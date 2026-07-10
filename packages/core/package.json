@@ -6,17 +6,20 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./env": {
       "types": "./src/env.ts",
-      "import": "./dist/env.js"
+      "import": "./dist/env.js",
+      "require": "./dist/env.cjs"
     }
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsup src/index.ts src/env.ts --format esm --clean",
+    "build": "tsup src/index.ts src/env.ts --format esm,cjs --clean",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

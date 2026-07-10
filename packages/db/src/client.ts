@@ -1,14 +1,13 @@
 import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { env } from '@copyforge/core';
+import * as schema from './schema/index.js';
 
 /**
  * Shared MariaDB connection pool + Drizzle client.
  *
  * The pool is created lazily on first use so importing this module never
  * opens a connection (keeps `next build` and tooling side-effect free).
- * The typed schema is attached in WO-002; until then `getDb()` returns a
- * query-builder bound to the live pool.
  */
 
 let pool: mysql.Pool | null = null;
@@ -25,13 +24,13 @@ export function getPool(): mysql.Pool {
   return pool;
 }
 
-export type Database = MySql2Database<Record<string, never>>;
+export type Database = MySql2Database<typeof schema>;
 
 let db: Database | null = null;
 
 export function getDb(): Database {
   if (!db) {
-    db = drizzle(getPool());
+    db = drizzle(getPool(), { schema, mode: 'default' });
   }
   return db;
 }

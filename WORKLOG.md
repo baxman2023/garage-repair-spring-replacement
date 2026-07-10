@@ -55,3 +55,59 @@ uptime) via `ecosystem.config.cjs`.
 **Open questions:** none blocking. (`.env` loading for local dev currently relies on the
 shell/PM2 env; a dotenv/`--env-file` convention can be settled when WO-003 needs live
 email/DB config.)
+
+### WO-002 — Schema v1 + migrations
+
+**Acceptance (restated):** Every §3 table modeled in Drizzle across per-domain files;
+ULID `char(26)` ids, `created_at`/`updated_at` on all tables, composite indexes leading
+with `workspace_id`; an idempotent seed for `model_routes`, `prompt_versions`,
+`feature_flags`. `drizzle-kit` migration applies cleanly to a fresh MariaDB; seed re-runs
+without duplicating.
+
+**Status:** ✅ Complete. Verified against a live MariaDB 11: dropped + recreated the
+database, `db:migrate` applied `0000_*.sql` cleanly (43 domain tables + drizzle tracker),
+`db:seed` ran twice (run 1: model_routes +10, feature_flags +4; run 2: all +0). DDL
+confirmed: `id char(26)`, `created_at DEFAULT current_timestamp`,
+`updated_at ... ON UPDATE current_timestamp`, and composite indexes leading with
+`workspace_id` (e.g. `assets_ws_project_idx`, `assets_ws_market_idx`).
+
+**Files touched:**
+- `packages/db/src/schema/`: `_helpers.ts` (idColumn/ulidRef/timestamps factories),
+  `enums.ts` (shared enum tuples + TS unions), `identity.ts`, `strategy.ts`, `genome.ts`,
+  `assets.ts` (+ `AssetBlock` type), `delivery.ts`, `ledger.ts`, `infra.ts`, `index.ts`.
+- `packages/db/src/`: `client.ts` (bind typed `schema`), `index.ts` (export schema),
+  `migrate.ts`, `seed.ts`, `loadEnv.ts`.
+- `packages/db/drizzle.config.ts`, generated `drizzle/0000_*.sql` + meta.
+- `packages/db/package.json` (db:generate/migrate/seed/push scripts; dotenv, tsx deps).
+- `packages/core/package.json`: dual ESM+CJS build so tooling (drizzle-kit, CJS) can load
+  it.
+
+**Decisions:**
+- **Every tenant table carries `workspace_id` (NOT NULL)** with a `(workspace_id, …)`
+  composite index, per §2.2 — no exceptions among project/asset/ledger/quiz tables.
+- **Shared vs tenant layers via NULLable `workspace_id`.** Genome tables
+  (`swipes`/`genome_components`/`genome_packs`), `model_routes`, and `calibration_state`
+  use a NULLable `workspace_id`: NULL = shared seed / platform default, non-NULL =
+  workspace-private (internal-winner layer per WO-048, per-workspace model override per
+  §1.3). Config tables `prompt_versions`/`feature_flags` are global.
+- **Event dedupe is tenant-scoped:** unique `(workspace_id, dedupe_key)` rather than a bare
+  global `dedupe_key`, to keep replay-safety within tenant boundaries (§4 says "dedupe_key
+  unique"; scoped to workspace is the tenant-safe reading).
+- **drizzle-kit loads a compiled CJS schema bundle** (`dist/schema/index.cjs`), not TS
+  source: under a `type: module` package drizzle-kit's loader injects `require` into ESM
+  scope and fails. `pnpm build` therefore precedes `db:generate`. The db build emits both
+  ESM (app consumption) and CJS (tooling).
+- **`users.is_platform_admin`** boolean added now as part of the identity model (drives the
+  separate admin auth guard in WO-052) rather than a later migration.
+- **Model IDs seeded from §1.1 as editable config** (haiku→classification/voc/claims/scrub,
+  sonnet→drafting, fable→council/focus/autopsy/offer/market; fallback chain
+  fable-5→opus-4-8→sonnet-4-6). Never hardcoded at call sites.
+- **`prompt_versions` seed is an empty catalog by design at WO-002.** The seeder mechanism
+  ships now; generation prompts are authored by their owning WOs (Council WO-020,
+  generators WO-022+) and appended to `PROMPT_SEEDS` — avoids stub prompt bodies and
+  scope-jumping.
+
+**Open questions:** none blocking. JSON columns are typed loosely (`Record<string,unknown>`
+/ light interfaces) for now; the full zod contracts in `packages/core/contracts` (§4) are
+authored by the WOs that first produce each document (WO-009 product_profile, WO-013
+market_profile, etc.), then wired onto the column `$type`s.

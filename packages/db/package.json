@@ -12,8 +12,12 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format esm --clean",
-    "typecheck": "tsc --noEmit"
+    "build": "tsup src/index.ts src/schema/index.ts --format esm,cjs --clean",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@copyforge/core": "workspace:*",
@@ -22,6 +26,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "drizzle-kit": "^0.30.1"
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2"
   }
 }

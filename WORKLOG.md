@@ -161,3 +161,45 @@ survival across a `closePool()` "restart", and expired + reused token rejection.
   will absorb these inline checks.
 
 **Open questions:** none blocking.
+
+### WO-004 — Tenancy guard
+
+**Acceptance (restated):** `withWorkspace` tRPC middleware injecting `workspace_id`;
+`packages/db` query helpers that require workspace scope; a CI check forbidding raw tenant-
+table queries outside the guard; a cross-tenant test suite that fails closed on every
+tenant table.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green; tenancy scan clean (and verified
+to fail closed on a planted violation); **31/31 db tests pass** — 29 per-table cross-tenant
+isolation cases (read + update + delete all fail closed for a foreign workspace) plus 2
+structural coverage checks; full suite 41 tests green.
+
+**Files touched:**
+- `packages/db/src/guard.ts` — `tenantDb(workspaceId)` (findMany/findFirst/insert/update/
+  delete, all AND-in `workspace_id`; insert auto-stamps id + workspace), `TENANT_TABLES`,
+  `TENANT_TABLE_NAMES`; exported from `index.ts`.
+- `packages/db/src/guard.test.ts`, `vitest.config.ts`, `vitest.setup.ts`, package.json
+  (vitest + `test`).
+- `scripts/tenancy-scan.mjs` + root `check:tenancy` script.
+- `apps/web/src/server/trpc.ts` — `workspaceProcedure` (`withWorkspace`) injecting
+  `workspaceId`/`role`/scoped `db`, and `ownerProcedure`; `routers/workspace.ts` refactored
+  onto them.
+- `eslint.config.mjs` — Node globals for `.mjs` scripts.
+
+**Decisions:**
+- **Enforced set = 29 tenant business/commerce tables** (strategy, assets, delivery,
+  ledger, plus api_keys/subscriptions/seat_assignments/licenses). Bootstrap/identity/infra
+  tables (users, workspaces, workspace_members, sessions, auth_tokens, jobs, model_routes,
+  audit_log, genome_*, calibration_state) are deliberately exempt — they're read while
+  *establishing* the workspace context, span workspaces (fair scheduler), or are global
+  config.
+- **CI scan is precise, not a blunt grep:** a file only violates if it *imports* a tenant
+  table from `@copyforge/db` AND calls `.from/.insert/.update/.delete` on it directly.
+  Passing a table to `tenantDb().findMany(table, …)` or referencing `table.column` is
+  allowed, so guard-mediated usage never trips it. Verified it flags a planted
+  `getDb().select().from(assets)` and is otherwise clean.
+- **`TENANT_TABLE_NAMES` is duplicated in the scan script** (node .mjs can't import the TS
+  guard without a build); a comment ties them together. The db-side `guard.test.ts` asserts
+  `entries` covers exactly `TENANT_TABLES`, catching drift on the DB side.
+
+**Open questions:** none blocking.

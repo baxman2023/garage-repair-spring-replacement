@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "produce": "pnpm --filter @copyforge/cli run dev --",
     "worker": "pnpm --filter @copyforge/worker run dev",
-    "test": "pnpm -r run test"
+    "test": "pnpm -r run test",
+    "check:tenancy": "node scripts/tenancy-scan.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "sharp", "@tailwindcss/oxide"]

@@ -111,3 +111,53 @@ confirmed: `id char(26)`, `created_at DEFAULT current_timestamp`,
 / light interfaces) for now; the full zod contracts in `packages/core/contracts` (§4) are
 authored by the WOs that first produce each document (WO-009 product_profile, WO-013
 market_profile, etc.), then wired onto the column `$type`s.
+
+### WO-003 — Auth (magic link) + workspaces
+
+**Acceptance (restated):** Passwordless magic-link login (token table, 15-min expiry,
+single-use), httpOnly session cookies, workspace create-on-first-login, owner/member roles,
+invite→accept flow. Full login → workspace → invite → accept path works; sessions survive
+restart; expired/reused tokens rejected.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green; **10/10 vitest tests pass**
+against live MariaDB, including the full login→workspace→invite→accept path, session
+survival across a `closePool()` "restart", and expired + reused token rejection.
+
+**Files touched:**
+- `packages/db/src/schema/auth.ts` (auth_tokens, sessions, workspace_invites) + schema
+  index; migration `drizzle/0001_daily_paladin.sql`.
+- `apps/web/src/server/auth/`: `tokens.ts` (crypto/expiry, pure), `cookies.ts`
+  (session cookie opts, cookie parse, `safeNextPath`), `email.ts` (nodemailer + dev-log
+  fallback), `service.ts` (requestMagicLink/verify/sessions/invites), `session.ts`
+  (`currentSession()` for server components), `tokens.test.ts`, `service.test.ts`.
+- `apps/web/src/server/trpc.ts` (session context + `protectedProcedure`),
+  `routers/auth.ts`, `routers/workspace.ts`, `routers/_app.ts`.
+- Route handlers: `app/auth/verify/route.ts`, `app/invite/accept/route.ts`,
+  `app/api/auth/logout/route.ts`.
+- UI: `app/login/{page,LoginForm}.tsx`, `app/page.tsx` (dashboard),
+  `app/InviteForm.tsx`.
+- `apps/web/{vitest.config.ts,vitest.setup.ts}`, package.json (nodemailer, drizzle-orm,
+  vitest, dotenv, @types/nodemailer; `test` script); root `test` script.
+
+**Decisions:**
+- **Only token hashes are persisted** (sha256 of a 32-byte random token). Raw tokens live
+  solely in the emailed link / cookie. Session cookie is `cf_session`, httpOnly, SameSite
+  lax, `secure` in production.
+- **Single-use is enforced atomically** via a conditional `UPDATE … SET consumed_at WHERE
+  consumed_at IS NULL AND expires_at > now` and an `affectedRows === 1` check — race-safe
+  against double-consume. Invites use the same pattern on `accepted_at`.
+- **Cookie mutation happens in Route Handlers** (`/auth/verify`, `/invite/accept`,
+  `/api/auth/logout`), not tRPC mutations, since the fetch adapter can't set cookies mid-
+  call. tRPC carries the resolved session in context for reads/guards.
+- **`activeWorkspaceId` lives on the session** so a user in multiple workspaces has a
+  current one; accepting an invite switches the session into that workspace.
+- **Sessions are DB-backed**, so they survive process restarts (verified by dropping the
+  pool mid-test and re-resolving).
+- **Open-redirect guard** (`safeNextPath`) on the post-login `next` param.
+- **Email has a dev/test fallback** that logs the link to stdout when `EMAIL_HOST` is
+  unset — keeps CI/tests token- and SMTP-free.
+- **`protectedProcedure` added; workspace/owner checks are inline in the workspace router
+  for now.** The formal `withWorkspace` tenancy guard + `ownerProcedure` land in WO-004 and
+  will absorb these inline checks.
+
+**Open questions:** none blocking.

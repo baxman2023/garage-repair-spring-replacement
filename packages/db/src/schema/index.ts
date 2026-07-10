@@ -1,5 +1,6 @@
 export * from './enums';
 export * from './identity';
+export * from './auth';
 export * from './strategy';
 export * from './genome';
 export * from './assets';

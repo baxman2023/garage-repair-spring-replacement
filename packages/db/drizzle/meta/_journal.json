@@ -8,6 +8,13 @@
       "when": 1783725802288,
       "tag": "0000_narrow_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1783726533779,
+      "tag": "0001_daily_paladin",
+      "breakpoints": true
     }
   ]
 }

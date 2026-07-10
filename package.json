@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "eslint .",
     "produce": "pnpm --filter @copyforge/cli run dev --",
-    "worker": "pnpm --filter @copyforge/worker run dev"
+    "worker": "pnpm --filter @copyforge/worker run dev",
+    "test": "pnpm -r run test"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "sharp", "@tailwindcss/oxide"]

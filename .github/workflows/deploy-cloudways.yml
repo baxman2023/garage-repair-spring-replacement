@@ -1,0 +1,84 @@
+name: Deploy to Cloudways
+
+# Manual deployment to a Cloudways phpstack server. Credentials arrive as
+# dispatch inputs (masked in logs immediately); the server-side work lives in
+# deploy/cloudways-deploy.sh, which is idempotent — re-run to update.
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: 'Server IP'
+        required: true
+        default: '209.97.157.182'
+      ssh_user:
+        description: 'SSH (master) user'
+        required: true
+        default: 'master_pkkuxkkjsa'
+      ssh_password:
+        description: 'SSH password'
+        required: true
+      app_folder:
+        description: 'Cloudways application folder'
+        required: true
+        default: 'ujhpasrsep'
+      db_name:
+        description: 'Database name'
+        required: true
+        default: 'ujhpasrsep'
+      db_user:
+        description: 'Database user'
+        required: true
+        default: 'ujhpasrsep'
+      db_password:
+        description: 'Database password'
+        required: true
+      app_url:
+        description: 'Public application URL'
+        required: true
+        default: 'https://phpstack-1305612-6546406.cloudwaysapps.com'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SSHPASS: ${{ inputs.ssh_password }}
+      SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15
+    steps:
+      - name: Mask secrets in logs
+        run: |
+          echo "::add-mask::${{ inputs.ssh_password }}"
+          echo "::add-mask::${{ inputs.db_password }}"
+
+      - uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass rsync
+
+      - name: Sync source to server
+        run: |
+          sshpass -e ssh $SSH_OPTS "${{ inputs.ssh_user }}@${{ inputs.host }}" 'mkdir -p ~/copyforge'
+          rsync -az --delete \
+            --exclude .git --exclude node_modules --exclude .next \
+            --exclude exports --exclude '.env' --exclude '*.log' \
+            -e "sshpass -e ssh $SSH_OPTS" \
+            ./ "${{ inputs.ssh_user }}@${{ inputs.host }}:copyforge/"
+
+      - name: Run server deployment
+        run: |
+          sshpass -e ssh $SSH_OPTS "${{ inputs.ssh_user }}@${{ inputs.host }}" \
+            "APP_FOLDER='${{ inputs.app_folder }}' \
+             DB_NAME='${{ inputs.db_name }}' \
+             DB_USER='${{ inputs.db_user }}' \
+             DB_PASSWORD='${DB_PW}' \
+             APP_URL='${{ inputs.app_url }}' \
+             bash ~/copyforge/deploy/cloudways-deploy.sh"
+        env:
+          DB_PW: ${{ inputs.db_password }}
+
+      - name: Verify public URL
+        run: |
+          sleep 5
+          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.app_url }}/api/health"
+          echo
+          echo "Deployed: ${{ inputs.app_url }}"

@@ -25,6 +25,7 @@ export const JOB_TYPES = {
   calibrationRun: 'calibration.run',
   buildStep: 'build.step',
   autopsyRun: 'autopsy.run',
+  learningNightly: 'learning.nightly',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

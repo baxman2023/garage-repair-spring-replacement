@@ -2185,3 +2185,59 @@ second click.
   pre-fill path — the autopsy dump is just a very good dump.
 
 **Open questions:** none blocking.
+
+### WO-048 — Learning loop
+
+**Acceptance (restated):** Nightly job: promoted challengers + high-Brier-accuracy
+assets decompose into `genome_components` tagged internal-winner; calibration refresh;
+Genome Feed pack refresh for entitled workspaces; internal winners NEVER leak across
+workspaces (workspace layer over the shared seed corpus). Acceptance: cross-workspace
+leak test fails closed; nightly run idempotent.
+
+**Done.** `learning.nightly` (one job per workspace per UTC day) selects winners
+deterministically — challengers with status `won` plus assets whose resolved forecast
+scored Brier ≤ 0.01 (within ten points of reality), deduped with the promoted reason
+winning — and eats each one through the EXISTING `genome.decompose` prompt/contract
+(same ≥90% typed-ratio bar), inserting components on the WORKSPACE genome layer with
+`is_internal_winner=true`. Then `runCalibration` (bounded, WO-045) and, for
+workspaces holding the Genome Feed entitlement, a per-niche pack upsert
+(`Genome Feed — <niche>`, curated component ids, refreshed in place).
+
+Acceptance verified:
+- **Leak fails closed** three ways: `queryGenomeComponents`, `retrieveGenome`, and
+  pack listings from a stranger workspace all return zero of the winner's rows —
+  the shared-OR-own scope in the genome store is the only read path.
+- **Idempotent**: the second nightly run decomposes nothing (the tagged
+  winner swipe + existing components are the ledger), spends zero model calls
+  (mock transport call count asserted), and pack refresh updates in place — no
+  duplicates. The enqueue gate gives each workspace exactly one job per UTC day
+  regardless of how often the sweep fires (before-hour, after-hour, repeat sweeps
+  all tested).
+- No entitlement → `packsRefreshed: 0` and no workspace pack rows, while the
+  private components still land (the entitlement gates the curated FEED, not the
+  workspace's own learning).
+
+**Files touched:**
+- `packages/db/src/learningStore.ts` (+ test): `findLearningWinners`
+  (BRIER_ACCURACY_MAX = 0.01; quiz-definition forecasts excluded — only real
+  assets decompose), internal-winner swipe ledger helpers,
+  `refreshGenomeFeedPacks` (entitlement-gated upsert), `enqueueDueNightlyLearning`
+  (hourUtc gate + per-day dedupe; `workspaceIds` narrows sweeps in tests).
+- `packages/pipeline/src/learning.ts` (+ test): `runLearningNightly` (winner →
+  swipe → decompose → workspace-layer insert → calibration → packs; returns a
+  summary) and the job handler wrapper.
+- Worker: handler registration + a 15-minute `setInterval` sweep calling the
+  idempotent enqueue gate (cleared on shutdown). No new schema — WO-017's genome
+  tables already carried the nullable-workspace layer and `is_internal_winner`.
+
+**Decisions:**
+- Winner decomposition REUSES the `genome.decompose` prompt and quality bar rather
+  than a bespoke prompt — an internal winner is just a swipe we trust more, and one
+  contract means one failure mode.
+- Idempotency keys off "tagged swipe WITH components", so a run that dies between
+  swipe insert and component insert self-heals on the next night instead of
+  permanently skipping the winner.
+- Niche for internal winners = slugified project name — packs group naturally per
+  funnel without a new taxonomy.
+
+**Open questions:** none blocking.

@@ -150,6 +150,16 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  BRIER_ACCURACY_MAX,
+  findLearningWinners,
+  internalWinnerTag,
+  findInternalWinnerSwipe,
+  countComponentsForSwipe,
+  refreshGenomeFeedPacks,
+  enqueueDueNightlyLearning,
+  type LearningWinner,
+} from './learningStore.js';
+export {
   createAutopsy,
   getAutopsy,
   listAutopsies,

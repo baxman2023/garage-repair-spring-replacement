@@ -1,6 +1,6 @@
 import { assertEnv } from '@copyforge/core';
 import { installConsoleRedaction } from '@copyforge/ai';
-import { closePool } from '@copyforge/db';
+import { closePool, enqueueDueNightlyLearning } from '@copyforge/db';
 import { runWorker, type HandlerRegistry } from './worker.js';
 import {
   createIntakeHandler,
@@ -26,6 +26,8 @@ import {
   createCalibrationRunHandler,
   createAutopsyRunHandler,
   AUTOPSY_RUN_JOB,
+  createLearningNightlyHandler,
+  LEARNING_NIGHTLY_JOB,
   ASSET_COMPLIANCE_JOB,
   CALIBRATION_RUN_JOB,
   CHALLENGER_GENERATE_JOB,
@@ -80,6 +82,7 @@ const handlers: HandlerRegistry = {
   [PREDICTIONS_RESOLVE_JOB]: createPredictionsResolveHandler(),
   [CALIBRATION_RUN_JOB]: createCalibrationRunHandler(),
   [AUTOPSY_RUN_JOB]: createAutopsyRunHandler(),
+  [LEARNING_NIGHTLY_JOB]: createLearningNightlyHandler(),
 };
 
 let shuttingDown = false;
@@ -98,10 +101,19 @@ async function main(): Promise<void> {
     concurrency: env.WORKER_CONCURRENCY,
   });
 
+  // Nightly learning loop (WO-048): sweep every 15 minutes; the enqueue gate
+  // itself is idempotent per workspace per UTC day, so this is safe to spam.
+  const nightlySweep = setInterval(() => {
+    enqueueDueNightlyLearning().catch((err) =>
+      console.error('[worker] nightly learning sweep failed', err),
+    );
+  }, 15 * 60 * 1000);
+
   const shutdown = (signal: NodeJS.Signals): void => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`[worker] received ${signal}, draining…`);
+    clearInterval(nightlySweep);
     void worker
       .stop()
       .then(() => closePool())

@@ -38,6 +38,7 @@ export { createQuizGenerateHandler, QUIZ_GENERATE_JOB } from './quizBuilder.js';
 export { createWebhookHandler, WEBHOOK_DELIVER_JOB, type WebhookFetcher } from './webhook.js';
 export { createChallengerGenerateHandler, buildChallengerBrief, CHALLENGER_GENERATE_JOB } from './challenger.js';
 export { createAutopsyRunHandler, AUTOPSY_RUN_JOB, type AutopsyDeps } from './autopsy.js';
+export { createLearningNightlyHandler, runLearningNightly, LEARNING_NIGHTLY_JOB, type LearningDeps, type LearningRunSummary } from './learning.js';
 export {
   createPredictionsResolveHandler,
   createCalibrationRunHandler,

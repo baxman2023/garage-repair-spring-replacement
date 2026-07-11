@@ -94,3 +94,15 @@ export async function saveProfileVersion(params: {
     return id;
   }));
 }
+
+/**
+ * Operator/bootstrap lookup (produce CLI): resolve a project id to its row —
+ * including its workspace — BEFORE a workspace context exists. This is the
+ * CLI's tenancy entry point, mirroring how auth resolves sessions.
+ */
+export async function resolveProjectById(
+  projectId: string,
+): Promise<typeof projects.$inferSelect | null> {
+  const rows = await getDb().select().from(projects).where(eq(projects.id, projectId)).limit(1);
+  return rows[0] ?? null;
+}

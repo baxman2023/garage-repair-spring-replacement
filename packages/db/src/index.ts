@@ -16,6 +16,7 @@ export {
   getCurrentProfile,
   listProfileVersions,
   saveProfileVersion,
+  resolveProjectById,
   type ProductProfileRow,
 } from './profiles.js';
 export {

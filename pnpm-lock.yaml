@@ -41,10 +41,22 @@ importers:
       '@copyforge/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copyforge/pipeline':
+        specifier: workspace:*
+        version: link:../../packages/pipeline
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@types/react@19.2.17)(mysql2@3.22.6(@types/node@22.20.1))(react@19.2.7)
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.1
+      vitest:
+        specifier: ^3.0.2
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)
 
   apps/web:
     dependencies:
@@ -124,6 +136,9 @@ importers:
       '@copyforge/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copyforge/pipeline':
+        specifier: workspace:*
+        version: link:../../packages/pipeline
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -203,6 +218,31 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.23.0
+      vitest:
+        specifier: ^3.0.2
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)
+
+  packages/pipeline:
+    dependencies:
+      '@copyforge/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@copyforge/core':
+        specifier: workspace:*
+        version: link:../core
+      '@copyforge/db':
+        specifier: workspace:*
+        version: link:../db
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@types/react@19.2.17)(mysql2@3.22.6(@types/node@22.20.1))(react@19.2.7)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.1
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
       vitest:
         specifier: ^3.0.2
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.0)

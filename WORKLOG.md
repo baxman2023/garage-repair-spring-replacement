@@ -726,3 +726,74 @@ re-approval (old G2 report rows immutable, re-approval appends a new one).
   approved. Verified in tests.
 
 **Open questions:** none blocking.
+
+### WO-016 — produce CLI v1
+
+**Acceptance (restated):** `npm run produce -- --project <id> --phase strategy
+[--auto-approve]` runs WO-009-input → WO-013 outputs where possible, JSON summary to
+stdout, non-zero exit on gate failure; CI-runnable against a seeded fixture project.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **158 tests pass**
+(pipeline 17 relocated, cli +3). Verified: a seeded fixture project runs the FULL phase
+headlessly with mocked AI (`--dump-file` intake → forge → auto-G0 → G1 → selection → 5
+diagnoses → auto-G2) ending with `assertG2Approved` actually unlocked; a G1 hard stop
+returns `ok:false` with the ranked fix list in the summary; without `--auto-approve` the
+run stops `pending` at the human G0 checkpoint. The built binary prints help, `--version`,
+and exits 2 on bad args / 1 on gate failure / 0 on success.
+
+**Files touched:**
+- **New `packages/pipeline`** — the five job handlers (intake, offerForge, marketSelect,
+  marketProfile, vocMine) + their 17 tests moved here from `apps/worker/src/handlers` so
+  the worker (queue-driven) and CLI (inline) share one implementation. Worker imports from
+  `@copyforge/pipeline`; behavior unchanged.
+- `apps/cli/src/strategy.ts` — `runStrategyPhase(opts, deps)`: resolve project→workspace,
+  optional dump-file intake, forge + auto-G0 (first checklist-passing variant), funnel math
+  (flags: `--price/--margin/--refund/--cpc`), market selection, per-market diagnosis, G2
+  under `--auto-approve`; structured `StrategySummary`.
+- `apps/cli/src/index.ts` — arg parsing, help, JSON to stdout, exit codes; loads root .env.
+- `apps/cli/src/strategy.test.ts` — the CI fixture runs (mocked AI, zero tokens).
+- `packages/db/profiles.ts` — `resolveProjectById` bootstrap lookup (the CLI's tenancy
+  entry point; keeps the tenancy scan clean rather than raw-querying in the app).
+
+**Decisions:**
+- **Handlers moved to a shared package** rather than duplicating logic or having the CLI
+  spawn a worker. `apps/worker` remains the queue driver; `apps/cli` drives the same
+  handlers inline — one implementation, two drivers (recorded as a §2 structure addition).
+- **`--auto-approve` covers G0 and G2** (picks the first G0-passing variant; snapshots +
+  records G2). Without it the CLI stops at each human gate with `pending` status — G2 is a
+  human checkpoint by design.
+- **dotenv externalized** in the CLI build (CJS `require` inside the ESM bundle broke the
+  binary — caught by smoke-testing `dist/index.js`).
+
+**Open questions:** none blocking.
+
+---
+
+## PHASE 1 REPORT — Intake & Strategy (WO-009 … WO-016) ✅ COMPLETE
+
+**State:** All eight WOs implemented, verified, committed, pushed. Green:
+`pnpm typecheck` / `build` / `lint`, **158 tests** (core 47, db 55, ai 23, pipeline 17,
+web 10, worker 3, cli 3), tenancy + ai-boundary scans clean. Migrations 0000–0003; seeds
+idempotent (10 model routes, 4 flags, 5 prompts).
+
+**The strategy pipeline now runs end-to-end** (headless-verified in CI with mocked AI):
+dump/URL/interrogation intake → versioned product profile → Offer Forge (3 variants,
+fake-scarcity structurally impossible) → G0 checklist approval → Funnel Math with hard stop
++ ranked fixes → market selection (starving-crowd matrix, user edits survive re-runs) →
+Schwartz diagnosis per market (strict contract; generators can't build prompts from
+undiagnosed markets) → VOC mining (typed, deduped, source-traceable, quote-rate harness) →
+G2 snapshot approval (staleness-aware) → `assertG2Approved` ready to lock/unlock the Phase 2
+fan-out.
+
+**Risks / notes:**
+1. Same environment caveats as Phase 0 (in-container MariaDB; live Anthropic path unexercised
+   — all AI verified through the mock harness).
+2. **Structure addition:** `packages/pipeline` (shared handlers) — spec §2 lists only
+   db/core/ai; this addition is the minimal way to satisfy WO-016's headless requirement
+   without duplicating generator logic. Flagged for approval as a deviation-in-spirit.
+3. **Contract extensions** (documented per-WO): `awareness/sophistication_justification` in
+   market_profile (WO-013 deliverable), `gate_reports.project_id` for project-level gates.
+4. G2 staleness semantics (edits re-lock the build) is the strong reading of "approval
+   snapshot immutable" — flag if you want approvals to survive market edits instead.
+
+**Awaiting your go before starting Phase 2 (Genome & Generation, WO-017 … WO-028).**

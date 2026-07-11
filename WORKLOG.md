@@ -571,3 +571,41 @@ a later failing run re-arms the stop; both verdicts land as project-level G1 gat
   required-change factor so the easiest lever leads.
 
 **Open questions:** none blocking.
+
+### WO-012 — Market Selection Engine
+
+**Acceptance (restated):** fable-5 candidate generation (8–12); starving-crowd scoring
+matrix (pain, purchasing power, reachability, urgency, LTV — weights in config); ranked
+list UI with swap/edit/add-manual; top 5 persisted to `markets` rank 1–5. Scores persisted
+with rationale per market; user edits survive re-runs.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **131 tests pass**
+(core +4, db +4, worker +3). Verified: deterministic weighted ranking persists exactly the
+top 5 at ranks 1–5 with scores + rationale; a user-edited market keeps its rank/label
+through a full engine re-run while the other four slots refresh; swap exchanges ranks;
+manual add fills a free rank → displaces the worst engine row when full → refuses when all
+five are user-defined; out-of-contract candidate counts persist nothing; handler requires
+G0 first; the run endpoint enqueues via `enqueueGenerationJob`, so the G1 hard stop
+applies (matching the DAG: G1 → market selection).
+
+**Files touched:**
+- `packages/core/src/contracts/market.ts` (+ test): `STARVING_CROWD_WEIGHTS` (config,
+  sum=1), candidate/result contracts (8–12, scores 0–10), `scoreMarket` (0–100),
+  `rankCandidates` (stable ties).
+- `packages/db/src/markets.ts` (+ test): `applyEngineCandidates` (engine rows replaced,
+  user rows survive at their ranks, label-dedupe vs user rows), `swapMarketRanks`,
+  `updateMarket` (marks user-origin), `addManualMarket`; seed: `market.select` prompt v1.
+- `apps/worker/src/handlers/marketSelect.ts` (+ test), registered.
+- `apps/web`: `routers/markets.ts` (list/run/swap/update/addManual), `/projects/[id]/markets`
+  page + `MarketsPanel` (ranked cards, ↑↓ swap, inline edit, manual add).
+
+**Decisions:**
+- **Edit-survival mechanism:** rows carry `origin: 'engine' | 'user'` inside their profile
+  JSON. Any edit or manual add flips to `user`; re-runs replace only engine rows and skip
+  candidates whose label collides with a kept user row. No schema change needed.
+- **Ranked-candidate slate is capped at 5 slots**; manual adds beyond 5 displace the worst
+  engine row and refuse when the user owns all five (explicit, not silent).
+- **Weights live in core config** (`STARVING_CROWD_WEIGHTS`, admin-editable later);
+  0–10 dimension scores × weights → 0–100 total, persisted to `markets.score_total`.
+
+**Open questions:** none blocking.

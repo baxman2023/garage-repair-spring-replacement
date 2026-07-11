@@ -16,6 +16,20 @@ export {
   type ChannelProjection,
 } from './funnelMath.js';
 export {
+  STARVING_CROWD_WEIGHTS,
+  starvingCrowdScoresSchema,
+  marketCandidateSchema,
+  marketSelectionResultSchema,
+  parseMarketSelectionResult,
+  scoreMarket,
+  rankCandidates,
+  type StarvingCrowdScores,
+  type MarketCandidate,
+  type MarketSelectionResult,
+  type RankedCandidate,
+  type ScoreDimension,
+} from './contracts/market.js';
+export {
   OFFER_SCHEMA_VERSION,
   URGENCY_TYPES,
   offerSchema,

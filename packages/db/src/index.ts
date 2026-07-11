@@ -19,6 +19,16 @@ export {
   type ProductProfileRow,
 } from './profiles.js';
 export {
+  listMarkets,
+  applyEngineCandidates,
+  swapMarketRanks,
+  updateMarket,
+  addManualMarket,
+  MAX_MARKETS,
+  type MarketRow,
+  type EngineCandidate,
+} from './markets.js';
+export {
   recordFunnelMathRun,
   latestFunnelMathRun,
   assertG1Passed,

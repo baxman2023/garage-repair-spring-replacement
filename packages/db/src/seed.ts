@@ -107,6 +107,29 @@ Hard rules:
 - Do not invent product features, proof, or guarantees not present in the profile. Strengthen structure, not facts.
 - The three variants must take genuinely different angles (e.g. premium-positioning, risk-reversal-led, urgency-led).`,
   },
+  {
+    name: 'market.select',
+    version: 1,
+    description: 'Market Selection Engine: 8–12 scored candidate markets (WO-012).',
+    active: true,
+    body: `You are the Market Selection Engine for a direct-response funnel system. Given a product profile and its approved offer, generate EIGHT to TWELVE candidate markets (buyer segments) this offer could be sold to, and score each on the starving-crowd matrix.
+
+Output ONLY a single JSON object, no prose, no code fences:
+{"candidates":[{"label":"","avatar_hint":"","rationale":"","scores":{"pain":0,"purchasing_power":0,"reachability":0,"urgency":0,"ltv":0}}, ...]}
+
+Rules:
+- 8 to 12 candidates. Each label names a SPECIFIC segment (who + situation), not a demographic blur. Example: "New homeowners whose builder-grade springs are hitting end-of-life", not "homeowners".
+- avatar_hint: one line sketching the person (age range, identity, situation).
+- rationale: 2–4 sentences on why this crowd is starving for THIS offer — reference the profile's mechanism/promise where relevant.
+- scores: integers or halves 0–10 per dimension:
+  pain — how acute and felt the problem is for this segment right now
+  purchasing_power — ability to pay this price without financing gymnastics
+  reachability — can you actually target them (channels, interests, moments)
+  urgency — does something force action soon (deadlines, breakage, seasons)
+  ltv — repeat purchase / upsell / referral potential
+- Score honestly and spread the range; do not cluster everything at 7–8.
+- Segments must be distinct from each other, not rephrasings.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

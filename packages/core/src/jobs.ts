@@ -5,6 +5,7 @@
 export const JOB_TYPES = {
   intakeExtractProfile: 'intake.extract_profile',
   offerForge: 'offer.forge',
+  marketSelect: 'market.select',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

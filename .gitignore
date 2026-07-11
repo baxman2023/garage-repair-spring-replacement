@@ -23,3 +23,6 @@ pnpm-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+# export artifacts (WO-036)
+exports/

@@ -161,6 +161,11 @@ export function createPackageHandler() {
       checksum,
     });
 
+    // Render the file artifacts (WO-036) — fills renderings.file_paths.
+    const { exportAssetFiles } = await import('./exporter.js');
+    const { files } = await exportAssetFiles({ workspaceId: job.workspaceId, assetId });
+    pkg.renderings.file_paths = files.map((f) => f.path);
+
     const g7 = checkG7(pkg);
     await recordAssetGate({
       workspaceId: job.workspaceId,

@@ -127,6 +127,12 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  recordExport,
+  listExportsForAsset,
+  listExportsForMarket,
+  type ExportRow,
+} from './exportsStore.js';
+export {
   savePackage,
   latestPackage,
   updatePackageRenderings,

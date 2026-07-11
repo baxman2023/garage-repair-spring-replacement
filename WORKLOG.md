@@ -1631,3 +1631,46 @@ the embed line, variants add the no-layout-shift line). G6 pass now chains
   (WO-033 dashboard).
 
 **Open questions:** none blocking.
+
+### WO-036 — Export renderer (files)
+
+**Acceptance (restated):** Per-asset exports — Markdown always; semantic unstyled HTML
+for letters/advertorials/quiz results; VSL/webinar teleprompter TXT with a 170-WPM block
+timing header; email sequence as an .md pack; per-market ZIP; export history.
+Acceptance: exports byte-reproducible from a package; ZIP contains manifest.json listing
+checksums.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **333 tests pass**
+(core +7, pipeline +2 heavy integration). Verified: every renderer is a pure function of
+the package — two renders are string-identical and two disk exports carry identical
+sha256 checksums, re-verified by reading the bytes back; the per-market ZIP is
+byte-reproducible too (fixed DOS timestamp, STORE method) and its `manifest.json` lists
+per-file checksums that match the actual zipped bytes plus the source package checksums.
+Teleprompter TXT: `PACE: 170 WPM`, total runtime, and `[MM:SS → MM:SS]` per block. HTML
+is semantic and escaped (h1 headline, ul bullets, sectioned by block id, VideoObject
+JSON-LD when present). Email pack: one .md per email (subject/preview/offset/phase
+header + body) plus a `00-sequence.md` index. Export history rows per file and per zip.
+The package job now renders files inline, filling `renderings.file_paths` — G7's missing
+list shrinks to the two prompts (WO-037/38).
+
+**Files touched:**
+- `packages/core/src/exportRender.ts` (+ test): `renderMarkdown`/`renderHtml`/
+  `renderTeleprompter`/`renderEmailPack`/`renderAssetFiles`, `contentChecksum` (sha256),
+  and a dependency-free deterministic STORE-method ZIP (`crc32` verified against the
+  standard test vector, `zipStore`, `readStoreZip`).
+- `packages/db/src/exportsStore.ts`: `recordExport`, `listExportsForAsset/Market`.
+- `packages/pipeline/src/exporter.ts` (+ test): `exportAssetFiles` (write + history +
+  renderings update), `exportMarketZip` (manifest + zip + history), `EXPORT_DIR` root
+  (documented in .env.example, gitignored).
+- `packageJob.ts` renders files inline after composing.
+
+**Decisions:**
+- **The ZIP is hand-rolled STORE-method** — no new dependency, and compression would
+  trade the byte-reproducibility acceptance for a few KB. Fixed DOS timestamp
+  (2020-01-01) because zip timestamps are the classic determinism leak.
+- **Renderers live in core (pure)**; only the writer (fs) lives in pipeline — the same
+  render functions serve the ZIP, the files, and future preview UIs.
+- File names derive from asset type + id suffix; email packs render into a
+  subdirectory with a numbered index.
+
+**Open questions:** none blocking.

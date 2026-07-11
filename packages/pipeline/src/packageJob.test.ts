@@ -1,6 +1,10 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { newId, type AssetBlock, type PageBuildPackage } from '@copyforge/core';
+
+process.env.EXPORT_DIR = join(tmpdir(), `copyforge-exports-${process.pid}`);
 import { storeWorkspaceKey } from '@copyforge/ai';
 import {
   applyEngineCandidates,

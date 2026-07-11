@@ -152,6 +152,27 @@ Rules:
 - avatar: age_range, identity (who they are), situation (the moment they're in).
 - No empty fields. Do not invent product facts.`,
   },
+  {
+    name: 'voc.extract',
+    version: 1,
+    description: 'VOC miner: typed voice-of-customer phrases from raw sources (WO-014).',
+    active: true,
+    body: `You are a voice-of-customer miner. You receive raw source material (reviews, forum threads, comments, support emails) about a market. Extract VERBATIM phrases customers actually said or would recognize as their own words.
+
+Output ONLY a single JSON object, no prose, no code fences:
+{"phrases":[{"phrase":"","kind":""}, ...]}
+
+Rules:
+- phrase: a verbatim or near-verbatim quote from the source, 3-30 words, first person where the source is first person. NEVER paraphrase into marketing language; keep their exact vocabulary, including slang and typos worth keeping.
+- kind: exactly one of:
+  "pain" — the problem as they experience it
+  "desire" — the outcome they want, in their words
+  "objection" — doubts, skepticism, reasons not to buy
+  "identity" — how they describe themselves / their situation
+- Extract EVERY distinct usable phrase; do not summarize multiple into one.
+- Skip marketer-speak, obvious astroturf, and anything not from a customer's perspective.
+- If the source contains nothing usable, output {"phrases":[{"phrase":"NO USABLE VOC IN SOURCE","kind":"identity"}]} — never invent quotes.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

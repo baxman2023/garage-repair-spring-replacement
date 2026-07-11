@@ -30,6 +30,16 @@ export {
   type EngineCandidate,
 } from './markets.js';
 export {
+  addVocSource,
+  getVocSource,
+  listVocSources,
+  setVocSourceContent,
+  listMarketPhrases,
+  insertMarketPhrases,
+  type VocSourceRow,
+  type VocPhraseRow,
+} from './voc.js';
+export {
   recordFunnelMathRun,
   latestFunnelMathRun,
   assertG1Passed,

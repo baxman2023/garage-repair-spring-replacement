@@ -6,6 +6,7 @@ import { createIntakeHandler, INTAKE_EXTRACT_JOB } from './handlers/intake.js';
 import { createOfferForgeHandler, OFFER_FORGE_JOB } from './handlers/offerForge.js';
 import { createMarketSelectHandler, MARKET_SELECT_JOB } from './handlers/marketSelect.js';
 import { createMarketProfileHandler, MARKET_PROFILE_JOB } from './handlers/marketProfile.js';
+import { createVocMineHandler, VOC_MINE_JOB } from './handlers/vocMine.js';
 
 /**
  * CopyForge worker entrypoint. Validates the environment, installs secret
@@ -20,6 +21,7 @@ const handlers: HandlerRegistry = {
   [OFFER_FORGE_JOB]: createOfferForgeHandler(),
   [MARKET_SELECT_JOB]: createMarketSelectHandler(),
   [MARKET_PROFILE_JOB]: createMarketProfileHandler(),
+  [VOC_MINE_JOB]: createVocMineHandler(),
 };
 
 let shuttingDown = false;

@@ -7,6 +7,7 @@ export const JOB_TYPES = {
   offerForge: 'offer.forge',
   marketSelect: 'market.select',
   marketProfile: 'market.profile',
+  vocMine: 'voc.mine',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

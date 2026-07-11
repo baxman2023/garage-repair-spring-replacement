@@ -649,3 +649,44 @@ prompt-input assertion point).
   physically cannot build prompts from undiagnosed markets.
 
 **Open questions:** none blocking.
+
+### WO-014 — VOC miner
+
+**Acceptance (restated):** Source intake (paste blobs, URLs); haiku extraction →
+`voc_phrases` typed pain|desire|objection|identity with source refs; dedupe; per-market
+corpus viewer; corpus injected into generation cache blocks. 200-phrase corpus < 2 min on
+worker; phrases traceable to sources; generators demonstrably quote VOC (spot-check
+harness).
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **147 tests pass**
+(core +5, worker +4). Verified: paste source → typed phrases each carrying
+`source_ref = sourceId` (traceable); URL source fetched + readability-extracted with
+content persisted to the source row; dedupe within batch and across successive mines
+(normalized text); 200-phrase corpus inserted in one job, measured well under the 2-minute
+budget; `vocQuoteRate` spot-check harness detects verbatim quotes in generated copy and
+returns 0 for generic text.
+
+**Files touched:**
+- `packages/core/src/contracts/voc.ts` (+ test): extraction contract (typed phrases),
+  `normalizePhrase`/`dedupePhrases`, `vocCorpusPromptBlock` (§1.2 cache-block renderer,
+  grouped by kind, per-kind cap), `vocQuoteRate` harness.
+- `packages/db/src/voc.ts`: sources CRUD + `insertMarketPhrases` (dedupe against existing
+  corpus); seed `voc.extract` prompt v1.
+- `apps/worker/src/handlers/vocMine.ts` (+ test), registered; chunks long sources (24k
+  chars) with the prompt cached across chunk calls; haiku `voc_extraction` stage.
+- `apps/web`: `routers/voc.ts` (addSource → enqueue mine via `enqueueGenerationJob`;
+  corpus), `/projects/[id]/voc` page + `VocPanel` (market tabs, paste/URL intake, corpus
+  viewer grouped by kind with counts + source tooltips).
+
+**Decisions:**
+- **"No usable VOC" sentinel:** the prompt instructs a specific sentinel instead of invented
+  quotes; the handler filters it out, so junk sources yield zero phrases rather than
+  fabricated voice.
+- **Dedupe key** = casefolded, punctuation-stripped, whitespace-collapsed phrase text —
+  catches typographic variants without fuzzy-matching false positives.
+- **VOC mining is treated as generation-class spend** (goes through the G1 hard-stop
+  enqueue path).
+- The **spot-check harness lives in core** so generator tests (WO-022+) can assert quote
+  rates against the corpus without new plumbing.
+
+**Open questions:** none blocking.

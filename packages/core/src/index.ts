@@ -38,6 +38,20 @@ export {
   type MarketProfile,
 } from './contracts/marketProfile.js';
 export {
+  VOC_PHRASE_KINDS,
+  vocExtractedPhraseSchema,
+  vocExtractionResultSchema,
+  parseVocExtractionResult,
+  normalizePhrase,
+  dedupePhrases,
+  vocCorpusPromptBlock,
+  vocQuoteRate,
+  type VocPhraseKind,
+  type VocExtractedPhrase,
+  type CorpusPhrase,
+  type VocQuoteReport,
+} from './contracts/voc.js';
+export {
   OFFER_SCHEMA_VERSION,
   URGENCY_TYPES,
   offerSchema,

@@ -1098,3 +1098,34 @@ year evergreening ("back in 2019"→"a while back", "since 2020"→"for years no
   their drop point reject the generation.
 
 **Open questions:** none blocking.
+
+### WO-024 — Generator: short-form feeder hooks
+
+**Acceptance (restated):** 3 × ~30-second vertical scripts per market (pattern-interrupt
+hook ≤3s, mechanism tease, curiosity CTA to the VSL), same spoken post-processor, linked to
+the parent VSL variant. Each ≤90 words spoken; hook block flagged and first; CTA references
+the VSL slug.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **219 tests pass**
+(pipeline +3). Verified: 3 feeder assets created with `parent_asset_id` → the VSL; each
+≤90 spoken words; the hook is the FIRST block with `timestampEnd ≤ 3.1s`; the CTA block
+carries `meta.ctaTarget === <vsl slug>` (checked against the stored slug, which the prompt
+supplies); spoken conventions + timestamps applied; each feeder auto-enters G3. Rejections:
+>90 words, a 20-word (≈7s) hook, and a CTA pointing at the wrong slug.
+
+**Files touched:**
+- `packages/pipeline/src/generators/shortForm.ts` (+ test): contract (exactly 3 scripts),
+  hook-first + ≤3s validation, ≤90-word cap, slug-reference validation, parent-VSL
+  resolution (payload option or newest VSL for the market), auto-council per feeder.
+- `packages/pipeline/src/generators/vsl.ts`: VSLs now get a `slug`
+  (`vsl-<id-suffix>`) at creation — the deployable identity feeders and message-match
+  (WO-041) reference.
+- Dispatcher case `short_form_video`; seed `generate.short_form` v1.
+
+**Decisions:**
+- **The CTA slug reference is structural** (`meta.ctaTarget`), not textual — a spoken CTA
+  shouldn't say "vsl-3f9a2b" out loud; the meta target is what the delivery layer wires,
+  and validation is exact-match against the parent's slug.
+- Hook budget = 3s at 170 WPM (≈8 words) with 0.1s rounding headroom.
+
+**Open questions:** none blocking.

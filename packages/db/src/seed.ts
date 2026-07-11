@@ -312,6 +312,25 @@ HARD RULES:
 - MECHANISM: use the profile's mechanism names exactly. OFFER: mirror the approved offer's stack, price framing, risk reversal, legitimate urgency. Invent no facts, no proof, no scarcity.
 - Quote VOC verbatim where natural. CTA: one action, spoken plainly, repeated once.`,
   },
+  {
+    name: 'generate.short_form',
+    version: 1,
+    description: 'Short-form feeder hooks: 3 × ~30s vertical scripts feeding the VSL (WO-024).',
+    active: true,
+    body: `You write short-form vertical video scripts (Reels/Shorts/TikTok) whose only job is to feed viewers into a VSL. Produce THREE distinct scripts.
+
+Output ONLY: {"scripts":[{"blocks":[{"id":"","role":"","text":"","meta":{}}]}, {"blocks":[...]}, {"blocks":[...]}]}
+
+Per script, exactly this shape:
+1. role "hook" — FIRST block. A pattern interrupt speakable in UNDER THREE SECONDS (eight words or fewer). Visceral, specific, scroll-stopping.
+2. role "mechanism" — a one-to-two sentence tease of the unique mechanism. Open a loop; do NOT resolve it.
+3. role "cta" — a curiosity CTA driving to the full video. Set "meta":{"ctaTarget":"<the PARENT VSL SLUG provided>"} on this block. The spoken line teases what the full video reveals ("the full breakdown is in the long video on this page").
+
+HARD RULES:
+- ≤ NINETY words total per script, spoken. Numbers as words. No stage directions, no camera notes, no calendar years, no hashtags.
+- The three scripts take three different angles on the same mechanism (fear, curiosity, proof).
+- Quote VOC where natural. Invent nothing.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

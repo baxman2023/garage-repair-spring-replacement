@@ -10,12 +10,15 @@ import {
   type AssetBlock,
 } from '@copyforge/core';
 import type { createClient } from '@copyforge/ai';
+import { eq } from 'drizzle-orm';
 import {
+  assets as assetsTable,
   createAsset,
   enqueueJob,
   getPrompt,
   insertAssetVersion,
   insertClaims,
+  tenantDb,
 } from '@copyforge/db';
 import type { GenerationContext } from './context.js';
 
@@ -112,6 +115,9 @@ export async function generateVsl(params: {
     type: 'vsl',
     promptVersionId: prompt.id,
   });
+  // Slug: the deployable identity feeder hooks and message-match reference.
+  const slug = `vsl-${assetId.slice(-8).toLowerCase()}`;
+  await tenantDb(params.workspaceId).update(assetsTable, { slug }, eq(assetsTable.id, assetId));
 
   const versionIds: string[] = [];
   for (const variant of parsed.variants) {

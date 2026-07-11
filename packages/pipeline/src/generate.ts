@@ -4,6 +4,7 @@ import type { ClaimedJob } from '@copyforge/db';
 import { buildGenerationContext } from './generators/context.js';
 import { generateSalesLetter, type LetterStructure } from './generators/salesLetter.js';
 import { generateVsl } from './generators/vsl.js';
+import { generateShortForm } from './generators/shortForm.js';
 
 /**
  * Asset generation dispatcher (WO-022+): one `asset.generate` job type,
@@ -40,6 +41,16 @@ export function createGenerateHandler(clientOptions: ClientOptions = {}) {
         return;
       case 'vsl':
         await generateVsl({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
+        return;
+      case 'short_form_video':
+        await generateShortForm({
+          ai,
+          workspaceId: job.workspaceId,
+          projectId,
+          jobId: job.id,
+          context,
+          parentVslId: typeof options.parentVslId === 'string' ? options.parentVslId : undefined,
+        });
         return;
       default:
         throw new Error(`No generator registered for asset type "${assetType}" yet.`);

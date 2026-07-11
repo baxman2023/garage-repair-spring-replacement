@@ -150,8 +150,29 @@ find "$WEBROOT" -mindepth 1 -maxdepth 1 \
   ! -name '.copyforge-default-backup' \
   -exec mv -t "$BACKUP" {} + 2>/dev/null || true
 
-public_ok() {
-  curl -fsS -m 20 "$APP_URL/api/health" 2>/dev/null | grep -q '"app":"CopyForge"'
+APP_HOST="${APP_URL#https://}"; APP_HOST="${APP_HOST%%/*}"
+
+# Cache-busted probe: Varnish hashes the query string, so a unique parameter
+# forces a miss — earlier runs poisoned /api/health with the placeholder page.
+public_probe() {
+  curl -fsS -m 20 "$APP_URL/api/health?cb=$(date +%s%N)" 2>&1 || true
+}
+public_ok() { public_probe | grep -q '"app":"CopyForge"'; }
+
+purge_cache() {
+  for path in / /api/health /login; do
+    curl -sX PURGE -H "Host: $APP_HOST" "http://127.0.0.1:8080$path" >/dev/null 2>&1 || true
+  done
+}
+
+diagnose() {
+  log "DIAGNOSTICS — what each layer serves for /api/health:"
+  echo "== public (cache-busted): $(public_probe | head -c 300)"
+  for port in 8080 8081 8082 8083; do
+    echo "== 127.0.0.1:$port (Host: $APP_HOST): $(curl -fsS -m 8 -H "Host: $APP_HOST" "http://127.0.0.1:$port/api/health" 2>&1 | head -c 200)"
+  done
+  echo "== app direct :$WEB_PORT: $(curl -fsS -m 8 "http://127.0.0.1:$WEB_PORT/api/health" 2>&1 | head -c 200)"
+  echo "== webroot listing:"; ls -la "$WEBROOT" | head -15
 }
 
 # Mode A: Apache mod_proxy via .htaccess.
@@ -164,6 +185,7 @@ cat > "$WEBROOT/.htaccess" <<HT
   RewriteRule ^(.*)\$ http://127.0.0.1:$WEB_PORT/\$1 [P,L]
 </IfModule>
 HT
+purge_cache
 sleep 2
 if public_ok; then
   log "public URL OK via mod_proxy — deployment complete"
@@ -220,13 +242,14 @@ cat > "$WEBROOT/.htaccess" <<HT
   RewriteRule ^ index.php [L]
 </IfModule>
 HT
-# Best-effort cache purge so the old placeholder page stops serving.
-curl -sX PURGE "http://127.0.0.1:8080/" >/dev/null 2>&1 || true
+purge_cache
 sleep 3
 if public_ok; then
   log "public URL OK via PHP proxy — deployment complete"
   exit 0
 fi
+diagnose
 log "FATAL: public URL still not serving CopyForge after both proxy modes"
-log "check: Cloudways panel → Application Settings (Varnish OFF may help), then re-run"
+log "if the diagnostics above show CopyForge on a local port but not publicly:"
+log "Cloudways panel → this application → Application Settings → Varnish → Disable (or Purge), then re-run"
 exit 1

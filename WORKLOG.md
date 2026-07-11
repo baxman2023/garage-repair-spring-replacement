@@ -1453,3 +1453,54 @@ will call.
   refs (proof can live outside the profile, e.g. a URL).
 
 **Open questions:** none blocking.
+
+### WO-032 — Compliance pre-flight (G6)
+
+**Acceptance (restated):** Rule packs — FTC (testimonials/endorsements, earnings), health
+mode (disease-claims list), finance mode (earnings disclaimers required), Meta/Google
+ad-policy lint (personal attributes, before/after, sensational); per-asset report with
+line refs; required-disclaimer inserter; acknowledge-with-audit for lint warnings (never
+for strict-mode claim failures). Acceptance: rule packs unit-tested with fixture
+violations; strict modes fail closed.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **308 tests pass**
+(core +10, pipeline +4). Verified per pack with fixture violations: FTC earnings claim
+without typicality disclaimer (silenced by "results are not typical"), undisclosed
+testimonial, guaranteed-outcome ERROR; health-mode disease-claim ERROR ("cures diabetes")
+and diagnosis-language warning — and health rules do NOT run outside health mode; finance
+earnings-without-disclaimer ERROR (silenced by a disclaimer) and risk-free ERROR;
+ad-policy personal attributes / before-after / sensational warnings. Findings anchor to
+the carrying block id with the matched excerpt (line refs). Handler flow proven: health
+mode + one flagged claim → G6 fails CLOSED (`failClosed`, `acknowledgeable:false`), and
+after attaching proof the re-run passes → `packaging`; unacknowledged warnings block,
+`recordComplianceAck` (audited: actor + reason on `audit_log`) flips the re-run to pass;
+acknowledging an ERROR's key changes nothing; finance mode auto-inserts the required
+disclaimer as a locked new-version block — which itself satisfies the earnings-disclaimer
+rule.
+
+**Files touched:**
+- `packages/core/src/compliance.ts` (+ test): `COMPLIANCE_RULES` (regex config with
+  `unlessPresent` silencers), `packsForMode`, `runCompliancePacks`,
+  `REQUIRED_DISCLAIMERS`/`insertRequiredDisclaimer` (idempotent),
+  `evaluateCompliance` + finding keys (`ruleId:blockId`).
+- `packages/db/src/complianceStore.ts`: version-scoped acknowledgments on `audit_log`
+  (`compliance.acknowledge`) — a new version voids old acks by construction.
+- `packages/pipeline/src/compliance.ts` (+ test): `asset.compliance` handler —
+  claims-flag fail-closed → disclaimer inserter → packs → ack-aware verdict; pass →
+  `packaging`, fail stays in `compliance`. G5 pass now auto-enqueues G6.
+- Web `compliance` router (latest/run/acknowledge) + `/assets/[assetId]/compliance`
+  panel with per-finding checkboxes and the audited-reason field.
+- Fixed a latent sort-tie bug: consecutive gate reports within one second now tiebreak
+  by ULID (router + tests).
+
+**Decisions:**
+- **G6 is fully deterministic — zero AI calls.** A compliance gate must be reproducible
+  and auditable; regex packs are config to extend.
+- **Acks are per (rule, block) per VERSION** — regenerating invalidates acknowledgments
+  automatically; nobody inherits an old acknowledgment onto new copy.
+- **Fail leaves the asset in `compliance`** (like G4's fail posture): every failure mode
+  has a user action (prove claims, acknowledge, fix copy) followed by a re-run.
+- The disclaimer inserter runs BEFORE the packs so its own text can satisfy
+  disclaimer-required rules in the same pass.
+
+**Open questions:** none blocking.

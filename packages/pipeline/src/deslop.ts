@@ -13,6 +13,7 @@ import {
 } from '@copyforge/core';
 import { createClient, type ClientOptions } from '@copyforge/ai';
 import {
+  enqueueJob,
   getAsset,
   getCurrentAssetVersion,
   getCurrentProfile,
@@ -213,6 +214,11 @@ export function createDeslopHandler(
 
     if (verdict.pass) {
       await setAssetStatus(job.workspaceId, assetId, 'compliance');
+      await enqueueJob({
+        workspaceId: job.workspaceId,
+        type: JOB_TYPES.assetCompliance,
+        payload: { projectId, assetId, marketId },
+      });
     } else {
       await setAssetStatus(job.workspaceId, assetId, 'blocked');
     }

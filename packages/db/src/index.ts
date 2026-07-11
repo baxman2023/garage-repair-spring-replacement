@@ -127,6 +127,11 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  COMPLIANCE_ACK_ACTION,
+  recordComplianceAck,
+  listComplianceAckKeys,
+} from './complianceStore.js';
+export {
   insertFocusGroupRun,
   latestFocusGroupRun,
   type FocusGroupRunRow,

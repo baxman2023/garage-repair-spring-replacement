@@ -12,6 +12,22 @@ export {
   type BuildPlanStep,
 } from './buildPlan.js';
 export {
+  COMPLIANCE_RULES,
+  packsForMode,
+  runCompliancePacks,
+  REQUIRED_DISCLAIMERS,
+  hasRequiredDisclaimer,
+  insertRequiredDisclaimer,
+  evaluateCompliance,
+  complianceFindingKey,
+  type CompliancePack,
+  type ComplianceSeverity,
+  type ComplianceMode,
+  type ComplianceRule,
+  type ComplianceFinding,
+  type ComplianceVerdict,
+} from './compliance.js';
+export {
   claimSimilarity,
   rematchClaims,
   buildClaimsFlagReport,

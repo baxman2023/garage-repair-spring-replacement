@@ -16,7 +16,9 @@ import {
   createFocusGroupHandler,
   createFocusFixHandler,
   createDeslopHandler,
+  createComplianceHandler,
   createVocMineHandler,
+  ASSET_COMPLIANCE_JOB,
   ASSET_DESLOP_JOB,
   ASSET_FOCUS_GROUP_JOB,
   ASSET_FOCUS_FIX_JOB,
@@ -56,6 +58,7 @@ const handlers: HandlerRegistry = {
   [ASSET_FOCUS_GROUP_JOB]: createFocusGroupHandler(),
   [ASSET_FOCUS_FIX_JOB]: createFocusFixHandler(),
   [ASSET_DESLOP_JOB]: createDeslopHandler(),
+  [ASSET_COMPLIANCE_JOB]: createComplianceHandler(),
 };
 
 let shuttingDown = false;

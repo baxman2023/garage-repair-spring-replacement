@@ -147,6 +147,9 @@ export async function updateMarket(params: {
       const profile = {
         ...(row.profile as Record<string, unknown>),
         ...(params.profilePatch ?? {}),
+        // Keep the profile JSON's label in lockstep with the row label so
+        // snapshot hashes (G2) see row-level renames.
+        ...(params.label !== undefined ? { label: params.label } : {}),
         origin: 'user' as const,
       };
       await tx

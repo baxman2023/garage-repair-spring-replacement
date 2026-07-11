@@ -10,6 +10,7 @@ import { offersRouter } from './offers';
 import { funnelMathRouter } from './funnelMath';
 import { marketsRouter } from './markets';
 import { vocRouter } from './voc';
+import { strategyRouter } from './strategy';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -30,6 +31,7 @@ export const appRouter = router({
   funnelMath: funnelMathRouter,
   markets: marketsRouter,
   voc: vocRouter,
+  strategy: strategyRouter,
 });
 
 export type AppRouter = typeof appRouter;

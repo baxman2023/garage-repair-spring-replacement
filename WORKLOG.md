@@ -690,3 +690,39 @@ returns 0 for generic text.
   rates against the corpus without new plumbing.
 
 **Open questions:** none blocking.
+
+### WO-015 — Strategy Review (G2)
+
+**Acceptance (restated):** Side-by-side 5-market review screen (scores, diagnosis, VOC
+highlights); approve/regenerate per market; G2 record with snapshot hash. Fan-out
+unreachable until G2 approved; approval snapshot immutable.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **155 tests pass**
+(core +4 snapshot hashing, db +4 G2). Verified: `assertG2Approved` throws before approval
+and passes after; snapshot refuses non-5-market or undiagnosed slates; post-approval edits
+(profile re-diagnosis OR row-level label rename) flip status to **stale** and re-lock the
+fan-out; the stored snapshot's hash and content are untouched by later edits and by
+re-approval (old G2 report rows immutable, re-approval appends a new one).
+
+**Files touched:**
+- `packages/core/src/snapshot.ts` (+ test): `canonicalStringify` (key-order-invariant) +
+  `snapshotHash` (sha256).
+- `packages/db/src/strategyGate.ts` (+ test): `buildStrategySnapshot` (5 contract-valid
+  profiles or throw), `recordG2` (immutable report with hash+markets, sets project status
+  to `build`), `getG2Status` (approved/stale via hash comparison), `assertG2Approved` —
+  the fan-out lock WO-028 will call.
+- `packages/db/src/markets.ts`: `updateMarket` now syncs label edits into the profile JSON
+  so row-level renames move the snapshot hash (found via the G2 tests).
+- `apps/web`: `routers/strategy.ts` (review payload with per-market diagnosis + VOC
+  highlights; regenerateMarket; approve), `/projects/[id]/review` page + `ReviewPanel`
+  (5-up grid, G2 status banner incl. stale warning, approve button gated on full diagnosis).
+
+**Decisions:**
+- **Staleness semantics:** G2 approval is valid only while the *current* markets hash-match
+  the approved snapshot. Any market change re-locks the build until re-approval — the
+  strong reading of "approval snapshot immutable" + "fan-out unreachable until approved."
+- **Immutability by construction:** gate reports are insert-only; the snapshot (hash + full
+  profiles) is embedded in the report row, so later market edits cannot rewrite what was
+  approved. Verified in tests.
+
+**Open questions:** none blocking.

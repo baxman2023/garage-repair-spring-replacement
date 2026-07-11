@@ -3,6 +3,7 @@ export { newId, type Id } from './id.js';
 export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
+export { canonicalStringify, snapshotHash } from './snapshot.js';
 export { extractJsonObject } from './jsonExtract.js';
 export {
   computeFunnelMath,

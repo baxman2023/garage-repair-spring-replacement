@@ -30,6 +30,14 @@ export {
   type EngineCandidate,
 } from './markets.js';
 export {
+  buildStrategySnapshot,
+  recordG2,
+  getG2Status,
+  assertG2Approved,
+  type G2Snapshot,
+  type G2Status,
+} from './strategyGate.js';
+export {
   addVocSource,
   getVocSource,
   listVocSources,

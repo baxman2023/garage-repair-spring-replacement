@@ -47,8 +47,12 @@ export async function recordHarvestResult(params: {
   );
 }
 
-/** Manual trigger — always allowed. */
+/** Manual trigger — allowed unless the platform kill switch is off (WO-052). */
 export async function triggerHarvest(workspaceId: string, queryId: string): Promise<string> {
+  const { flagEnabled } = await import('./flagsStore.js');
+  if (!(await flagEnabled('harvester_enabled', true))) {
+    throw new Error('The harvester is disabled platform-wide (harvester_enabled).');
+  }
   const query = await getHarvestQuery(workspaceId, queryId);
   if (!query) throw new Error('Harvest query not found.');
   return enqueueJob({

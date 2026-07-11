@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { newId } from '@copyforge/core';
 import {
   claimNextJob,
@@ -12,7 +12,9 @@ import {
   jobRuns,
   jobs,
   reapStaleJobs,
+  resetPausedJobTypesCache,
   retryDelayMs,
+  setPausedJobTypes,
 } from './index.js';
 
 let dbUp = false;
@@ -159,5 +161,36 @@ describe('heartbeat + stale-claim reaper', () => {
     const job = await claimNextJob('owner');
     expect(await heartbeatJob(job!.id, 'owner')).toBe(true);
     expect(await heartbeatJob(job!.id, 'someone-else')).toBe(false);
+  });
+});
+
+describe('kill switch: paused job types (WO-052)', () => {
+  afterEach(async () => {
+    if (dbUp) await setPausedJobTypes([]);
+  });
+
+  it('the claim loop skips paused types and resumes when unpaused — no restart', async () => {
+    if (!dbUp) return;
+    const ws = newId();
+    const pausedId = await enqueueJob({ workspaceId: ws, type: 'pause.target', payload: {} });
+    const otherId = await enqueueJob({ workspaceId: ws, type: 'pause.other', payload: {} });
+
+    await setPausedJobTypes(['pause.target']);
+    resetPausedJobTypesCache();
+
+    // Only the unpaused job is claimable…
+    const first = await claimNextJob('kw1');
+    expect(first?.id).toBe(otherId);
+    await completeJob(first!.id, first!.jobRunId);
+    // …and the paused one is invisible, not failed.
+    expect(await claimNextJob('kw1')).toBeNull();
+    expect((await getDb().select().from(jobs).where(eq(jobs.id, pausedId)))[0]!.status).toBe('pending');
+
+    // Flipping the switch back releases it immediately.
+    await setPausedJobTypes([]);
+    resetPausedJobTypesCache();
+    const released = await claimNextJob('kw1');
+    expect(released?.id).toBe(pausedId);
+    await completeJob(released!.id, released!.jobRunId);
   });
 });

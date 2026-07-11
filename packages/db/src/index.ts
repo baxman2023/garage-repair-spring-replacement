@@ -150,6 +150,27 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  PAUSED_JOB_TYPES_FLAG,
+  getFlag,
+  flagEnabled,
+  setFlag,
+  listFlags,
+  setPausedJobTypes,
+  getEffectivePausedJobTypes,
+  pausedJobTypesCached,
+  resetPausedJobTypesCache,
+  type FlagRow,
+} from './flagsStore.js';
+export {
+  adminSearchUsers,
+  adminSearchWorkspaces,
+  adminSearchLicenses,
+  adminListModelRoutes,
+  adminUpdateModelRoute,
+  adminUsageOverview,
+  type AdminUsageRow,
+} from './adminStore.js';
+export {
   REFUND_GRACE_DAYS,
   processStripeWebhook,
   reapLapsedSubscriptions,

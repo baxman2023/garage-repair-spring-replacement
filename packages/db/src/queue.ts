@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, lt, lte, notInArray, or, sql } from 'drizzle-orm';
 import { newId } from '@copyforge/core';
 import { getDb } from './client.js';
 import { jobRuns, jobs } from './schema/index.js';
@@ -73,6 +73,15 @@ export interface ClaimedJob {
  */
 export async function claimNextJob(workerId: string): Promise<ClaimedJob | null> {
   const db = getDb();
+  // Kill switches (WO-052): paused types are invisible to the claim loop.
+  // Cached (5s), so a flag flip takes effect without a deploy or restart.
+  const { pausedJobTypesCached } = await import('./flagsStore.js');
+  const paused = await pausedJobTypesCached();
+  const pausedFilter =
+    paused.length > 0
+      ? sql` AND j.type NOT IN (${sql.join(paused.map((t) => sql`${t}`), sql`, `)})`
+      : sql``;
+
   return db.transaction(async (tx) => {
     // 1. Least-recently-served workspace with a ready pending job.
     //    NULL last_served (never served) sorts first.
@@ -83,7 +92,7 @@ export async function claimNextJob(workerId: string): Promise<ClaimedJob | null>
         SELECT workspace_id, MAX(heartbeat_at) AS last_served
         FROM jobs GROUP BY workspace_id
       ) s ON s.workspace_id = j.workspace_id
-      WHERE j.status = 'pending' AND (j.run_after IS NULL OR j.run_after <= NOW())
+      WHERE j.status = 'pending' AND (j.run_after IS NULL OR j.run_after <= NOW())${pausedFilter}
       GROUP BY j.workspace_id, s.last_served
       ORDER BY (s.last_served IS NOT NULL) ASC, s.last_served ASC, MIN(j.created_at) ASC
       LIMIT 1
@@ -105,6 +114,7 @@ export async function claimNextJob(workerId: string): Promise<ClaimedJob | null>
           eq(jobs.workspaceId, workspaceId),
           eq(jobs.status, 'pending'),
           or(isNull(jobs.runAfter), lte(jobs.runAfter, new Date())),
+          ...(paused.length > 0 ? [notInArray(jobs.type, paused)] : []),
         ),
       )
       .orderBy(desc(jobs.priority), asc(jobs.createdAt))

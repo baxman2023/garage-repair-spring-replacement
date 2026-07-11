@@ -2391,3 +2391,59 @@ route + signature path is exactly what `stripe listen` will hit.
 
 **Open questions:** Stripe test-mode click-through pending user sign-off (needs
 real STRIPE_* keys; noted as a launch-checklist item for WO-056).
+
+### WO-052 — Admin panel
+
+**Acceptance (restated):** Platform-owner role behind a separate auth guard;
+users/workspaces/licenses search; prompt registry management; model_routes editor;
+feature flags; kill switches (pause worker types, disable harvester, disable
+signups); usage overview across workspaces (counts + token totals, never content).
+Acceptance: admin routes inaccessible to normal owners; kill switches take effect
+without deploy.
+
+**Done.** The `admin` router sits entirely behind the pre-existing `adminProcedure`
+(users.isPlatformAdmin — a platform role no workspace owner holds; the WO-008
+prompt-registry router was already behind the same guard and the acceptance test
+covers it too). Surfaces: cross-workspace search over users/workspaces/licenses
+(LIKE-escaped, license keys masked even for admins), admin license issue/revoke,
+feature-flag toggles, model_routes editor (primary model, max tokens, active), and
+the usage overview — per-workspace call counts, input/cache-read/output token
+totals, estimated cost, pending/failed job counts. No content column is selected
+anywhere in the aggregate. `/admin` page renders all four sections (prompts keep
+their own page) and refuses non-admins server-side.
+
+Kill switches are DB reads at decision time — no deploy, no restart:
+- **Pause worker types**: `paused_job_types` flag (surgical list) plus the
+  `worker_generation_enabled` master switch, which expands to every
+  token-spending job type (GENERATION_JOB_TYPES in core) while deterministic
+  gates (compliance, package, resolver…) keep running. `claimNextJob` filters
+  both its workspace-selection SQL and the row claim through a 5-second-cached
+  pause set — tested: paused job invisible (stays pending, not failed), sibling
+  types claim normally, unpausing releases it immediately.
+- **Disable harvester**: `triggerHarvest` (and therefore scheduled runs, which
+  call through it) refuses when `harvester_enabled` is off.
+- **Disable signups**: `requestMagicLink` returns the same-shaped response but
+  issues no token and creates no account for unknown emails when
+  `signups_enabled` is off; existing users keep signing in (no enumeration).
+
+Acceptance verified: a tRPC caller with a normal owner identity gets
+"Platform administrators only" on every admin route (flags/search/usage/model
+routes/setFlag/prompts); an admin caller passes. All three switches tested
+flipping live against the DB.
+
+**Files touched:**
+- `packages/core/src/jobs.ts`: `GENERATION_JOB_TYPES`.
+- `packages/db/src/flagsStore.ts` (+ test): flag CRUD, pause set,
+  5s claim-path cache; `adminStore.ts`: searches, model-route editor, usage
+  aggregate; `queue.ts`: pause filter in `claimNextJob`; harvest.ts + web auth
+  service: switch consumers.
+- Web: `admin` router (+ acceptance test with a real appRouter caller),
+  `/admin` page + panel.
+
+**Decisions:**
+- Kill switches live in `feature_flags` rather than env so they flip at runtime;
+  the claim path caches the pause set for 5s to keep the hot loop at ~zero cost.
+- The signups switch blocks at link-request time (not verify time) so disabled
+  signups never even send an email — and responses stay constant-shape.
+
+**Open questions:** none blocking.

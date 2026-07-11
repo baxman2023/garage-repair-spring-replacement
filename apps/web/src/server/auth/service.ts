@@ -36,6 +36,15 @@ function defaultWorkspaceName(email: string): string {
 export async function requestMagicLink(rawEmail: string, next?: string): Promise<{ link: string }> {
   const db = getDb();
   const email = normalizeEmail(rawEmail);
+
+  // Kill switch (WO-052): signups off → no link for UNKNOWN emails. Existing
+  // users keep signing in; the response stays identical (no enumeration).
+  const { flagEnabled } = await import('@copyforge/db');
+  if (!(await flagEnabled('signups_enabled', true))) {
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
+    if (!existing[0]) return { link: '' };
+  }
+
   const raw = generateRawToken();
   await db.insert(authTokens).values({
     id: newId(),

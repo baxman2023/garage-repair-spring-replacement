@@ -11,6 +11,8 @@ export const JOB_TYPES = {
   genomeDecompose: 'genome.decompose',
   genomeHarvest: 'genome.harvest',
   assetRegenBlock: 'asset.regen_block',
+  assetGenerate: 'asset.generate',
+  assetCouncil: 'asset.council',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

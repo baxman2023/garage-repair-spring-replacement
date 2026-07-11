@@ -41,6 +41,8 @@ export {
   recordAssetGate,
   setAssetStatus,
   transitionAssetStatus,
+  insertClaims,
+  listClaims,
   type AssetRow,
   type AssetVersionRow,
   type CouncilReviewRow,

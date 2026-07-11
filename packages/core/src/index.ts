@@ -70,6 +70,17 @@ export {
   type ScoreDimension,
 } from './contracts/market.js';
 export {
+  BLOCK_ROLES,
+  generatedBlockSchema,
+  generatedBlocksSchema,
+  parseGeneratedBlocks,
+  extractedClaimsSchema,
+  parseExtractedClaims,
+  TARGET_LENGTHS,
+  type BlockRole,
+  type GeneratedBlocks,
+} from './contracts/assetBlocks.js';
+export {
   GENOME_COMPONENT_TYPES as GENOME_TYPES,
   genomeComponentSchema,
   parseGenomeDecomposition,

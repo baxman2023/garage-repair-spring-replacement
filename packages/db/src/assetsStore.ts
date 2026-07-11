@@ -202,3 +202,30 @@ export async function setAssetStatus(
 ): Promise<void> {
   await transitionAssetStatus({ workspaceId, assetId, to: status as AssetStatus });
 }
+
+// --- Claims (WO-022 / WO-031) -------------------------------------------------
+
+export async function insertClaims(params: {
+  workspaceId: string;
+  assetId: string;
+  assetVersionId: string;
+  claims: Array<{ text: string; proofRef?: string; status?: 'proven' | 'flagged' }>;
+}): Promise<number> {
+  const { claims } = await import('./schema/index.js');
+  const db = tenantDb(params.workspaceId);
+  for (const c of params.claims) {
+    await db.insert(claims, {
+      assetId: params.assetId,
+      assetVersionId: params.assetVersionId,
+      text: c.text,
+      proofRef: c.proofRef || null,
+      status: c.status ?? (c.proofRef ? 'proven' : 'flagged'),
+    });
+  }
+  return params.claims.length;
+}
+
+export async function listClaims(workspaceId: string, assetId: string) {
+  const { claims } = await import('./schema/index.js');
+  return tenantDb(workspaceId).findMany(claims, eq(claims.assetId, assetId));
+}

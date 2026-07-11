@@ -1010,3 +1010,49 @@ reached).
   content. 5/5 stable runs after.
 
 **Open questions:** none blocking.
+
+### WO-022 — Generator: long-form sales letter
+
+**Acceptance (restated):** Structure selector (PAS | star-story-solution | 4Ps); Bencivenga
+bullet engine from VOC + proof; mechanism section using the profile's mechanism names;
+offer/close from the approved offer; target lengths config; consumes market + genome cache
+blocks. Contract-valid blocks; every claim registered to `claims`; enters G3 automatically.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **203 tests pass**
+(pipeline +3). Verified: generation produces contract-valid blocks (roles from the §4
+enum, unique ids) on an asset with the prompt version **pinned**; both extracted claims
+registered (proof-matched → `proven`, naked → `flagged`); an `asset.council` job enqueued
+for the new asset (auto-G3); the §1.2 stack rides as three cached system blocks (genome →
+market+VOC → generator prompt) with offer/profile/structure in the dynamic block; the
+structure selector defaults `pas` for a problem-aware market and honors an explicit `4ps`;
+the letter demonstrably quotes VOC at rate 1.0 via the WO-014 harness; an undiagnosed
+market refuses generation before any model call.
+
+**Files touched:**
+- `packages/core/src/contracts/assetBlocks.ts`: §4 block-role contract
+  (`parseGeneratedBlocks`), claims-extraction contract, `TARGET_LENGTHS` config.
+- `packages/db/assetsStore.ts`: `insertClaims` (auto proven/flagged by proof ref) +
+  `listClaims`.
+- `packages/pipeline/src/generators/context.ts`: `buildGenerationContext` — the shared
+  §1.2 cache-block builder (genome retrieval → block; strict market profile block; VOC
+  corpus block) all WO-023–027 generators will reuse.
+- `packages/pipeline/src/generators/salesLetter.ts`: the generator (structure defaulting
+  by awareness, prompt-pinned asset creation, claims registration, auto-council enqueue).
+- `packages/pipeline/src/generate.ts` (`asset.generate` dispatcher — one job type, typed
+  payload; generators register per WO) + `councilJob.ts` (`asset.council` — runs the
+  WO-020 runner with a strictly-built market block); both registered in the worker.
+- Seeds: `generate.sales_letter` v1 (structure beats, Bencivenga bullet rules, mechanism-
+  name fidelity, offer mirroring, no-invention, readability + AI-tell guardrails) and
+  `claims.extract` v1 (haiku claims inventory with proof-ref matching).
+
+**Decisions:**
+- **One `asset.generate` job type dispatching by `assetType`** keeps the worker registry
+  and fan-out orchestration (WO-028) simple; each WO adds a generator function, not a new
+  queue plumbing path.
+- **G3 entry is a queued job**, not inline — matches the fan-out ordering/cache design and
+  makes generation resumable (WO-028 kill/resume requirement).
+- **Claims registration is part of generation** (same job): version saved → haiku
+  extraction → claims rows; proof-matched claims start `proven`, naked ones `flagged` —
+  feeding WO-031's inventory.
+
+**Open questions:** none blocking.

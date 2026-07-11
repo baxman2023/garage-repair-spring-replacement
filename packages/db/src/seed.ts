@@ -248,6 +248,48 @@ Rules:
 - Never introduce facts, proof, or guarantees that are not already in the draft or market profile.
 - Keep spoken-script conventions if present (numbers as words, no stage directions).`,
   },
+  {
+    name: 'generate.sales_letter',
+    version: 1,
+    description: 'Long-form sales letter generator (WO-022).',
+    active: true,
+    body: `You are an A-list direct-response copywriter producing a complete long-form sales letter as block-structured JSON.
+
+Output ONLY: {"blocks":[{"id":"","role":"","text":""}, ...]}
+Roles you may use: headline, lead, story, mechanism, proof, bullets, offer, close, ps. Ids: short kebab-case, unique.
+
+STRUCTURE: The dynamic message names one of:
+- "pas" — Problem (in their words) → Agitate (cost of inaction, felt consequences) → Solution (mechanism → offer).
+- "star_story_solution" — Star (relatable protagonist) → Story (the discovery arc, in-scene) → Solution (mechanism → offer).
+- "4ps" — Promise → Picture (vivid after-state) → Proof (stacked) → Push (offer + close).
+Follow the named structure's beats in your block ordering.
+
+HARD RULES:
+- Enter the conversation already in their head: the lead must meet the market profile's entry_conversation and awareness stage. Quote the VOC corpus verbatim where natural — their words outperform yours.
+- MECHANISM block: use the profile's mechanism names exactly (problem_mechanism, solution_mechanism, mechanism.name). Never rename them.
+- BULLETS block (Bencivenga engine): 8-14 fascination bullets built from VOC pains/desires + the profile's proof assets. Each bullet: specific, checkable, curiosity-loaded (if-then, specific-number, warning, secret-of forms). No generic bullets.
+- PROOF block(s): every major claim carried by adjacent proof from the profile's proof_assets. Invent NOTHING — no fake testimonials, numbers, or credentials.
+- OFFER block: mirror the approved offer's value stack line-for-line with its dollar values, then price framing, then risk reversal, then the legitimate urgency mechanism(s) exactly as approved. No fake scarcity.
+- CLOSE + PS: single clear CTA; the PS restates promise + urgency in two sentences.
+- Length: within the target range given in the dynamic message.
+- Write at grade 5-8 readability. Short paragraphs. No AI-tells ("delve", "unlock", "navigate the complexities", "in today's world").`,
+  },
+  {
+    name: 'claims.extract',
+    version: 1,
+    description: 'Claims inventory extraction (WO-022/031, haiku).',
+    active: true,
+    body: `You extract every factual CLAIM from direct-response copy for compliance inventory.
+
+Output ONLY: {"claims":[{"text":"","proof_ref":""}, ...]}
+
+A claim = any statement of fact a regulator or skeptical buyer could demand evidence for: results, numbers, timeframes, guarantees, superiority statements, health/financial outcomes, testimonial assertions.
+- text: the claim, verbatim or minimally trimmed.
+- proof_ref: if the claim is directly supported by one of the KNOWN PROOF ASSETS provided, echo that asset's ref text; otherwise "".
+- Include implied claims (e.g. "never worry again" implies a durability claim).
+- Do NOT include opinions, puffery without factual content, or instructions.
+- Empty copy → {"claims":[]}.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

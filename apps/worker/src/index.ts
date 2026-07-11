@@ -10,10 +10,14 @@ import {
   createGenomeDecomposeHandler,
   createHarvestHandler,
   createRegenBlockHandler,
+  createGenerateHandler,
+  createCouncilJobHandler,
   createVocMineHandler,
   GENOME_DECOMPOSE_JOB,
   GENOME_HARVEST_JOB,
   ASSET_REGEN_BLOCK_JOB,
+  ASSET_GENERATE_JOB,
+  ASSET_COUNCIL_JOB,
   INTAKE_EXTRACT_JOB,
   MARKET_PROFILE_JOB,
   MARKET_SELECT_JOB,
@@ -38,6 +42,8 @@ const handlers: HandlerRegistry = {
   [GENOME_DECOMPOSE_JOB]: createGenomeDecomposeHandler(),
   [GENOME_HARVEST_JOB]: createHarvestHandler(),
   [ASSET_REGEN_BLOCK_JOB]: createRegenBlockHandler(),
+  [ASSET_GENERATE_JOB]: createGenerateHandler(),
+  [ASSET_COUNCIL_JOB]: createCouncilJobHandler(),
 };
 
 let shuttingDown = false;

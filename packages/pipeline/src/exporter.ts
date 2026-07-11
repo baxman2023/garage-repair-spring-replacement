@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import {
+  COMMERCIAL_RIGHTS_STATEMENT,
   contentChecksum,
   parsePageBuildPackage,
   renderAssetFiles,
@@ -112,6 +113,8 @@ export async function exportMarketZip(params: {
     schema_version: '1',
     project: params.projectId,
     market: params.marketId,
+    // WO-055 acceptance: the rights statement ships in EVERY export manifest.
+    rights: COMMERCIAL_RIGHTS_STATEMENT,
     packages,
     files: manifestFiles,
   };

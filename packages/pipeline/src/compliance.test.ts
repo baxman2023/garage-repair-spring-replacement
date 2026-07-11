@@ -91,7 +91,9 @@ describe('compliance pre-flight — G6 (WO-032)', () => {
 
     const report = await latestG6(workspaceId, assetId);
     expect(report!.pass).toBe(false);
-    const detail = report!.report as { failClosed: boolean; acknowledgeable: boolean; reason: string };
+    const detail = report!.report as { failClosed: boolean; acknowledgeable: boolean; reason: string; disclaimer: string };
+    // WO-055: the assistive-not-legal-advice disclaimer rides every G6 report.
+    expect(detail.disclaimer).toMatch(/assistive tool, not legal advice/);
     expect(detail.failClosed).toBe(true);
     expect(detail.acknowledgeable).toBe(false);
     expect(detail.reason).toMatch(/1 unresolved flagged claim/);

@@ -2535,3 +2535,39 @@ present and always points somewhere.
 **Open questions:** the human walkthrough of the guided path (like WO-042's UX
 sign-off) is a user action; the mechanical acceptance (guidance → G2 on a fixture
 product) is test-verified.
+
+### WO-055 — Legal & rights
+
+**Acceptance (restated):** ToS with BYO-key terms (their key, their cost, our
+encryption duty); explicit commercial-rights statement — buyer owns generated copy
+outright, no watermarks anywhere in exports; privacy policy; compliance-tool
+disclaimer (assistive, not legal advice) surfaced on G6 reports; footer links wired.
+Acceptance: rights statement appears in ToS AND in every export ZIP manifest.
+
+**Done.** One source of truth: `packages/core/src/legal.ts` defines
+`COMMERCIAL_RIGHTS_STATEMENT` ("You own the copy CopyForge generates… no license,
+royalty, or attribution, and places no watermarks in any export."),
+`COMPLIANCE_DISCLAIMER` ("assistive tool, not legal advice…"), and `BYO_KEY_TERMS`
+(their key/their cost/AES-256-GCM/never logged/never displayed). The SAME constants
+render in `/legal/terms` (sections: per-named-user license, BYO key, commercial
+rights, compliance disclaimer, your content, refunds+7-day grace, warranty cap) and
+ship as `manifest.rights` in every export ZIP — the acceptance test asserts the
+manifest field equals the constant verbatim AND that no exported file matches any
+watermark pattern (generated-by/powered-by/copyforge.com). Both G6 report shapes
+(fail-closed and rule-pack verdicts) now carry `disclaimer`, asserted in the
+compliance test, and the CompliancePanel prints it under every report. Privacy
+policy at `/legal/privacy` (what we store, what we never do, event data ownership,
+processors, deletion). Root layout footer links Terms · Privacy · Docs · Sample
+funnel, with the one-line rights summary.
+
+**Files touched:** `packages/core/src/legal.ts`; exporter manifest + test;
+pipeline compliance reports + test; CompliancePanel; `/legal/terms`,
+`/legal/privacy`; root layout footer.
+
+**Decisions:**
+- Legal language lives in core as constants, not prose duplicated per surface —
+  the ToS section and the manifest can never diverge because they are the same
+  string.
+
+**Open questions:** none blocking. (Jurisdiction-specific counsel review of the
+ToS/privacy text is a business action, not a build task.)

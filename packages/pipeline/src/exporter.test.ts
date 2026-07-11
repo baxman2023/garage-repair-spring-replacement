@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { newId, readStoreZip, contentChecksum, type AssetBlock } from '@copyforge/core';
+import {
+  COMMERCIAL_RIGHTS_STATEMENT, newId, readStoreZip, contentChecksum, type AssetBlock } from '@copyforge/core';
 import { storeWorkspaceKey } from '@copyforge/ai';
 import {
   applyEngineCandidates,
@@ -154,11 +155,22 @@ describe('export renderer — files (WO-036)', () => {
     const entries = readStoreZip(bytes);
     const manifest = JSON.parse(new TextDecoder().decode(entries.get('manifest.json')!)) as {
       market: string;
+      rights: string;
       packages: Array<{ asset: string; checksum: string }>;
       files: Array<{ name: string; checksum: string }>;
     };
     expect(manifest.market).toBe(marketId);
     expect(manifest.packages).toHaveLength(2);
+    // WO-055 acceptance: the commercial-rights statement ships in EVERY export
+    // manifest — and no export file carries a watermark.
+    expect(manifest.rights).toBe(COMMERCIAL_RIGHTS_STATEMENT);
+    expect(manifest.rights).toContain('You own the copy');
+    const decoder = new TextDecoder();
+    for (const [name, data] of entries) {
+      if (name === 'manifest.json') continue;
+      const text = decoder.decode(data);
+      expect(text).not.toMatch(/generated (by|with) copyforge|powered by copyforge|copyforge\.com/i);
+    }
     // Every manifest checksum matches the actual zipped bytes.
     for (const file of manifest.files) {
       const data = entries.get(file.name)!;

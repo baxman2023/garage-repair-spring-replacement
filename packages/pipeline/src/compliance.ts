@@ -1,4 +1,5 @@
 import {
+  COMPLIANCE_DISCLAIMER,
   buildClaimsFlagReport,
   evaluateCompliance,
   insertRequiredDisclaimer,
@@ -65,6 +66,7 @@ export function createComplianceHandler() {
         pass: false,
         report: {
           mode,
+          disclaimer: COMPLIANCE_DISCLAIMER,
           failClosed: true,
           acknowledgeable: false,
           reason: `${flagReport.flagged} unresolved flagged claim(s) in ${mode} mode`,
@@ -102,6 +104,7 @@ export function createComplianceHandler() {
       pass: verdict.pass,
       report: {
         mode,
+        disclaimer: COMPLIANCE_DISCLAIMER,
         flagReport,
         disclaimerInserted: inserted,
         versionId: version.id,

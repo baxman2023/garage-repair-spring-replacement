@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { COMPLIANCE_DISCLAIMER } from '@copyforge/core';
 import { trpc } from '@/trpc/react';
 
 const box = {
@@ -96,6 +97,10 @@ export function CompliancePanel({ assetId }: { assetId: string }) {
           <span style={{ color: '#f0c674' }}>required disclaimer auto-inserted</span>
         )}
       </section>
+
+      {latest.data?.report && (
+        <p style={{ color: 'var(--muted)', fontSize: 12, margin: 0 }}>{COMPLIANCE_DISCLAIMER}</p>
+      )}
 
       {detail?.failClosed && (
         <section style={{ ...box, color: 'salmon' }}>

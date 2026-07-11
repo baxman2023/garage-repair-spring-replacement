@@ -19,6 +19,7 @@ export const JOB_TYPES = {
   assetCompliance: 'asset.compliance',
   assetPackage: 'asset.package',
   quizGenerate: 'quiz.generate',
+  webhookDeliver: 'webhook.deliver',
   buildStep: 'build.step',
 } as const;
 

@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
+    "playwright-core": "^1.61.1",
     "vitest": "^3.0.2"
   }
 }

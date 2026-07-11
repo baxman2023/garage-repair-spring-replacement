@@ -126,6 +126,16 @@ export {
   type CreatePromptVersionInput,
   type ResolvePromptOptions,
 } from './prompts.js';
+export { recordEvent, type EventType } from './eventsStore.js';
+export {
+  definitionOf,
+  publicQuizView,
+  startQuizSession,
+  recordQuizAnswer,
+  completeQuizSession,
+  quizFunnelMetrics,
+  type QuizCompletion,
+} from './quizRuntime.js';
 export {
   saveQuizDefinition,
   getQuizForProject,

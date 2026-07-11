@@ -2,10 +2,12 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
 import {
+  env,
   JOB_TYPES,
   quizBandSchema,
   quizQuestionSchema,
   quizScoringSchema,
+  renderQuizEmbedHtml,
   simulateRouting,
   validateQuizDefinition,
   type QuizBand,
@@ -18,6 +20,8 @@ import {
   getQuizForProject,
   listMarkets,
   projects,
+  publicQuizView,
+  quizFunnelMetrics,
   updateQuizDefinition,
   type TenantDb,
 } from '@copyforge/db';
@@ -115,4 +119,24 @@ export const quizRouter = router({
       });
       return { simulation: simulateRouting(merged, 1000) };
     }),
+
+  /** Deploy surface (WO-040): hosted link, single-file embed, funnel metrics. */
+  deploy: workspaceProcedure.input(projectScoped).query(async ({ ctx, input }) => {
+    await assertProject(ctx.db, input.projectId);
+    const row = await getQuizForProject(ctx.workspaceId, input.projectId);
+    if (!row) throw new TRPCError({ code: 'NOT_FOUND', message: 'No quiz yet — generate one first.' });
+    const origin = new URL(env.APP_URL).origin;
+    const view = publicQuizView(row);
+    return {
+      hostedUrl: `${origin}/q/${row.slug}`,
+      singleFileHtml: renderQuizEmbedHtml({
+        slug: row.slug,
+        questions: view.questions,
+        leadCapture: view.lead_capture,
+        apiBase: origin,
+      }),
+      webhookUrl: row.webhookUrl,
+      metrics: await quizFunnelMetrics(ctx.workspaceId, row.id),
+    };
+  }),
 });

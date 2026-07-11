@@ -21,6 +21,11 @@ export {
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
 export {
+  renderQuizEmbedHtml,
+  type QuizEmbedInputs,
+  type PublicQuizQuestion,
+} from './quizEmbed.js';
+export {
   QUIZ_SCHEMA_VERSION,
   MIN_ROUTING_QUESTIONS,
   MAX_ROUTING_QUESTIONS,

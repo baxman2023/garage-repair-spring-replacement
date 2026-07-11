@@ -20,9 +20,11 @@ import {
   createPackageHandler,
   createQuizGenerateHandler,
   createVocMineHandler,
+  createWebhookHandler,
   ASSET_COMPLIANCE_JOB,
   ASSET_PACKAGE_JOB,
   QUIZ_GENERATE_JOB,
+  WEBHOOK_DELIVER_JOB,
   ASSET_DESLOP_JOB,
   ASSET_FOCUS_GROUP_JOB,
   ASSET_FOCUS_FIX_JOB,
@@ -65,6 +67,7 @@ const handlers: HandlerRegistry = {
   [ASSET_COMPLIANCE_JOB]: createComplianceHandler(),
   [ASSET_PACKAGE_JOB]: createPackageHandler(),
   [QUIZ_GENERATE_JOB]: createQuizGenerateHandler(),
+  [WEBHOOK_DELIVER_JOB]: createWebhookHandler(),
 };
 
 let shuttingDown = false;

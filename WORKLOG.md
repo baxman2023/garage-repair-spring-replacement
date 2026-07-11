@@ -1808,3 +1808,55 @@ readout.
   documented here for posterity).
 
 **Open questions:** none blocking.
+
+### WO-040 — Quiz runtime
+
+**Acceptance (restated):** (a) hosted Next.js `/q/[slug]` — one question per screen,
+progress bar, mobile-first; (b) embeddable SINGLE-FILE HTML export (self-contained,
+posts to the hosted API); sessions/answers/leads persistence; routed inline render of
+market-variant results; CRM webhook out (configurable URL, payload = lead + band +
+answers); ledger events (quiz_start/complete/optin). Acceptance: single-file export runs
+from file:// and third-party pages; session funnel metrics recorded; webhook retries
+with backoff.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **358 tests pass**
+(core +3 incl. a REAL-BROWSER acceptance test, db +3, pipeline +3). The file://
+acceptance runs headless Chromium (playwright-core devDep + the preinstalled browser)
+against the generated single file at 375px: question 1 renders with zero network
+(questions are embedded; only weights/disqualify stay server-side), answering advances
+one-question-per-screen with the progress bar, and the lead-capture step appears between
+the last question and results. Structural test proves self-containment: inline CSS/JS,
+no external src/href/@import/url(), the only absolute URL is the API base. Runtime flow
+proven end-to-end in the db test: start (idempotent per sessionRef, deduped quiz_start
+event) → answers (invalid options rejected) → complete → lead routed to the right
+market band with results copy, `quiz_complete` + `optin` events, and the CRM webhook job
+queued with lead+band+answers payload; the disqualified path returns
+decline-with-dignity, tags the lead, and shows in funnel metrics
+(starts/completes/optins/disqualified). Webhook delivery throws on non-2xx so the
+queue's exponential backoff (WO-007) IS the retry mechanism (maxAttempts 6). Offline
+embeds backfill answers at completion (validated against the definition).
+
+**Files touched:**
+- `packages/db/src/eventsStore.ts`: replay-safe `recordEvent` (unique dedupe_key,
+  duplicates collapse silently) — WO-043 builds on this.
+- `packages/db/src/quizRuntime.ts` (+ test): sessions/answers/completion with
+  server-side scoring, lead + events + webhook enqueue, `publicQuizView` (weights and
+  disqualify flags NEVER leave the server — asserted), `quizFunnelMetrics`.
+- `packages/core/src/quizEmbed.ts` (+ tests): the single-file embed renderer.
+- `packages/pipeline/src/webhook.ts` (+ test): `webhook.deliver` handler (injectable
+  fetcher); worker registration.
+- Web: public CORS'd API routes `/api/quiz/[slug]/{start,answer,complete}` (embeds run
+  from any origin), public hosted page `/q/[slug]` with the mobile-first runtime,
+  `quiz.deploy` tRPC (hosted URL + downloadable single-file HTML + metrics).
+
+**Decisions:**
+- **Scoring is exclusively server-side** — the embed carries only question/option text;
+  weights and disqualification logic are not inspectable client-side.
+- **Rendering never blocks on the network**: the session starts fire-and-forget and
+  answers backfill at completion, which is what makes true file:// operation possible.
+- **Webhook retries ARE the job queue** — no second retry mechanism to maintain; a
+  non-2xx throws and the queue backs off exponentially to max attempts.
+- playwright-core added as a devDependency (test-only) to drive the preinstalled
+  Chromium for the acceptance test.
+
+**Open questions:** none blocking.

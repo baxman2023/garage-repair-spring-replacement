@@ -1,6 +1,6 @@
 import { assertEnv } from '@copyforge/core';
 import { installConsoleRedaction } from '@copyforge/ai';
-import { closePool, enqueueDueNightlyLearning } from '@copyforge/db';
+import { closePool, enqueueDueNightlyLearning, reapLapsedSubscriptions } from '@copyforge/db';
 import { runWorker, type HandlerRegistry } from './worker.js';
 import {
   createIntakeHandler,
@@ -106,6 +106,11 @@ async function main(): Promise<void> {
   const nightlySweep = setInterval(() => {
     enqueueDueNightlyLearning().catch((err) =>
       console.error('[worker] nightly learning sweep failed', err),
+    );
+    // Entitlement safety net (WO-051): lapsed subscriptions flip inactive
+    // well within a day even if Stripe's webhook never arrives.
+    reapLapsedSubscriptions().catch((err) =>
+      console.error('[worker] subscription reaper failed', err),
     );
   }, 15 * 60 * 1000);
 

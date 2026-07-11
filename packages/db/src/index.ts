@@ -150,6 +150,15 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  REFUND_GRACE_DAYS,
+  processStripeWebhook,
+  reapLapsedSubscriptions,
+  listReceipts,
+  subscriptionStatus,
+  type StripeEventPayload,
+  type WebhookOutcome,
+} from './billingStore.js';
+export {
   SEAT_PRICE_USD,
   UPSELL_MESSAGE,
   SEATS_FULL_MESSAGE,

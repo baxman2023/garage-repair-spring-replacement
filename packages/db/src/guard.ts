@@ -5,6 +5,7 @@ import { getDb } from './client.js';
 import {
   apiKeys,
   autopsies,
+  billingReceipts,
   campaignMarketMaps,
   eventTriage,
   harvestQueries,
@@ -106,6 +107,7 @@ export const TENANT_TABLES = [
   eventTriage,
   campaignMarketMaps,
   autopsies,
+  billingReceipts,
 ] as const;
 
 /**
@@ -148,6 +150,7 @@ export const TENANT_TABLE_NAMES: readonly string[] = [
   'eventTriage',
   'campaignMarketMaps',
   'autopsies',
+  'billingReceipts',
 ];
 
 /**

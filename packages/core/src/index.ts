@@ -4,6 +4,16 @@ export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export {
+  parseStripeSignatureHeader,
+  verifyStripeSignature,
+  signStripePayload,
+  buildLicenseCheckoutParams,
+  buildGenomeFeedCheckoutParams,
+  encodeStripeForm,
+  type CheckoutParams,
+  type StripeSignatureHeader,
+} from './stripe.js';
+export {
   AUTOPSY_PAGE_KINDS,
   autopsyIntakeSchema,
   autopsyPageSchema,

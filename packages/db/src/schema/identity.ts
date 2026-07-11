@@ -62,6 +62,8 @@ export const licenses = mysqlTable(
     type: mysqlEnum('type', LICENSE_TYPES).notNull().default('standard'),
     seats: int('seats').notNull().default(1),
     expiresAt: timestamp('expires_at'),
+    // Stripe linkage (WO-051): lets a refund find its license.
+    stripePaymentIntentId: varchar('stripe_payment_intent_id', { length: 255 }),
     ...timestamps(),
   },
   (t) => [
@@ -98,6 +100,24 @@ export const subscriptions = mysqlTable(
     ...timestamps(),
   },
   (t) => [index('subscriptions_ws_idx').on(t.workspaceId)],
+);
+
+/** Receipts/invoices surfaced in-app (WO-051). Tenant-scoped. */
+export const billingReceipts = mysqlTable(
+  'billing_receipts',
+  {
+    id: idColumn(),
+    workspaceId: ulidRef('workspace_id').notNull(),
+    kind: mysqlEnum('kind', ['license', 'subscription', 'refund'] as const).notNull(),
+    stripeRef: varchar('stripe_ref', { length: 255 }).notNull(),
+    amountCents: int('amount_cents').notNull().default(0),
+    currency: varchar('currency', { length: 8 }).notNull().default('usd'),
+    description: varchar('description', { length: 512 }).notNull(),
+    // Stripe-hosted receipt/invoice URL, when the event carried one.
+    url: varchar('url', { length: 1024 }),
+    ...timestamps(),
+  },
+  (t) => [index('billing_receipts_ws_idx').on(t.workspaceId)],
 );
 
 export const stripeEvents = mysqlTable(

@@ -52,6 +52,7 @@ const entries: Entry[] = [
   { label: 'eventTriage', table: s.eventTriage, values: () => ({ projectId: newId(), source: 'pixel', payload: {}, reason: 'r' }) },
   { label: 'campaignMarketMaps', table: s.campaignMarketMaps, values: (x) => ({ projectId: newId(), campaign: `c-${x}`, marketId: newId() }) },
   { label: 'autopsies', table: s.autopsies, values: (x) => ({ title: `A-${x}`, pages: [] }) },
+  { label: 'billingReceipts', table: s.billingReceipts, values: (x) => ({ kind: 'license', stripeRef: `pi-${x}`, description: 'd' }) },
 ];
 
 const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;

@@ -2335,3 +2335,59 @@ checkout; decision documented).
   path out of lockout is self-service.
 
 **Open questions:** none blocking.
+
+### WO-051 — Stripe billing
+
+**Acceptance (restated):** Checkout — $1,000 lifetime license (quantity = seats);
+optional Genome Feed subscription $79/mo → entitlement consumed by WO-019/048;
+idempotent webhook handler via `stripe_events`; refund → license revoke with grace
+period; receipts/invoices in app. Acceptance: full purchase → activation in Stripe
+test mode; webhook replay-safe; lapse flips entitlement within a day.
+
+**Done.** Checkout sessions build from pure param builders in core (license: mode
+payment, quantity = seats, `metadata.workspaceId`/kind/seats mirrored onto the
+payment intent; Genome Feed: mode subscription with workspace metadata) and post to
+Stripe through one injectable-fetch client in the web app — refusing loudly when the
+STRIPE_* env is absent. The webhook receiver verifies Stripe's v1 signature with a
+from-scratch HMAC implementation in core (timestamp tolerance, timing-safe compare,
+multi-signature/key-rotation headers; `signStripePayload` mirrors Stripe for tests),
+then hands to `processStripeWebhook`, which records the event id against the unique
+`stripe_events` index FIRST — a replayed delivery returns `{replayed:true}` and
+re-applies nothing (asserted: second delivery adds no license, no receipt). Handled
+events: checkout completed → license issued PRE-BOUND to the purchasing workspace
+(pi linkage stored) + receipt; subscription created/updated/deleted → subscriptions
+upsert (active|trialing → entitled); invoice.paid → receipt with hosted invoice URL;
+charge.refunded → the license's `expiresAt` is pulled to now+7 days (usable through
+grace, then WO-050's reaper expires it into lockout) + a receipt naming the grace
+end date. Lapse safety net: `reapLapsedSubscriptions` flips any still-active
+subscription past its period end, wired into the worker's 15-minute sweep — an
+entitlement lapse lands within minutes even if the webhook never arrives.
+
+Verified in CI (fixture events, zero network): purchase→activation end-to-end
+(webhook → bound 2-seat license → seat assigned → `workspaceAccess` full), replay
+no-op, subscription on/off/lapse-reap, refund grace math (6–7.1 days), unknown
+event types recorded-and-ignored yet still replay-safe. Live Stripe test-mode
+click-through is a user sign-off item (like WO-038's live-model run) — the webhook
+route + signature path is exactly what `stripe listen` will hit.
+
+**Files touched:**
+- `packages/core/src/stripe.ts` (+ test): signature verify/sign, checkout param
+  builders, form encoding.
+- `packages/db/src/billingStore.ts` (+ test): idempotent webhook processor, grace
+  refund, lapse reaper, receipts/subscription queries. Schema (migration 0009):
+  `billing_receipts` tenant table (guard/scan/matrix registered) +
+  `licenses.stripe_payment_intent_id`.
+- Web: `/api/stripe/webhook` route (503 unconfigured, 400 bad signature),
+  `server/billing.ts` checkout client, `billing` router
+  (receipts/subscription/buyLicense/buyGenomeFeed), `/settings/billing` page.
+- Worker: subscription reaper joins the 15-minute sweep.
+
+**Decisions:**
+- No `stripe` npm dependency — the two calls we make (create checkout session,
+  verify webhook) are a form-encoded POST and an HMAC; owning them keeps the
+  dependency surface flat and both fully testable offline.
+- Refund grace keeps the license ACTIVE with a 7-day fuse rather than a new
+  status — WO-050's existing expiry machinery does the enforcement.
+
+**Open questions:** Stripe test-mode click-through pending user sign-off (needs
+real STRIPE_* keys; noted as a launch-checklist item for WO-056).

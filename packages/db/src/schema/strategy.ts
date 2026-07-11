@@ -3,7 +3,6 @@ import {
   decimal,
   index,
   int,
-  json,
   mysqlEnum,
   mysqlTable,
   text,
@@ -12,7 +11,7 @@ import {
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { idColumn, timestamps, ulidRef } from './_helpers';
+import { idColumn, json, timestamps, ulidRef } from './_helpers';
 import { AWARENESS_STAGES, VOC_KINDS } from './enums';
 
 /** Strategy phase (spec §3). All tables tenant-scoped by `workspace_id`. */

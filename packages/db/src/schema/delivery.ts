@@ -1,14 +1,13 @@
 import {
   boolean,
   index,
-  json,
   mysqlEnum,
   mysqlTable,
   timestamp,
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { idColumn, timestamps, ulidRef } from './_helpers';
+import { idColumn, json, timestamps, ulidRef } from './_helpers';
 import { EXPORT_FORMATS } from './enums';
 
 /** Delivery & runtime (spec §3). */

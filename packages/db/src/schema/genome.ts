@@ -3,14 +3,13 @@ import {
   decimal,
   index,
   int,
-  json,
   mysqlEnum,
   mysqlTable,
   text,
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { idColumn, timestamps, ulidRef } from './_helpers';
+import { idColumn, json, timestamps, ulidRef } from './_helpers';
 import { AWARENESS_STAGES, GENOME_COMPONENT_TYPES } from './enums';
 
 /**

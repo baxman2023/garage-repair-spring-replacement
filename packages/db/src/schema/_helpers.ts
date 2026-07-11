@@ -1,5 +1,32 @@
-import { char, timestamp } from 'drizzle-orm/mysql-core';
+import { char, customType, timestamp } from 'drizzle-orm/mysql-core';
 import { newId } from '@copyforge/core';
+
+/**
+ * JSON column that reliably round-trips on MariaDB.
+ *
+ * MariaDB exposes JSON as LONGTEXT, so the driver returns column values as
+ * strings and drizzle's built-in `json()` (which has no read mapper) would hand
+ * back an unparsed string. This custom type parses on read and stringifies on
+ * write. Use `json('col').$type<T>()` exactly like the built-in.
+ */
+export const json = customType<{ data: unknown; driverData: string }>({
+  dataType() {
+    return 'json';
+  },
+  toDriver(value) {
+    return JSON.stringify(value);
+  },
+  fromDriver(value) {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  },
+});
 
 /**
  * Shared column helpers (spec §3 conventions):

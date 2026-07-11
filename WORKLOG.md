@@ -249,3 +249,57 @@ output.
 **Open questions:** none blocking. The live Anthropic ping path is real but unexercised
 against the API here (no real key / egress); it's covered structurally + via injected
 pingers, and will run for real once a workspace key + the WO-006 client exist.
+
+### WO-006 — AI client wrapper + model router + usage metering
+
+**Acceptance (restated):** `packages/ai` is the single choke point — resolves the workspace
+key + model route, applies the fallback chain on 429/529 with exponential backoff + jitter,
+builds `cache_control` block stacks (§1.2), records a `usage_ledger` row per call with a
+cost estimate, enforces per-stage timeout/max_tokens. Mocked-API unit tests cover routing/
+fallback/metering; no Anthropic request is built outside `packages/ai`.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green, both CI scans clean (and each
+verified to fail closed on a planted violation), **65 tests pass** (ai 23). Coverage:
+workspace-override routing + max_tokens, fallover model-A→model-B after 3×529 with injected
+backoff, ledger row with exact token counts + cost, cache blocks forwarded, actionable
+no-key error (transport never reached), redacted non-retryable error.
+
+**Files touched:**
+- `packages/ai/src/`: `stages.ts` (moved STAGES/cache roles out to break cycle),
+  `transport.ts` (Transport interface, default SDK transport, `toSystemParam`,
+  `isOverloaded`), `client.ts` (`createClient`/`generate`, route resolution, fallback loop,
+  metering), `mock.ts` (`MockTransport`), `pricing.ts`; tests
+  `transport.test.ts`, `client.test.ts`; `index.ts` exports.
+- `scripts/ai-boundary-scan.mjs` + root `check:ai-boundary`.
+- **`packages/db/src/schema/_helpers.ts`** — custom `json` column type (parse-on-read) +
+  swapped into all 7 schema files; `packages/db/src/json.test.ts` regression test.
+
+**Decisions:**
+- **MariaDB JSON bug fixed globally.** drizzle 0.38's `MySqlJson` has no read mapper, and
+  MariaDB returns JSON as LONGTEXT (a string), so every JSON column was round-tripping as an
+  unparsed string (surfaced as a corrupted `fallback_chain` spread char-by-char). Replaced
+  `json()` with a `customType` that `JSON.parse`s on read across the schema. No DDL/migration
+  change (still `json` type). Locked with a round-trip regression test.
+- **Transport is injectable; the mock harness (`MockTransport`) ships now** (spec §8) so CI
+  never spends tokens. `createClient({ transport, sleep, jitter })` makes backoff/fallback
+  deterministic in tests.
+- **Fallback loop:** up to 3 attempts per model on 429/529 (exponential backoff
+  `500ms·2^attempt·(1+jitter)`), then advance through the deduped `[primary, ...fallback]`
+  chain. Non-retryable errors are redacted and surfaced immediately.
+- **Metering** reads `input/output/cache_read` tokens from the response and writes a
+  `usage_ledger` row with a cost estimate from the editable `PRICING` table (unknown models
+  → `DEFAULT_PRICE`, so cost is always recorded). `cache_read` vs `input` are tracked
+  separately so cache-hit rate is observable per §1.2.
+- **AI boundary enforced by CI:** `@anthropic-ai/sdk` may only appear in `packages/ai`;
+  the scan flags `new Anthropic(` / SDK imports anywhere else.
+
+**Open questions:** none blocking. `PRICING` values are directional estimates (documented as
+such); real per-model prices can be corrected in the admin surface (WO-052).
+
+---
+
+## Phase 0 progress checkpoint
+
+WO-001 … WO-006 complete, committed, and pushed. Remaining in Phase 0: WO-007 (job queue +
+fair scheduler), WO-008 (prompt registry + pinning). Running totals: 65 tests, live MariaDB
+bootstrapped in-container, two CI guard scans (tenancy, ai-boundary).

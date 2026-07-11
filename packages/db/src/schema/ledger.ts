@@ -1,14 +1,13 @@
 import {
   decimal,
   index,
-  json,
   mysqlEnum,
   mysqlTable,
   timestamp,
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { idColumn, timestamps, ulidRef } from './_helpers';
+import { idColumn, json, timestamps, ulidRef } from './_helpers';
 import { ASSET_TYPES, CHALLENGER_STATUSES, EVENT_SOURCES, EVENT_TYPES } from './enums';
 
 /** Control Ledger (spec §3 / Phase 5). */

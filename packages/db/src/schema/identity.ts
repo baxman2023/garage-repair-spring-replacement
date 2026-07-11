@@ -3,7 +3,6 @@ import {
   decimal,
   index,
   int,
-  json,
   mysqlEnum,
   mysqlTable,
   text,
@@ -11,7 +10,7 @@ import {
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
-import { idColumn, timestamps, ulidRef } from './_helpers';
+import { idColumn, json, timestamps, ulidRef } from './_helpers';
 import { API_PROVIDERS, LICENSE_STATUSES, LICENSE_TYPES, WORKSPACE_ROLES } from './enums';
 
 /** Identity & commerce (spec §3). */

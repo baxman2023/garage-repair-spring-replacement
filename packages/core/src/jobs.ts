@@ -10,6 +10,7 @@ export const JOB_TYPES = {
   vocMine: 'voc.mine',
   genomeDecompose: 'genome.decompose',
   genomeHarvest: 'genome.harvest',
+  assetRegenBlock: 'asset.regen_block',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

@@ -40,6 +40,7 @@ export {
   listCouncilReviewsForAsset,
   recordAssetGate,
   setAssetStatus,
+  transitionAssetStatus,
   type AssetRow,
   type AssetVersionRow,
   type CouncilReviewRow,

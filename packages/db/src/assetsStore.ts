@@ -1,5 +1,5 @@
 import { desc, eq } from 'drizzle-orm';
-import { newId } from '@copyforge/core';
+import { assertTransition, newId, type AssetStatus } from '@copyforge/core';
 import { getDb } from './client.js';
 import { tenantDb } from './guard.js';
 import { withTxRetry } from './txRetry.js';
@@ -158,11 +158,47 @@ export async function recordAssetGate(params: {
   });
 }
 
-/** Minimal status setter (the enforced transition machine lands in WO-021). */
+/**
+ * Enforced status transition (WO-021): every move validated by the core
+ * machine; owner overrides out of `blocked` are audited.
+ */
+export async function transitionAssetStatus(params: {
+  workspaceId: string;
+  assetId: string;
+  to: AssetStatus;
+  override?: boolean;
+  actorUserId?: string | null;
+  reason?: string;
+}): Promise<void> {
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    const rows = await tx.select().from(assets).where(eq(assets.id, params.assetId)).limit(1);
+    const asset = rows[0];
+    if (!asset || asset.workspaceId !== params.workspaceId) {
+      throw new Error('Asset not found in this workspace.');
+    }
+    assertTransition(asset.status as AssetStatus, params.to, { override: params.override });
+    await tx.update(assets).set({ status: params.to }).where(eq(assets.id, params.assetId));
+    if (params.override) {
+      const { auditLog } = await import('./schema/index.js');
+      await tx.insert(auditLog).values({
+        id: newId(),
+        workspaceId: params.workspaceId,
+        actorUserId: params.actorUserId ?? null,
+        action: 'asset.status_override',
+        targetType: 'asset',
+        targetId: params.assetId,
+        meta: { from: asset.status, to: params.to, reason: params.reason ?? '' },
+      });
+    }
+  });
+}
+
+/** @deprecated WO-020 shim — use transitionAssetStatus. Kept for the council runner. */
 export async function setAssetStatus(
   workspaceId: string,
   assetId: string,
   status: AssetRow['status'],
 ): Promise<void> {
-  await tenantDb(workspaceId).update(assets, { status }, eq(assets.id, assetId));
+  await transitionAssetStatus({ workspaceId, assetId, to: status as AssetStatus });
 }

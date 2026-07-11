@@ -9,9 +9,11 @@ import {
   createOfferForgeHandler,
   createGenomeDecomposeHandler,
   createHarvestHandler,
+  createRegenBlockHandler,
   createVocMineHandler,
   GENOME_DECOMPOSE_JOB,
   GENOME_HARVEST_JOB,
+  ASSET_REGEN_BLOCK_JOB,
   INTAKE_EXTRACT_JOB,
   MARKET_PROFILE_JOB,
   MARKET_SELECT_JOB,
@@ -35,6 +37,7 @@ const handlers: HandlerRegistry = {
   [VOC_MINE_JOB]: createVocMineHandler(),
   [GENOME_DECOMPOSE_JOB]: createGenomeDecomposeHandler(),
   [GENOME_HARVEST_JOB]: createHarvestHandler(),
+  [ASSET_REGEN_BLOCK_JOB]: createRegenBlockHandler(),
 };
 
 let shuttingDown = false;

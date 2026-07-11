@@ -5,6 +5,20 @@ export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
 export {
+  ASSET_STATUSES,
+  canTransition,
+  assertTransition,
+  type AssetStatus,
+} from './assetStatus.js';
+export {
+  mergeRegeneratedBlocks,
+  diffBlocks,
+  type AssetBlock,
+  type AssetBlockMeta,
+  type BlockDiff,
+  type BlockChange,
+} from './blocks.js';
+export {
   COUNCIL_LENSES,
   lensResultSchema,
   parseLensResult,

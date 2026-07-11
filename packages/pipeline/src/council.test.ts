@@ -49,6 +49,42 @@ const lensJson = (score: number, failing: boolean) =>
     line_notes: failing ? [{ block_id: 'lead', note: 'Corporate throat-clearing; no A-pile energy' }] : [],
   });
 
+/**
+ * Lens calls run in PARALLEL, so a FIFO mock maps responses to lenses
+ * nondeterministically. This transport reads the lens name out of the request
+ * and answers per-round scores deterministically; revision calls advance the
+ * round.
+ */
+function lensAwareTransport(rounds: Array<Record<string, number>>, revisions: unknown[]) {
+  let round = 0;
+  let revisionIndex = 0;
+  const calls: Array<{ content: string; system: string[] }> = [];
+  return {
+    calls,
+    transport: {
+      async createMessage(req: { messages: { content: string }[]; system?: { text: string; cache?: boolean }[]; model: string }) {
+        const content = req.messages[0]!.content;
+        calls.push({ content, system: (req.system ?? []).map((b) => b.text) });
+        let text: string;
+        const lensMatch = /LENS FOR THIS CALL: (\w+)/.exec(content);
+        if (lensMatch) {
+          const score = rounds[round]![lensMatch[1]!]!;
+          text = lensJson(score, score < 70);
+        } else {
+          text = JSON.stringify(revisions[revisionIndex++]);
+          round++;
+        }
+        return {
+          model: req.model,
+          text,
+          stopReason: 'end_turn',
+          usage: { inputTokens: 10, cacheReadTokens: 0, cacheCreationTokens: 0, outputTokens: 5 },
+        };
+      },
+    },
+  };
+}
+
 async function setup(): Promise<{ workspaceId: string; projectId: string; assetId: string }> {
   const workspaceId = newId();
   await storeWorkspaceKey(workspaceId, 'sk-ant-council-test-0000');
@@ -62,16 +98,16 @@ describe('Council engine (WO-020 / G3)', () => {
   it('bad draft fails round 1, revision improves it, round 2 passes — all on record', async () => {
     if (!dbUp) return;
     const { workspaceId, projectId, assetId } = await setup();
-    const mock = new MockTransport();
-    // Round 1: 6 lens calls — halbert & carlton fail hard, others mediocre.
-    const round1 = { schwartz: 72, halbert: 55, bencivenga: 74, sugarman: 71, kennedy: 75, carlton: 58 };
-    for (const lens of COUNCIL_LENSES) mock.pushText(lensJson(round1[lens], round1[lens] < 70));
-    // Revision call returns the improved draft.
-    mock.pushText(JSON.stringify({ blocks: GOOD_BLOCKS }));
-    // Round 2: everything strong.
-    for (const _lens of COUNCIL_LENSES) mock.pushText(lensJson(88, false));
+    // Round 1: halbert & carlton fail hard, others mediocre. Round 2: strong.
+    const { transport, calls } = lensAwareTransport(
+      [
+        { schwartz: 72, halbert: 55, bencivenga: 74, sugarman: 71, kennedy: 75, carlton: 58 },
+        { schwartz: 88, halbert: 88, bencivenga: 88, sugarman: 88, kennedy: 88, carlton: 88 },
+      ],
+      [{ blocks: GOOD_BLOCKS }],
+    );
 
-    const outcome = await createCouncilRunner({ transport: mock })({
+    const outcome = await createCouncilRunner({ transport })({
       workspaceId,
       projectId,
       assetId,
@@ -96,13 +132,13 @@ describe('Council engine (WO-020 / G3)', () => {
     expect(v2.reviews.every((r) => r.verdict === 'pass')).toBe(true);
 
     // The revision prompt contained ONLY the failing lenses' notes.
-    const revisionCall = mock.calls[6]!; // calls 0-5 = round-1 lenses
-    expect(revisionCall.req.messages[0].content).toContain('HALBERT');
-    expect(revisionCall.req.messages[0].content).toContain('CARLTON');
-    expect(revisionCall.req.messages[0].content).not.toContain('KENNEDY');
-    // Persona corpus + market block cached on lens calls (§1.2).
-    expect(mock.calls[0].req.system?.length).toBe(2);
-    expect(mock.calls[0].req.system?.every((b) => b.cache)).toBe(true);
+    const revisionCall = calls.find((c) => c.content.includes('REVISION BRIEF'))!;
+    expect(revisionCall.content).toContain('HALBERT');
+    expect(revisionCall.content).toContain('CARLTON');
+    expect(revisionCall.content).not.toContain('KENNEDY');
+    // Persona corpus + market block ride as two system blocks on lens calls (§1.2).
+    expect(calls[0]!.system.length).toBe(2);
+    expect(calls[0]!.system[1]).toContain('MARKET PROFILE');
 
     // Asset advanced out of council.
     const asset = await getAsset(workspaceId, assetId);

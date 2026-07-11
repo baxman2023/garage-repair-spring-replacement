@@ -968,3 +968,45 @@ floors are immune to weighting.
   machine that advances assets between gates is WO-021's contract.
 
 **Open questions:** none blocking.
+
+### WO-021 — Asset framework
+
+**Acceptance (restated):** `assets`/`asset_versions` per §3–§4; status transitions enforced
+in one module; block editor (edit/reorder/lock — locked blocks survive regeneration);
+version diff view; regenerate-single-block. Illegal transitions rejected; block lock
+honored across regen; diff renders adds/removes/edits.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **200 tests pass**
+(core +9, pipeline +3). Verified: the canonical path
+draft→council⇄revising→focus_group→deslop→compliance→packaging→approved→live→retired is
+legal, jumps/regressions rejected, every gate stage can fail into `blocked`, `blocked` is a
+trap without override, override resumes into any gate stage (never straight to live) and
+writes an `audit_log` row with actor + reason; locked blocks keep content through a
+regeneration merge and are re-inserted when regen drops them, while unlocked drops stick;
+block diff renders adds/removes/edits(+line ops)/reorders; single-block regen creates a
+version differing in exactly the target block and REFUSES locked blocks (transport never
+reached).
+
+**Files touched:**
+- `packages/core`: `assetStatus.ts` (transition map + override rules), `blocks.ts`
+  (`mergeRegeneratedBlocks`, `diffBlocks`), tests; `AssetBlockMeta.locked` added to the db
+  schema type too.
+- `packages/db/assetsStore.ts`: `transitionAssetStatus` (validates via core, audits
+  overrides); `setAssetStatus` retained as a deprecated shim used by the council runner
+  (its moves are all legal transitions).
+- `packages/pipeline/regenBlock.ts` (+ test), registered as `asset.regen_block`.
+- `apps/web`: `routers/assets.ts` (get, saveBlocks→user version, regenerateBlock with
+  lock pre-check, diff, owner-only `override`), `/assets/[assetId]` editor (per-block
+  edit/lock/reorder/regen, save-as-version, version picker + rendered diff).
+
+**Decisions:**
+- **Override semantics:** owner may resume a blocked asset into any gate stage up to
+  `approved`, never directly to `live`/`retired` — going live requires passing through the
+  approval machinery.
+- **Lock is block-`meta.locked`** (§4 meta extension); enforcement lives in three layers:
+  merge helper (regeneration), worker handler (refuses), router (pre-check + disabled UI).
+- **Flake fix (council test):** parallel lens calls + FIFO mock mapped responses to lenses
+  nondeterministically; replaced with a lens-aware transport that answers by request
+  content. 5/5 stable runs after.
+
+**Open questions:** none blocking.

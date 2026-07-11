@@ -20,3 +20,4 @@ export {
   type HarvestDeps,
 } from './harvest.js';
 export { createCouncilRunner, type CouncilRunOptions, type CouncilOutcome, type CouncilLoopRecord } from './council.js';
+export { createRegenBlockHandler, ASSET_REGEN_BLOCK_JOB } from './regenBlock.js';

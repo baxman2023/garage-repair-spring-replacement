@@ -13,6 +13,7 @@ import { vocRouter } from './voc';
 import { strategyRouter } from './strategy';
 import { genomeRouter } from './genome';
 import { councilRouter } from './council';
+import { assetsRouter } from './assets';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -36,6 +37,7 @@ export const appRouter = router({
   strategy: strategyRouter,
   genome: genomeRouter,
   council: councilRouter,
+  assets: assetsRouter,
 });
 
 export type AppRouter = typeof appRouter;

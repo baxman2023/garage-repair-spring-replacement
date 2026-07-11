@@ -20,12 +20,15 @@ import {
   GATES,
 } from './enums';
 
-/** Ordered content block within an asset version (spec §4). */
+/** Ordered content block within an asset version (spec §4 + WO-021 lock). */
 export interface AssetBlockMeta {
   timestampStart?: number;
   timestampEnd?: number;
   openLoop?: boolean;
   variantOf?: string;
+  /** Locked blocks survive regeneration (WO-021). */
+  locked?: boolean;
+  [key: string]: unknown;
 }
 export interface AssetBlock {
   id: string;

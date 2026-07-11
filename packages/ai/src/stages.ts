@@ -11,6 +11,7 @@ export const STAGES = [
   'claims_extraction',
   'scrub',
   'asset_drafting',
+  'genome_decompose',
   'council',
   'focus_group',
   'autopsy',

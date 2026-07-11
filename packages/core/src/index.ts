@@ -31,6 +31,13 @@ export {
   type ScoreDimension,
 } from './contracts/market.js';
 export {
+  GENOME_COMPONENT_TYPES as GENOME_TYPES,
+  genomeComponentSchema,
+  parseGenomeDecomposition,
+  type GenomeComponent,
+  type GenomeDecomposition,
+} from './contracts/genome.js';
+export {
   MARKET_PROFILE_SCHEMA_VERSION,
   AWARENESS_STAGES_ORDER,
   marketProfileSchema,

@@ -797,3 +797,47 @@ fan-out.
    snapshot immutable" — flag if you want approvals to survive market edits instead.
 
 **Awaiting your go before starting Phase 2 (Genome & Generation, WO-017 … WO-028).**
+
+> Go received — Phase 2 started.
+
+---
+
+## Phase 2 — Genome & Generation
+
+### WO-017 — Persuasion Genome: schema + decomposer
+
+**Acceptance (restated):** Swipe intake (paste/URL); sonnet decomposition into
+`genome_components` (lead, mechanism_name, proof_stack, price_reveal, close, bullet_style,
+headline_pattern) with confidence + tags (niche, channel, awareness). 10-swipe fixture
+decomposes with ≥90% components typed; components queryable by type+niche.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **165 tests pass**
+(core +4, pipeline +3). Verified: the 10-swipe fixture (with deliberate untyped strays)
+stays ≥90% typed and yields components queryable by type+niche (10 leads for the niche;
+full count matches; confidence persisted); a decomposition below the 90% bar fails loudly
+with nothing persisted; workspace privacy holds (an intruder can neither decompose nor see
+another workspace's swipe).
+
+**Files touched:**
+- `packages/core/src/contracts/genome.ts` (+ test): tolerant `parseGenomeDecomposition`
+  (keeps valid typed components, counts dropped, reports typedRatio).
+- `packages/ai/src/stages.ts`: new `genome_decompose` stage; seeded model route → sonnet
+  (§1.1 "sonnet decomposition").
+- `packages/db/src/genome.ts`: two-layer store (NULL workspace = shared seed; non-NULL =
+  private), `addSwipe`/`getSwipe`/`updateSwipeSource`/`listSwipes`/`insertGenomeComponents`/
+  `queryGenomeComponents`; seed `genome.decompose` prompt v1.
+- `packages/pipeline/src/genomeDecompose.ts` (+ test), registered in the worker; URL swipes
+  stored as `URL:<href>` and fetched+readability-extracted by the job before decomposition;
+  `MIN_TYPED_RATIO = 0.9` enforced per decomposition.
+- `apps/web`: `routers/genome.ts` (addSwipe paste/URL → auto-decompose job; swipes;
+  components query), `/genome` page + `GenomePanel` (intake + type/niche-filtered browser).
+
+**Decisions:**
+- **The ≥90% typed acceptance is a runtime quality bar**, not just a fixture stat: any
+  single decomposition below 90% typed throws (job retries/fails visibly) rather than
+  silently persisting a thin read of the swipe.
+- **Components inherit the swipe's layer** (shared vs workspace) — the WO-048 leak rule is
+  enforced from day one; queries always scope `(shared OR own)`.
+- **Swipe niche/channel take precedence over the model's inference** when both exist.
+
+**Open questions:** none blocking.

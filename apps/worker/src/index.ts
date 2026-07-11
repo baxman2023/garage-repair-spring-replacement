@@ -7,7 +7,9 @@ import {
   createMarketProfileHandler,
   createMarketSelectHandler,
   createOfferForgeHandler,
+  createGenomeDecomposeHandler,
   createVocMineHandler,
+  GENOME_DECOMPOSE_JOB,
   INTAKE_EXTRACT_JOB,
   MARKET_PROFILE_JOB,
   MARKET_SELECT_JOB,
@@ -29,6 +31,7 @@ const handlers: HandlerRegistry = {
   [MARKET_SELECT_JOB]: createMarketSelectHandler(),
   [MARKET_PROFILE_JOB]: createMarketProfileHandler(),
   [VOC_MINE_JOB]: createVocMineHandler(),
+  [GENOME_DECOMPOSE_JOB]: createGenomeDecomposeHandler(),
 };
 
 let shuttingDown = false;

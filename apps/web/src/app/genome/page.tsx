@@ -1,0 +1,23 @@
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentSession } from '@/server/auth/session';
+import { GenomePanel } from './GenomePanel';
+
+export default async function GenomePage() {
+  const session = await currentSession();
+  if (!session) redirect('/login?next=/genome');
+
+  return (
+    <main style={{ maxWidth: 1100 }}>
+      <p>
+        <Link href="/">← Home</Link>
+      </p>
+      <h1>Persuasion Genome</h1>
+      <p style={{ color: 'var(--muted)' }}>
+        Winning copy, stored as tagged structural components — not blobs. Feed it swipes;
+        generators retrieve the DNA.
+      </p>
+      <GenomePanel />
+    </main>
+  );
+}

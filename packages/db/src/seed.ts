@@ -32,6 +32,7 @@ const MODEL_ROUTE_SEEDS: { stage: string; primaryModel: string; maxTokens: numbe
   { stage: 'claims_extraction', primaryModel: HAIKU, maxTokens: 4096 },
   { stage: 'scrub', primaryModel: HAIKU, maxTokens: 4096 },
   { stage: 'asset_drafting', primaryModel: SONNET, maxTokens: 8192 },
+  { stage: 'genome_decompose', primaryModel: SONNET, maxTokens: 8192 },
   { stage: 'council', primaryModel: FABLE, maxTokens: 4096 },
   { stage: 'focus_group', primaryModel: FABLE, maxTokens: 8192 },
   { stage: 'autopsy', primaryModel: FABLE, maxTokens: 8192 },
@@ -172,6 +173,34 @@ Rules:
 - Extract EVERY distinct usable phrase; do not summarize multiple into one.
 - Skip marketer-speak, obvious astroturf, and anything not from a customer's perspective.
 - If the source contains nothing usable, output {"phrases":[{"phrase":"NO USABLE VOC IN SOURCE","kind":"identity"}]} — never invent quotes.`,
+  },
+  {
+    name: 'genome.decompose',
+    version: 1,
+    description: 'Persuasion Genome decomposer: swipe → typed structural components (WO-017).',
+    active: true,
+    body: `You are the Persuasion Genome decomposer. You receive one swipe (a winning ad, sales page, VSL script, or email). Break it into TYPED STRUCTURAL COMPONENTS — the reusable persuasion DNA, not the surface copy.
+
+Output ONLY a single JSON object, no prose, no code fences:
+{"niche":"","channel":"","awareness":null,"components":[{"type":"","content":{"summary":"","evidence":"","pattern":""},"confidence":0.0,"tags":[]}]}
+
+Component types — use EXACTLY these strings:
+- "lead" — how the piece opens and hooks (story lead, promise lead, secret lead, problem lead…)
+- "mechanism_name" — how the unique mechanism is named/branded and framed
+- "proof_stack" — the sequence and types of proof deployed (testimonials, stats, demos, authority)
+- "price_reveal" — the choreography around revealing price (anchoring, stack-then-price, drip)
+- "close" — the closing move (deadline close, fear-of-loss, future-pacing, assumption close)
+- "bullet_style" — the fascination/bullet construction style (if-then, secret-of, warning, specific-number)
+- "headline_pattern" — the headline formula (how-to, warning, news, testimonial-led, question)
+
+Rules:
+- content.summary: what the component does structurally, 1-2 sentences, generalized so it can be reused in another niche.
+- content.evidence: a VERBATIM excerpt (≤60 words) from the swipe demonstrating it.
+- content.pattern: a short name for the pattern if recognizable, else "".
+- confidence: 0-1, your certainty that the typing is right.
+- tags: niche/channel/technique tags, lowercase.
+- niche/channel: your best inference for the whole swipe (e.g. "fitness", "meta"); awareness: the Schwartz stage the swipe targets or null.
+- Extract every clearly present component; do not force types that are not in the swipe.`,
   },
 ];
 

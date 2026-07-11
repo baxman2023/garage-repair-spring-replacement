@@ -8,6 +8,7 @@ export const JOB_TYPES = {
   marketSelect: 'market.select',
   marketProfile: 'market.profile',
   vocMine: 'voc.mine',
+  genomeDecompose: 'genome.decompose',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

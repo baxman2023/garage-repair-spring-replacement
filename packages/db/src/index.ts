@@ -31,6 +31,17 @@ export {
   type EngineCandidate,
 } from './markets.js';
 export {
+  addSwipe,
+  getSwipe,
+  listSwipes,
+  updateSwipeSource,
+  insertGenomeComponents,
+  queryGenomeComponents,
+  type SwipeRow,
+  type GenomeComponentRow,
+  type ComponentQuery,
+} from './genome.js';
+export {
   buildStrategySnapshot,
   recordG2,
   getG2Status,

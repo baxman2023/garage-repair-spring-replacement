@@ -4,6 +4,22 @@ export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
+export { AI_TELLS, findAiTells, hasEmDashOveruse } from './aiTells.js';
+export {
+  MERGE_FIELDS,
+  extractMergeFields,
+  findUnknownMergeFields,
+  SEQUENCE_KINDS,
+  SEQUENCE_SPECS,
+  LAUNCH_PHASES,
+  sequenceEmailSchema,
+  emailSequenceResultSchema,
+  validateEmailSequence,
+  sequenceGraph,
+  type SequenceKind,
+  type SequenceEmail,
+  type LaunchPhase,
+} from './contracts/emailSequence.js';
 export {
   SPOKEN_WPM,
   integerToWords,

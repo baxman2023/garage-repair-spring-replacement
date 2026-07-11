@@ -34,3 +34,4 @@ export {
   WEBINAR_SECTIONS,
   type WebinarSection,
 } from './generators/webinar.js';
+export { generateEmailSequences } from './generators/emailSequences.js';

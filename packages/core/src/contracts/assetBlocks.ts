@@ -16,6 +16,7 @@ export const BLOCK_ROLES = [
   'close',
   'ps',
   'subject',
+  'preview',
   'body',
   'hook',
   'cta',

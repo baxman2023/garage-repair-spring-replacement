@@ -1172,3 +1172,50 @@ offer item, missing email kind.
 - Emails are stubs by design — full sequence engine is WO-026.
 
 **Open questions:** none blocking.
+
+### WO-026 — Generator: email sequences
+
+**Acceptance (restated):** Owned-audience engine per market — indoctrination/welcome
+(5–7), launch seed→open→close (9), cart abandon (3), 10 daily-infotainment templates in
+founder voice; subject + preview + body blocks; merge-field conventions documented; every
+email single-CTA. Sequence graphs persisted with send-offset metadata; subjects pass the
+G5 AI-tell scrub.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **242 tests pass**
+(core +15, pipeline +4). Verified: all four sequences persisted as `email_sequence`
+assets; version meta carries `sequence.{kind, emails[{id, send_offset_hours, phase?}]}`
+with strictly-increasing offsets; blocks are subject/preview/body triplets sectioned per
+email with `sendOffsetHours` in meta; launch graph keeps seed→open→close phase tags (all
+three acts required, order enforced); founder voice samples reach the daily-infotainment
+prompt; each sequence auto-enters G3. Rejections: AI-tell subject, 0 or 2 `{{cta_link}}`,
+undocumented merge field, wrong cardinality, non-increasing offsets, backwards phases.
+
+**Files touched:**
+- `packages/core/src/aiTells.ts`: the G5 AI-tell config list (`AI_TELLS`, wildcard-capable
+  matcher `findAiTells`, `hasEmDashOveruse`) — shared config WO-030's De-Slop gate reuses.
+- `packages/core/src/contracts/emailSequence.ts` (+ `emailSequence.test.ts`):
+  `MERGE_FIELDS` conventions, token extraction/unknown detection, `SEQUENCE_SPECS`
+  cardinalities, `validateEmailSequence` (counts, monotonic offsets, launch phases,
+  single-CTA, merge-field fail-closed, subject scrub + first_name-only rule),
+  `sequenceGraph`.
+- `docs/merge-fields.md`: the documented merge-field conventions (deliverable).
+- `packages/pipeline/src/generators/emailSequences.ts` (+ test): one AI call per kind,
+  one asset per sequence, claims + auto-council per asset;
+  `options.sequences` filter for fan-out (WO-028).
+- Dispatcher case `email_sequence`; seed `generate.email_sequence` v1;
+  `BLOCK_ROLES` + `preview`.
+
+**Decisions:**
+- **`preview` added to BLOCK_ROLES**: spec §4's role list predates WO-026, whose
+  deliverable explicitly requires "subject + preview + body blocks" — the specific work
+  order controls; additive, no existing contract broken.
+- **Single-CTA is structural**: exactly one `{{cta_link}}` token per body. Prose may
+  restate the action, but only one live link ships — checkable, ESP-portable.
+- **Unknown merge fields fail closed** (ESPs render unknown tokens as literal text —
+  a silent copy defect, so it's a generation error instead).
+- **Subject scrub runs at generation time** using the shared G5 config list; WO-030 will
+  run the same list over full bodies with readability/specificity/voice scoring.
+- Daily-infotainment offsets are 24h steps (day index) so the graph shape is uniform
+  across kinds.
+
+**Open questions:** none blocking.

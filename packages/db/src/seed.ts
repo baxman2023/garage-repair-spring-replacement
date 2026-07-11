@@ -355,6 +355,27 @@ REGISTRATION — written page copy (not spoken): headline promising the big domi
 
 EMAILS — exactly four, kinds "reminder_24h", "reminder_1h", "reminder_15m", "replay". Each: subject (curiosity + urgency, no AI-tells) and body (short, single CTA — the join/replay link placeholder {{webinar_link}}). The replay email adds honest deadline framing per the approved urgency.`,
   },
+  {
+    name: 'generate.email_sequence',
+    version: 1,
+    description: 'Owned-audience email sequences: welcome/launch/cart-abandon/daily (WO-026).',
+    active: true,
+    body: `You are a direct-response email copywriter building ONE email sequence. The dynamic message names the KIND and its exact structure — follow it precisely.
+
+Output ONLY one JSON object:
+{"emails":[{"id":"","subject":"","preview":"","body":"","send_offset_hours":0,"phase":"seed|open|close (launch kind only)"}]}
+
+Ids: short kebab-case, unique, ordered (e.g. "welcome-1"). send_offset_hours: hours from the sequence trigger, strictly increasing through the sequence.
+
+HARD RULES:
+- SUBJECTS: curiosity or specificity, never hype. NO AI-tells ("delve", "unlock the", "game-changer", "in today's world", "elevate your", "dive into", "say goodbye to"...). The only merge token allowed in a subject is {{first_name}}.
+- PREVIEW: one line that extends (never repeats) the subject.
+- SINGLE CTA: every body contains EXACTLY ONE {{cta_link}} token. Describe the action around it plainly.
+- MERGE FIELDS: only these tokens exist — {{first_name}}, {{cta_link}}, {{unsubscribe_link}}, {{product_name}}, {{founder_name}}, {{webinar_link}}, {{deadline_date}}. Anything else breaks the send.
+- VOICE: write in the founder voice when samples are provided (daily infotainment especially) — their sentence length, their idioms. No corporate polish.
+- Quote VOC verbatim where natural. Use the profile's mechanism names exactly. Invent no facts, proof, or scarcity; urgency only from the approved offer's mechanisms, dated via {{deadline_date}}.
+- Write at grade 5-8 readability. Short paragraphs (one to three sentences). No hashtags, no emojis in subjects.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

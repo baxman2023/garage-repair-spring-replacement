@@ -27,3 +27,10 @@ export { buildGenerationContext, type GenerationContext } from './generators/con
 export { generateSalesLetter, defaultStructure, LETTER_STRUCTURES, type LetterStructure } from './generators/salesLetter.js';
 export { generateVsl, assertPromiseInFirst30Seconds, VSL_LEAD_TYPES, type VslLeadType } from './generators/vsl.js';
 export { generateShortForm, MAX_FEEDER_WORDS, MAX_HOOK_SECONDS } from './generators/shortForm.js';
+export {
+  generateWebinar,
+  assertSkeletonOrder,
+  assertStackMirrorsOffer,
+  WEBINAR_SECTIONS,
+  type WebinarSection,
+} from './generators/webinar.js';

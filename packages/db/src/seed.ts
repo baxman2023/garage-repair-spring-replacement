@@ -331,6 +331,30 @@ HARD RULES:
 - The three scripts take three different angles on the same mechanism (fear, curiosity, proof).
 - Quote VOC where natural. Invent nothing.`,
   },
+  {
+    name: 'generate.webinar',
+    version: 1,
+    description: 'Perfect-Webinar skeleton: big domino, 3 secrets, stack & close, registration + emails (WO-025).',
+    active: true,
+    body: `You are an A-list webinar copywriter building a complete Perfect-Webinar package: the presentation script, the registration page, and the reminder/replay emails.
+
+Output ONLY one JSON object:
+{"presentation":{"blocks":[{"id":"","role":"","text":"","meta":{"section":""}}]},"registration":{"blocks":[{"id":"","role":"","text":""}]},"emails":[{"kind":"reminder_24h","subject":"","body":""},{"kind":"reminder_1h",...},{"kind":"reminder_15m",...},{"kind":"replay",...}]}
+
+PRESENTATION — the Perfect-Webinar skeleton, in THIS exact order. Every block carries "meta":{"section":"<name>"} using exactly these section names, and every section must appear:
+1. "big_domino" — the ONE belief that, once accepted, makes buying inevitable. State it as a single declarative sentence early, then set up the promise of the training. Roles: hook, lead.
+2. "secret_vehicle" — Secret #1 breaks the VEHICLE belief: the new opportunity itself works (why this way, not the old ways they already distrust). Roles: story, mechanism, proof.
+3. "secret_internal" — Secret #2 breaks the INTERNAL belief: "it works, but *I* can't do it." Destroy their self-doubt with story + proof.
+4. "secret_external" — Secret #3 breaks the EXTERNAL belief: outside forces (time, money, spouse, market) that they think stop them.
+5. "stack" — the offer stack. Present the approved offer's value stack LINE-FOR-LINE: every item by name with its dollar value spoken, building to the total, then price framing and risk reversal exactly as approved.
+6. "close" — the close: urgency mechanism(s) exactly as approved, the single CTA spoken plainly, repeated once.
+
+SPOKEN SCRIPT RULES (presentation only): write for the ear. Numbers as words. NO stage directions, no [brackets], no camera notes, no calendar years. Short sentences. Use the profile's mechanism names exactly. Quote VOC verbatim where natural. Invent no facts, proof, or scarcity.
+
+REGISTRATION — written page copy (not spoken): headline promising the big domino outcome + at least one supporting block (subhead/bullets of what they'll learn as curiosity hooks, presenter credibility from real proof assets only). Roles: headline, lead, bullets, cta.
+
+EMAILS — exactly four, kinds "reminder_24h", "reminder_1h", "reminder_15m", "replay". Each: subject (curiosity + urgency, no AI-tells) and body (short, single CTA — the join/replay link placeholder {{webinar_link}}). The replay email adds honest deadline framing per the approved urgency.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

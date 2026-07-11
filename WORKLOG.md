@@ -1129,3 +1129,46 @@ supplies); spoken conventions + timestamps applied; each feeder auto-enters G3. 
 - Hook budget = 3s at 170 WPM (≈8 words) with 0.1s rounding headroom.
 
 **Open questions:** none blocking.
+
+### WO-025 — Generator: webinar
+
+**Acceptance (restated):** Perfect-Webinar-skeleton presentation — big domino statement,
+three secrets breaking the vehicle/internal/external beliefs, stack & close built from the
+approved offer — plus registration-page copy, reminder emails (24h/1h/15m), and the replay
+email; presentation timestamped at 170 WPM. Skeleton sections must all be present and
+ordered; the stack must mirror the offer's value stack line-for-line.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **223 tests pass**
+(pipeline +6: 2 pure assertion suites + 4 DB-backed). Verified: all six sections
+(`big_domino → secret_vehicle → secret_internal → secret_external → stack → close`)
+present and ordered via `meta.section`; stack carries every value-stack item by name AND
+its spoken dollar value (asserted post-conversion, so `$500` → "five hundred dollars" is
+what's checked); registration blocks stored `section:"registration"` WITHOUT timestamps
+(written copy); exactly 4 emails (subject+body block pairs, `email_<kind>` sections);
+presentation timestamps sequential and within ±5% of wordcount/170; claims inventory
+extracted; auto-G3 council enqueue. Rejections: misordered skeleton, stack missing an
+offer item, missing email kind.
+
+**Files touched:**
+- `packages/pipeline/src/generators/webinar.ts` (+ `webinar.test.ts`): result contract,
+  `assertSkeletonOrder`, `assertStackMirrorsOffer`, spoken conventions + timestamps on the
+  presentation only, single asset with presentation/registration/email blocks in one
+  version.
+- Dispatcher case `webinar`; pipeline index exports; seed `generate.webinar` v1
+  (skeleton order + section names + line-for-line stack rule are in the prompt AND
+  enforced structurally after).
+
+**Decisions:**
+- **One asset, one version, sectioned blocks** — the webinar package (presentation +
+  registration + emails) ships and gets council-reviewed as a unit; `meta.section`
+  partitions it for delivery/export (WO-034 teleprompter TXT can filter to skeleton
+  sections). Sibling-version fan-out stays a VSL-only concept (lead variants).
+- **Stack mirror is asserted against SPOKEN values** (`integerToWords`) because the
+  assertion runs after the spoken post-processor — dollars-as-digits can't appear in a
+  spoken script.
+- **Registration escapes the min-3-block contract**: `parseGeneratedBlocks` demands ≥3
+  blocks (asset-level rule); a registration page is legitimately 2 (headline + bullets),
+  so its blocks validate against `generatedBlockSchema` directly.
+- Emails are stubs by design — full sequence engine is WO-026.
+
+**Open questions:** none blocking.

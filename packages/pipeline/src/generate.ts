@@ -5,6 +5,7 @@ import { buildGenerationContext } from './generators/context.js';
 import { generateSalesLetter, type LetterStructure } from './generators/salesLetter.js';
 import { generateVsl } from './generators/vsl.js';
 import { generateShortForm } from './generators/shortForm.js';
+import { generateWebinar } from './generators/webinar.js';
 
 /**
  * Asset generation dispatcher (WO-022+): one `asset.generate` job type,
@@ -51,6 +52,9 @@ export function createGenerateHandler(clientOptions: ClientOptions = {}) {
           context,
           parentVslId: typeof options.parentVslId === 'string' ? options.parentVslId : undefined,
         });
+        return;
+      case 'webinar':
+        await generateWebinar({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
         return;
       default:
         throw new Error(`No generator registered for asset type "${assetType}" yet.`);

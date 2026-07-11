@@ -124,24 +124,106 @@ pm2 save >/dev/null
   echo "@reboot . $NVM_DIR/nvm.sh && $NVM_DIR/versions/node/$(node -v)/bin/pm2 resurrect" ) | crontab -
 log "pm2 online + @reboot resurrection installed"
 
-# --- 6. Reverse proxy: PHP webroot → Node --------------------------------------------
-cat > "$APP_BASE/public_html/.htaccess" <<HT
-# CopyForge: proxy everything to the Node.js app (deploy/cloudways-deploy.sh).
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteRule ^(.*)\$ http://127.0.0.1:$WEB_PORT/\$1 [P,L]
-</IfModule>
-HT
-log ".htaccess proxy → 127.0.0.1:$WEB_PORT installed"
-
-# --- 7. Verify -----------------------------------------------------------------------
+# --- 6. Local verify ------------------------------------------------------------------
 sleep 8
 HEALTH="$(curl -fsS -m 10 "http://127.0.0.1:$WEB_PORT/api/health" || true)"
 echo "$HEALTH"
 if echo "$HEALTH" | grep -q '"app":"CopyForge"'; then
-  log "LOCAL HEALTH OK — deployment complete"
+  log "local health OK"
 else
   log "health did not answer as CopyForge; recent web log:"
   pm2 logs copyforge-web --lines 25 --nostream || true
   exit 1
 fi
+
+# --- 7. Route the public URL to the app -----------------------------------------------
+# Cloudways' nginx serves files in public_html directly, so the placeholder
+# page shadows the app. Move the defaults aside once (kept in a backup dir),
+# leaving only our routing files + .well-known (Let's Encrypt).
+WEBROOT="$APP_BASE/public_html"
+BACKUP="$APP_BASE/public_html_default_backup"
+mkdir -p "$BACKUP"
+find "$WEBROOT" -mindepth 1 -maxdepth 1 \
+  ! -name '.well-known' ! -name '.htaccess' ! -name 'index.php' \
+  -exec mv -t "$BACKUP" {} + 2>/dev/null || true
+
+public_ok() {
+  curl -fsS -m 20 "$APP_URL/api/health" 2>/dev/null | grep -q '"app":"CopyForge"'
+}
+
+# Mode A: Apache mod_proxy via .htaccess.
+rm -f "$WEBROOT/index.php"
+cat > "$WEBROOT/.htaccess" <<HT
+# CopyForge: proxy everything to the Node.js app (deploy/cloudways-deploy.sh).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule ^(.*)\$ http://127.0.0.1:$WEB_PORT/\$1 [P,L]
+</IfModule>
+HT
+sleep 2
+if public_ok; then
+  log "public URL OK via mod_proxy — deployment complete"
+  exit 0
+fi
+log "mod_proxy route not serving the app; installing PHP proxy fallback"
+
+# Mode B: PHP reverse proxy (works on every Cloudways PHP stack).
+cat > "$WEBROOT/index.php" <<PHP
+<?php
+// CopyForge reverse proxy (fallback when Apache mod_proxy is unavailable).
+\$port = $WEB_PORT;
+\$url = 'http://127.0.0.1:' . \$port . \$_SERVER['REQUEST_URI'];
+\$ch = curl_init(\$url);
+\$headers = [];
+foreach (function_exists('getallheaders') ? getallheaders() : [] as \$k => \$v) {
+  \$lk = strtolower(\$k);
+  if (in_array(\$lk, ['content-length', 'connection', 'accept-encoding'], true)) continue;
+  \$headers[] = \$k . ': ' . \$v;
+}
+\$headers[] = 'X-Forwarded-Proto: https';
+\$headers[] = 'X-Forwarded-For: ' . (\$_SERVER['REMOTE_ADDR'] ?? '');
+curl_setopt_array(\$ch, [
+  CURLOPT_CUSTOMREQUEST => \$_SERVER['REQUEST_METHOD'],
+  CURLOPT_HTTPHEADER => \$headers,
+  CURLOPT_POSTFIELDS => file_get_contents('php://input'),
+  CURLOPT_RETURNTRANSFER => false,
+  CURLOPT_FOLLOWLOCATION => false,
+  CURLOPT_TIMEOUT => 120,
+  CURLOPT_HEADERFUNCTION => function (\$ch, \$line) {
+    \$t = trim(\$line);
+    if (\$t !== '' && stripos(\$t, 'transfer-encoding:') !== 0 && stripos(\$t, 'connection:') !== 0
+        && stripos(\$t, 'HTTP/') !== 0) {
+      header(\$line, false);
+    }
+    if (stripos(\$t, 'HTTP/') === 0) {
+      \$parts = explode(' ', \$t);
+      if (isset(\$parts[1])) http_response_code((int) \$parts[1]);
+    }
+    return strlen(\$line);
+  },
+  CURLOPT_WRITEFUNCTION => function (\$ch, \$data) { echo \$data; flush(); return strlen(\$data); },
+]);
+curl_exec(\$ch);
+if (curl_errno(\$ch)) { http_response_code(502); echo 'CopyForge upstream unavailable'; }
+curl_close(\$ch);
+PHP
+cat > "$WEBROOT/.htaccess" <<HT
+# CopyForge: route every request through the PHP reverse proxy.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteCond %{REQUEST_URI} !^/index\.php\$
+  RewriteRule ^ index.php [L]
+</IfModule>
+HT
+# Best-effort cache purge so the old placeholder page stops serving.
+curl -sX PURGE "http://127.0.0.1:8080/" >/dev/null 2>&1 || true
+sleep 3
+if public_ok; then
+  log "public URL OK via PHP proxy — deployment complete"
+  exit 0
+fi
+log "FATAL: public URL still not serving CopyForge after both proxy modes"
+log "check: Cloudways panel → Application Settings (Varnish OFF may help), then re-run"
+exit 1

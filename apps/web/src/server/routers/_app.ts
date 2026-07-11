@@ -16,6 +16,7 @@ import { councilRouter } from './council';
 import { assetsRouter } from './assets';
 import { buildRouter } from './build';
 import { focusGroupRouter } from './focusGroup';
+import { claimsRouter } from './claims';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -42,6 +43,7 @@ export const appRouter = router({
   assets: assetsRouter,
   build: buildRouter,
   focusGroup: focusGroupRouter,
+  claims: claimsRouter,
 });
 
 export type AppRouter = typeof appRouter;

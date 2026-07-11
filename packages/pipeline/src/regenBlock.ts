@@ -1,15 +1,20 @@
 import { z } from 'zod';
-import { extractJsonObject, JOB_TYPES, type AssetBlock } from '@copyforge/core';
+import { extractJsonObject, JOB_TYPES, parseExtractedClaims, type AssetBlock } from '@copyforge/core';
 import { createClient, type ClientOptions } from '@copyforge/ai';
 import {
   getCurrentAssetVersion,
+  getCurrentProfile,
+  getPrompt,
   insertAssetVersion,
+  insertClaims,
   type ClaimedJob,
 } from '@copyforge/db';
 
 /**
  * Regenerate a single block (WO-021). Locked blocks refuse regeneration.
  * The new version differs from the current one in exactly the target block.
+ * Claims are re-extracted for the new version (WO-031) — resolved claims
+ * survive via the store's text-similarity rematch.
  */
 
 export const ASSET_REGEN_BLOCK_JOB = JOB_TYPES.assetRegenBlock;
@@ -62,12 +67,39 @@ export function createRegenBlockHandler(clientOptions: ClientOptions = {}) {
 
     const { text } = regenResultSchema.parse(extractJsonObject(result.text));
     const nextBlocks = blocks.map((b) => (b.id === blockId ? { ...b, text } : b));
-    await insertAssetVersion({
+    const inserted = await insertAssetVersion({
       workspaceId: job.workspaceId,
       assetId,
       blocks: nextBlocks,
       createdBy: 'system',
       meta: { regeneratedBlock: blockId },
+    });
+
+    // Claims re-extraction for the regenerated version (WO-031): the store
+    // rematches by text similarity, so attached proofs survive.
+    const claimsPrompt = await getPrompt('claims.extract');
+    if (!claimsPrompt) throw new Error('No active prompt "claims.extract" — run the seed.');
+    const profile = projectId ? await getCurrentProfile(job.workspaceId, projectId) : null;
+    const proofAssets = (profile?.profile as { proof_assets?: unknown[] } | null)?.proof_assets ?? [];
+    const claimsResult = await ai.generate({
+      workspaceId: job.workspaceId,
+      stage: 'claims_extraction',
+      projectId,
+      jobId: job.id,
+      system: [{ text: claimsPrompt.body, cache: true }],
+      messages: [
+        {
+          role: 'user',
+          content: `KNOWN PROOF ASSETS:\n${JSON.stringify(proofAssets)}\n\nCOPY:\n\n${nextBlocks.map((b) => b.text).join('\n\n')}`,
+        },
+      ],
+    });
+    const { claims } = parseExtractedClaims(extractJsonObject(claimsResult.text));
+    await insertClaims({
+      workspaceId: job.workspaceId,
+      assetId,
+      assetVersionId: inserted.id,
+      claims: claims.map((c) => ({ text: c.text, proofRef: c.proof_ref || undefined })),
     });
   };
 }

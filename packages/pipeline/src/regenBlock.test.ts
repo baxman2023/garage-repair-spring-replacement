@@ -3,14 +3,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { newId } from '@copyforge/core';
 import { MockTransport, storeWorkspaceKey } from '@copyforge/ai';
 import {
+  attachClaimProof,
   auditLog,
+  claimsFlagReport,
   closePool,
   createAsset,
   getAsset,
   getCurrentAssetVersion,
   getDb,
   insertAssetVersion,
+  insertClaims,
+  listClaims,
+  listCurrentClaims,
   projects,
+  resetClaimToFlagged,
   tenantDb,
   transitionAssetStatus,
   type ClaimedJob,
@@ -58,6 +64,7 @@ describe('regenerate-single-block (WO-021)', () => {
     const { workspaceId, assetId } = await setup(false);
     const mock = new MockTransport();
     mock.pushText(JSON.stringify({ text: 'The Six A.M. Snap That Traps Your Car' }));
+    mock.pushText(JSON.stringify({ claims: [] })); // WO-031 re-extraction
     await createRegenBlockHandler({ transport: mock })(
       makeJob(workspaceId, { assetId, blockId: 'headline', instruction: 'more visceral' }),
     );
@@ -79,6 +86,57 @@ describe('regenerate-single-block (WO-021)', () => {
     ).rejects.toThrow(/locked/);
     expect(mock.calls.length).toBe(0);
     expect((await getCurrentAssetVersion(workspaceId, assetId))!.version).toBe(1);
+  });
+});
+
+describe('claims inventory — proof linker + regeneration survival (WO-031)', () => {
+  it('attached proofs survive regeneration via text-similarity rematch (acceptance)', async () => {
+    if (!dbUp) return;
+    const { workspaceId, assetId } = await setup(false);
+    const v1 = await getCurrentAssetVersion(workspaceId, assetId);
+    await insertClaims({
+      workspaceId,
+      assetId,
+      assetVersionId: v1!.id,
+      claims: [{ text: 'rated ten thousand cycles by the independent lab' }],
+    });
+    const [claim] = await listClaims(workspaceId, assetId);
+    expect(claim!.status).toBe('flagged'); // extraction without proof arrives flagged
+    await attachClaimProof({ workspaceId, claimId: claim!.id, proofRef: 'lab-cert-2201' });
+
+    // Regenerate: the model re-emits a PARAPHRASE of the proven claim plus a new one.
+    const mock = new MockTransport();
+    mock.pushText(JSON.stringify({ text: 'New headline text' }));
+    mock.pushText(
+      JSON.stringify({
+        claims: [
+          { text: 'rated ten thousand cycles by an accredited independent lab', proof_ref: '' },
+          { text: 'saves five hundred dollars every single year', proof_ref: '' },
+        ],
+      }),
+    );
+    await createRegenBlockHandler({ transport: mock })(
+      makeJob(workspaceId, { assetId, blockId: 'headline' }),
+    );
+
+    const current = await listCurrentClaims(workspaceId, assetId);
+    expect(current).toHaveLength(2);
+    const survived = current.find((c) => c.text.includes('accredited'))!;
+    expect(survived.status).toBe('proven'); // resolution carried by similarity
+    expect(survived.proofRef).toBe('lab-cert-2201');
+    const fresh = current.find((c) => c.text.includes('five hundred'))!;
+    expect(fresh.status).toBe('flagged');
+
+    // Flag report reflects the CURRENT version's claims.
+    const report = await claimsFlagReport(workspaceId, assetId);
+    expect(report).toMatchObject({ total: 2, proven: 1, flagged: 1 });
+    expect(report.flaggedClaims[0]).toContain('five hundred');
+
+    // Proof linker roundtrip: attach → proven, detach → flagged.
+    await attachClaimProof({ workspaceId, claimId: fresh.id, proofRef: 'case-study-9' });
+    expect((await claimsFlagReport(workspaceId, assetId)).flagged).toBe(0);
+    await resetClaimToFlagged({ workspaceId, claimId: fresh.id });
+    expect((await claimsFlagReport(workspaceId, assetId)).flagged).toBe(1);
   });
 });
 

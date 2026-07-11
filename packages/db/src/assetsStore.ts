@@ -205,27 +205,87 @@ export async function setAssetStatus(
 
 // --- Claims (WO-022 / WO-031) -------------------------------------------------
 
+/**
+ * Insert a version's extracted claims. Resolutions SURVIVE regeneration
+ * (WO-031 acceptance): each incoming claim is text-similarity rematched
+ * against the asset's existing claims, inheriting proofRef/status from a
+ * resolved prior claim. Fresh assets have nothing to match — a no-op.
+ */
 export async function insertClaims(params: {
   workspaceId: string;
   assetId: string;
   assetVersionId: string;
   claims: Array<{ text: string; proofRef?: string; status?: 'proven' | 'flagged' }>;
 }): Promise<number> {
+  const { rematchClaims } = await import('@copyforge/core');
   const { claims } = await import('./schema/index.js');
   const db = tenantDb(params.workspaceId);
-  for (const c of params.claims) {
+  const existing = await listClaims(params.workspaceId, params.assetId);
+  const rematched = rematchClaims(
+    params.claims.map((c) => ({
+      text: c.text,
+      proofRef: c.proofRef,
+      status: c.status ?? (c.proofRef ? 'proven' : undefined),
+    })),
+    existing.map((e) => ({ text: e.text, proofRef: e.proofRef, status: e.status })),
+  );
+  for (const c of rematched) {
     await db.insert(claims, {
       assetId: params.assetId,
       assetVersionId: params.assetVersionId,
       text: c.text,
-      proofRef: c.proofRef || null,
-      status: c.status ?? (c.proofRef ? 'proven' : 'flagged'),
+      proofRef: c.proofRef,
+      status: c.status,
     });
   }
-  return params.claims.length;
+  return rematched.length;
 }
 
 export async function listClaims(workspaceId: string, assetId: string) {
   const { claims } = await import('./schema/index.js');
   return tenantDb(workspaceId).findMany(claims, eq(claims.assetId, assetId));
+}
+
+/** Claims for the asset's CURRENT version (what gates and the UI act on). */
+export async function listCurrentClaims(workspaceId: string, assetId: string) {
+  const version = await getCurrentAssetVersion(workspaceId, assetId);
+  const all = await listClaims(workspaceId, assetId);
+  if (!version) return all;
+  const current = all.filter((c) => c.assetVersionId === version.id);
+  return current.length > 0 ? current : all;
+}
+
+/** Proof linker: attach a proof ref → proven. */
+export async function attachClaimProof(params: {
+  workspaceId: string;
+  claimId: string;
+  proofRef: string;
+}): Promise<void> {
+  const { claims } = await import('./schema/index.js');
+  if (!params.proofRef.trim()) throw new Error('A proof reference is required.');
+  await tenantDb(params.workspaceId).update(
+    claims,
+    { proofRef: params.proofRef.trim(), status: 'proven' },
+    eq(claims.id, params.claimId),
+  );
+}
+
+/** Proof linker: reset a claim back to flagged (detaches its proof). */
+export async function resetClaimToFlagged(params: {
+  workspaceId: string;
+  claimId: string;
+}): Promise<void> {
+  const { claims } = await import('./schema/index.js');
+  await tenantDb(params.workspaceId).update(
+    claims,
+    { proofRef: null, status: 'flagged' },
+    eq(claims.id, params.claimId),
+  );
+}
+
+/** Flag report per asset (WO-031): current-version claims, proven vs flagged. */
+export async function claimsFlagReport(workspaceId: string, assetId: string) {
+  const { buildClaimsFlagReport } = await import('@copyforge/core');
+  const current = await listCurrentClaims(workspaceId, assetId);
+  return buildClaimsFlagReport(current.map((c) => ({ text: c.text, status: c.status })));
 }

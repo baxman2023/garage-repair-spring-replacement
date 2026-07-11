@@ -1410,3 +1410,46 @@ G4 pass now auto-enqueues `asset.deslop`.
 - Voice-match re-scores every loop (the rewrite is supposed to move it).
 
 **Open questions:** none blocking.
+
+### WO-031 — Claims inventory
+
+**Acceptance (restated):** Haiku claim extraction per asset version → `claims` (in place
+since WO-022); proof linker UI attaching proof_assets; status proven|flagged; flag report
+per asset. Acceptance: G6 blocked while unresolved flags exist in strict modes; claims
+survive regeneration via text-similarity rematch.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **294 tests pass**
+(core +7, pipeline +1 rich acceptance test). Verified end-to-end: a flagged extraction
+gets `lab-cert-2201` attached via the proof linker (→ proven); regenerating a block
+re-extracts claims and the PARAPHRASED claim ("…by an accredited independent lab")
+inherits the proof and proven status by token-Jaccard rematch, while a genuinely new
+claim ("saves five hundred dollars…") arrives flagged; the flag report reflects the
+current version (2 total / 1 proven / 1 flagged); attach → 0 flags, detach → 1 flag.
+Strict-mode precondition: `assertClaimsResolvedForStrictMode` throws with the flag list
+in health/finance mode and never gates in `none` — this is the exact check WO-032's G6
+will call.
+
+**Files touched:**
+- `packages/core/src/claimsMatch.ts` (+ test): `claimSimilarity` (stopword-free token
+  Jaccard), `rematchClaims` (threshold-driven carry of proofRef/status; matching a
+  FLAGGED prior never fabricates proof; incoming proof_refs keep their own),
+  `buildClaimsFlagReport`, `assertClaimsResolvedForStrictMode`.
+- `packages/db/src/assetsStore.ts`: `insertClaims` now rematches against the asset's
+  existing claims on every insert (fresh assets: no-op); `listCurrentClaims`,
+  `attachClaimProof`, `resetClaimToFlagged`, `claimsFlagReport`.
+- `packages/pipeline/src/regenBlock.ts`: regenerated versions re-extract claims
+  (haiku stage) with the profile's proof assets; store-level rematch carries proofs.
+- Web `claims` router (list + report + attachable proof assets, attachProof, flag) and
+  the `/assets/[assetId]/claims` proof-linker page.
+
+**Decisions:**
+- **Rematch lives in `insertClaims`** — one choke point every extraction path already
+  goes through, so survival works for generator drafts, sibling VSL variants, and
+  regenerations without per-caller wiring.
+- **Similarity is deterministic** (token Jaccard ≥ 0.55, stopwords dropped) — a
+  compliance-adjacent behavior should not depend on a model's mood; threshold is a
+  parameter.
+- The proof linker offers the profile's `proof_assets` as a picker but accepts free-text
+  refs (proof can live outside the profile, e.g. a URL).
+
+**Open questions:** none blocking.

@@ -12,6 +12,16 @@ export {
   type BuildPlanStep,
 } from './buildPlan.js';
 export {
+  claimSimilarity,
+  rematchClaims,
+  buildClaimsFlagReport,
+  assertClaimsResolvedForStrictMode,
+  CLAIM_REMATCH_THRESHOLD,
+  type ClaimLike,
+  type RematchedClaim,
+  type ClaimsFlagReport,
+} from './claimsMatch.js';
+export {
   DEFAULT_DESLOP_CONFIG,
   SPOKEN_ASSET_TYPES,
   fleschKincaidGrade,

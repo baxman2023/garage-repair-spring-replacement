@@ -1,4 +1,4 @@
-import { reportError } from '@copyforge/ai';
+import { isPermanentApiError, reportError } from '@copyforge/ai';
 import {
   claimNextJob,
   completeJob,
@@ -54,9 +54,12 @@ export function runWorker(opts: WorkerOptions): RunningWorker {
       await handler(job);
       await completeJob(job.id, job.jobRunId);
     } catch (err) {
-      await failJob(job.id, job.jobRunId, {
-        message: err instanceof Error ? err.message : String(err),
-      });
+      await failJob(
+        job.id,
+        job.jobRunId,
+        { message: err instanceof Error ? err.message : String(err) },
+        { permanent: isPermanentApiError(err) },
+      );
       // Redaction-first error reporting (WO-056); never throws.
       await reportError(err, { jobType: job.type, jobId: job.id, attempts: job.attempts });
     } finally {

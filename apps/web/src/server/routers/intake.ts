@@ -11,6 +11,7 @@ import {
 import {
   enqueueJob,
   getCurrentProfile,
+  latestJobForProject,
   projects,
   saveProfileVersion,
   type TenantDb,
@@ -35,6 +36,12 @@ export const intakeRouter = router({
       profile: row ? parseProductProfile(row.profile) : emptyProductProfile(),
       updatedAt: row?.updatedAt ?? null,
     };
+  }),
+
+  /** Live status of the latest dump-extraction job (queued/failed surfacing). */
+  dumpStatus: workspaceProcedure.input(projectScoped).query(async ({ ctx, input }) => {
+    await assertProject(ctx.db, input.projectId);
+    return latestJobForProject(ctx.workspaceId, JOB_TYPES.intakeExtractProfile, input.projectId);
   }),
 
   /** Dump mode: paste text (file uploads are read client-side into text). */

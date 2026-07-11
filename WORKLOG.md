@@ -2619,3 +2619,45 @@ load; `scripts/db-backup.sh`, `scripts/db-restore.sh`,
 `apps/worker/scripts/load-test.ts`, `LAUNCH_CHECKLIST.md`; db `loadEnv.ts`.
 
 **Open questions:** none blocking. Production-host items live in the checklist.
+
+### User-testing pass — live end-to-end run + fixes
+
+**What ran:** the full stack on staging (MariaDB + `next start` + the real worker),
+driven by a real Chromium browser through the complete user journey: magic-link
+signup, project creation, onboarding checklist, fake API key, Sales Detective dump,
+all 13 project sub-pages, licensing/billing/usage settings, autopsy intake, all
+docs/demo/legal pages, admin guard as a non-admin, footer, and the public surfaces
+(unknown quiz slug/share token → 404, bad ingest key → 401, oversized body → capped,
+unsigned Stripe webhook → 503). Console errors and 5xx responses were captured
+throughout. Incidentally verified in production conditions: key REDACTION — a fake
+`sk-ant-…` key transited real Anthropic 401s and appears NOWHERE in web/worker logs.
+
+**Issues found and fixed:**
+1. **Web app could not reach the database under `next start`.** The WO-056 cleanup
+   removed the accidental module-scope `loadRootEnv()` in `@copyforge/db` that the
+   web app had silently depended on for the root `.env`; the worker got an explicit
+   loader, the web app didn't. Fix: `next.config.mjs` loads the repo-root `.env` at
+   server boot (dotenv never overrides real env, so PM2 production vars win).
+2. **Permanent API errors burned the whole retry ladder.** A 401 invalid-key job
+   retried 5× with backoff (~30s of doomed attempts + 5 error reports) before
+   failing. Fix: the ai client preserves the HTTP status on surfaced errors,
+   `isPermanentApiError` (401/403) exported from packages/ai, `failJob` gained a
+   `permanent` option that skips retries, and the worker uses it. Regression test
+   added (fails on attempt 1 of 5, budget untouched).
+3. **Failed extractions were invisible — the worst first-hour bug.** After a dump,
+   the intake UI said "Dump queued — refreshes automatically" FOREVER when the
+   worker job died. Fix: `latestJobForProject` (db) + `intake.dumpStatus` (router)
+   + live status in IntakeWorkbench — queued/running states, and on failure a
+   salmon error with the actual message plus, for auth errors, "your Anthropic key
+   looks invalid — Update it in Settings" linking to `/settings/api-key`.
+   Verified in-browser: failure surfaces 3.4s after submit, one attempt, hint and
+   link rendered (screenshot in the session scratchpad).
+4. **Favicon 404** console noise on every page: added `src/app/icon.svg`.
+
+Also hardened the WO-056 enqueue-cap test against the global fair scheduler
+(claims drain until the test's own workspace job completes).
+
+**Verification:** full ladder green after fixes — typecheck, build, lint, both
+scans, 447 tests; the browser journey re-run ends with zero issues and zero
+console errors. (The known intermittent CLI full-suite flake appeared once and
+passed on isolation + full re-run, consistent with the WO-046 note.)

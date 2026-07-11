@@ -200,6 +200,7 @@ export async function failJob(
   jobId: string,
   jobRunId: string,
   error: JobError,
+  opts?: { permanent?: boolean },
 ): Promise<{ status: 'pending' | 'failed' }> {
   const db = getDb();
   return db.transaction(async (tx) => {
@@ -209,7 +210,9 @@ export async function failJob(
       .where(eq(jobs.id, jobId))
       .limit(1);
     const job = rows[0];
-    const exhausted = !job || job.attempts >= job.maxAttempts;
+    // Permanent failures (e.g. 401 bad API key) skip the retry ladder —
+    // retrying cannot succeed and only delays the user's feedback.
+    const exhausted = opts?.permanent || !job || job.attempts >= job.maxAttempts;
 
     if (exhausted) {
       await tx.update(jobs).set({ status: 'failed', lastError: error }).where(eq(jobs.id, jobId));
@@ -264,4 +267,36 @@ export async function reapStaleJobs(staleMs: number): Promise<number> {
       .where(and(eq(jobRuns.jobId, job.id), eq(jobRuns.status, 'running')));
   }
   return stale.length;
+}
+
+/**
+ * Latest job of a type for a project (WO-056 UX fix): lets the UI show a
+ * queued/extracting/failed state instead of waiting forever on a job that
+ * died. Payloads carry `projectId`, so the match is on the JSON column.
+ */
+export async function latestJobForProject(
+  workspaceId: string,
+  type: string,
+  projectId: string,
+): Promise<{ id: string; status: string; error: string | null; createdAt: Date } | null> {
+  const rows = await getDb()
+    .select()
+    .from(jobs)
+    .where(
+      and(
+        eq(jobs.workspaceId, workspaceId),
+        eq(jobs.type, type),
+        sql`JSON_UNQUOTE(JSON_EXTRACT(${jobs.payload}, '$.projectId')) = ${projectId}`,
+      ),
+    )
+    .orderBy(desc(jobs.createdAt), desc(jobs.id))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    error: (row.lastError as { message?: string } | null)?.message ?? null,
+    createdAt: row.createdAt,
+  };
 }

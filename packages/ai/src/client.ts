@@ -160,8 +160,12 @@ export function createClient(options: ClientOptions = {}) {
             await sleep(backoff);
             continue;
           }
-          // Non-retryable: redact and surface.
-          throw new Error(redact(err));
+          // Non-retryable: redact and surface. The HTTP status survives so
+          // the job layer can distinguish permanent failures (401 bad key)
+          // from transient ones and skip pointless retries.
+          const wrapped = new Error(redact(err)) as Error & { status?: number };
+          wrapped.status = (err as { status?: number } | null)?.status;
+          throw wrapped;
         }
       }
       // This model stayed overloaded across all attempts → next model in chain.

@@ -213,14 +213,36 @@ describe('job enqueue cap (WO-056)', () => {
       await expect(
         enqueueJob({ workspaceId: newId(), type: 'cap.test', payload: {} }),
       ).resolves.toBeTruthy();
-      // …and draining the backlog reopens the door.
-      const job = await claimNextJob('capw');
-      await completeJob(job!.id, job!.jobRunId);
+      // …and draining the backlog reopens the door. The fair scheduler is
+      // global, so claim (and complete) until one of OUR jobs drains.
+      for (let i = 0; i < 50; i++) {
+        const job = await claimNextJob('capw');
+        if (!job) break;
+        await completeJob(job.id, job.jobRunId);
+        if (job.workspaceId === ws) break;
+      }
       await expect(enqueueJob({ workspaceId: ws, type: 'cap.test', payload: {} })).resolves.toBeTruthy();
     } finally {
       if (prev === undefined) delete process.env.JOB_ENQUEUE_CAP;
       else process.env.JOB_ENQUEUE_CAP = prev;
       __resetEnvCache();
     }
+  });
+});
+
+describe('permanent job failures (user-test fix)', () => {
+  it('failJob with permanent:true fails immediately — no retry ladder', async () => {
+    if (!dbUp) return;
+    const ws = newId();
+    const id = await enqueueJob({ workspaceId: ws, type: 'perm.test', payload: {} });
+    const job = await claimNextJob('permw');
+    expect(job!.id).toBe(id);
+
+    // A 401-style permanent error on attempt 1 of 5 goes straight to failed.
+    const outcome = await failJob(job!.id, job!.jobRunId, { message: '401 invalid x-api-key' }, { permanent: true });
+    expect(outcome.status).toBe('failed');
+    const [row] = await getDb().select().from(jobs).where(eq(jobs.id, id));
+    expect(row!.status).toBe('failed');
+    expect(row!.attempts).toBe(1); // did not burn the retry budget
   });
 });

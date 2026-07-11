@@ -11,3 +11,13 @@ export class WorkspaceKeyError extends Error {
     this.name = 'WorkspaceKeyError';
   }
 }
+
+/**
+ * True for API failures no retry can fix — bad/revoked key (401), forbidden
+ * (403). The worker fails these jobs immediately instead of burning the
+ * retry budget (found live: a fake key retried 5x before surfacing).
+ */
+export function isPermanentApiError(err: unknown): boolean {
+  const status = (err as { status?: number } | null)?.status;
+  return status === 401 || status === 403;
+}

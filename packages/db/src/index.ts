@@ -8,6 +8,7 @@ export {
   failJob,
   reapStaleJobs,
   retryDelayMs,
+  latestJobForProject,
   type EnqueueParams,
   type ClaimedJob,
   type JobError,

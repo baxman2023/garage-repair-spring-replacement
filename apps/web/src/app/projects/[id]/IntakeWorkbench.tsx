@@ -35,6 +35,9 @@ export function IntakeWorkbench({ projectId }: { projectId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const dumpText = trpc.intake.dumpText.useMutation({ onSuccess: () => setDump('') });
   const dumpUrl = trpc.intake.dumpUrl.useMutation({ onSuccess: () => setUrl('') });
+  // Live extraction status (WO-056 UX fix): a failed worker job must surface,
+  // not leave "queued" on screen forever.
+  const dumpStatus = trpc.intake.dumpStatus.useQuery({ projectId }, { refetchInterval: 3000 });
 
   async function onFileChosen(file: File | undefined) {
     if (!file) return;
@@ -114,10 +117,27 @@ export function IntakeWorkbench({ projectId }: { projectId: string }) {
               style={{ color: 'var(--muted)' }}
             />
           </div>
-          {(dumpText.isSuccess || dumpUrl.isSuccess) && (
-            <p style={{ color: 'var(--ok)' }}>
-              Dump queued — the profile below refreshes automatically when extraction lands.
+          {dumpStatus.data?.status === 'failed' ? (
+            <p style={{ color: 'salmon' }}>
+              Extraction failed: {dumpStatus.data.error ?? 'unknown error'}
+              {/(401|invalid x-api-key|authentication)/i.test(dumpStatus.data.error ?? '') && (
+                <>
+                  {' '}— your Anthropic key looks invalid.{' '}
+                  <a href="/settings/api-key">Update it in Settings</a>, then re-submit the dump.
+                </>
+              )}
             </p>
+          ) : dumpStatus.data && dumpStatus.data.status !== 'done' ? (
+            <p style={{ color: 'var(--ok)' }}>
+              Extraction {dumpStatus.data.status === 'claimed' ? 'running' : 'queued'} — the
+              profile below refreshes automatically when it lands.
+            </p>
+          ) : (
+            (dumpText.isSuccess || dumpUrl.isSuccess) && (
+              <p style={{ color: 'var(--ok)' }}>
+                Dump queued — the profile below refreshes automatically when extraction lands.
+              </p>
+            )
           )}
           {(dumpText.isError || dumpUrl.isError) && (
             <p style={{ color: 'salmon' }}>{dumpText.error?.message ?? dumpUrl.error?.message}</p>

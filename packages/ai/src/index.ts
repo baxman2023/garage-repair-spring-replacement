@@ -57,4 +57,4 @@ export {
   type ErrorReportContext,
   type ReportFetcher,
 } from './errorReport.js';
-export { WorkspaceKeyError } from './errors.js';
+export { WorkspaceKeyError, isPermanentApiError } from './errors.js';

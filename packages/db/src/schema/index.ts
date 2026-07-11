@@ -4,6 +4,7 @@ export * from './auth';
 export * from './strategy';
 export * from './genome';
 export * from './assets';
+export * from './builds';
 export * from './delivery';
 export * from './ledger';
 export * from './infra';

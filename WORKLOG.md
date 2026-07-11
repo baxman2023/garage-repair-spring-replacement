@@ -1262,3 +1262,58 @@ non-story lead.
   math uses elsewhere; hook budget 5s (skip button) with 0.1s rounding headroom.
 
 **Open questions:** none blocking.
+
+### WO-028 — Fan-out orchestrator + upsell/bump generator
+
+**Acceptance (restated):** One click → full 5-market build, resumable. Job graph builder
+with per-market ordered chains maximizing §1.2 cache hits; progress UI (market × asset
+grid); resume-from-failure; cancel; upsell + order-bump generator appended to the chain;
+single "Build All" action post-G2. Acceptance: kill worker mid-build → resume completes
+without duplicates; cache hit rate visible ≥ target from the second market onward.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **262 tests pass**
+(core +3, db +2 guard coverage, pipeline +5). Verified: plan is market-major (every asset
+for market 1, then market 2 — §1.2's exact ordering rule) with a canonical per-market
+sequence (letter → VSL → feeders → webinar → emails → ads → advertorial → upsell → bump)
+so ads always find their message-match targets; chained `build.step` jobs keep execution
+strictly sequential regardless of worker count; **kill simulation**: a step forced back to
+`running` after its asset was created re-runs WITHOUT a second AI call (mock call-count
+asserted) and without duplicate assets — exactly one asset per (market, type); cancel
+skips pending steps and the in-flight chain job no-ops; a failing step records its error,
+`resume` re-arms from the first non-done step and the build completes; cache stats from
+`usage_ledger` (jobId → step → market) show market 1 at 0% and market 2 at 90% hit rate
+in the harness. Upsell: exactly one accept CTA + required honest decline block
+(`meta.section:"decline"`). Order bump: headline/body/checkbox_line, ≤150 words total.
+
+**Files touched:**
+- `packages/core/src/buildPlan.ts` (+ test): `FUNNEL_ASSET_SEQUENCE`, `buildFunnelPlan`
+  (market-major, subset-preserving); `JOB_TYPES.buildStep`.
+- `packages/db/src/schema/builds.ts` + migration 0005: `funnel_builds` (status + plan),
+  `funnel_build_steps` (seq-unique, status/jobId/assetIds/error) — both tenant-guarded
+  (guard, scan list, guard coverage test).
+- `packages/db/src/builds.ts`: `startFunnelBuild` (G2-gated via `assertG2Approved`, G1 via
+  `enqueueGenerationJob`, one running build per project), step CRUD, `cancelFunnelBuild`,
+  `resumeFunnelBuild`, `buildCacheStats`, `latestBuild`.
+- `packages/pipeline/src/generate.ts`: extracted shared `dispatchGeneration` (handler +
+  orchestrator use one dispatch); `buildStep.ts`: chained handler with dedupe-by-existing-
+  assets resume safety; `generators/upsellBump.ts` (+ tests in buildOrchestrator.test.ts).
+- Worker registers `build.step`; seeds `generate.upsell`, `generate.order_bump`;
+  web `build` router (start/status/cancel/resume) + `/projects/[id]/build` grid page
+  (market × asset glyph grid, per-market + overall cache hit rate, Build All / Cancel /
+  Resume buttons).
+
+**Decisions:**
+- **Chain-on-completion, not bulk enqueue**: enqueueing all steps upfront would let a
+  multi-worker pool run them out of order (cold caches, ads before their VSL). Each step
+  enqueues the next — order is structural.
+- **Resume dedupe is existence-based**: a step whose (market, type) assets exist with
+  `createdAt ≥ build.createdAt` is counted done rather than regenerated. For multi-asset
+  steps (email sequences ×4, feeders ×3) a crash mid-step could leave a partial set that
+  resume counts as done — accepted trade-off vs. duplicating the completed portion;
+  noted for a count-aware repair pass if it bites.
+- **Duplicate chain JOBS are tolerated** (a reaped retry may re-enqueue an already-queued
+  next step); they no-op on done steps — assets can't duplicate, which is what the
+  acceptance demands.
+- Cache observability rides the existing ledger (`jobId` linkage) — no new metering.
+
+**Open questions:** none blocking.

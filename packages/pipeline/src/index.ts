@@ -21,7 +21,8 @@ export {
 } from './harvest.js';
 export { createCouncilRunner, type CouncilRunOptions, type CouncilOutcome, type CouncilLoopRecord } from './council.js';
 export { createRegenBlockHandler, ASSET_REGEN_BLOCK_JOB } from './regenBlock.js';
-export { createGenerateHandler, ASSET_GENERATE_JOB } from './generate.js';
+export { createGenerateHandler, dispatchGeneration, ASSET_GENERATE_JOB, type DispatchArgs } from './generate.js';
+export { createBuildStepHandler, BUILD_STEP_JOB } from './buildStep.js';
 export { createCouncilJobHandler, ASSET_COUNCIL_JOB } from './councilJob.js';
 export { buildGenerationContext, type GenerationContext } from './generators/context.js';
 export { generateSalesLetter, defaultStructure, LETTER_STRUCTURES, type LetterStructure } from './generators/salesLetter.js';
@@ -35,6 +36,7 @@ export {
   type WebinarSection,
 } from './generators/webinar.js';
 export { generateEmailSequences } from './generators/emailSequences.js';
+export { generateUpsell, generateOrderBump, MAX_BUMP_WORDS } from './generators/upsellBump.js';
 export {
   generateMetaAds,
   generateYoutubeAd,

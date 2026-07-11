@@ -14,6 +14,8 @@ import {
   events,
   exports,
   focusGroupRuns,
+  funnelBuildSteps,
+  funnelBuilds,
   funnelMathRuns,
   gateReports,
   licenses,
@@ -96,6 +98,8 @@ export const TENANT_TABLES = [
   seatAssignments,
   licenses,
   harvestQueries,
+  funnelBuilds,
+  funnelBuildSteps,
 ] as const;
 
 /**
@@ -133,6 +137,8 @@ export const TENANT_TABLE_NAMES: readonly string[] = [
   'seatAssignments',
   'licenses',
   'harvestQueries',
+  'funnelBuilds',
+  'funnelBuildSteps',
 ];
 
 /**

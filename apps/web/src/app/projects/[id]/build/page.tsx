@@ -3,12 +3,12 @@ import { redirect, notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import { projects, tenantDb } from '@copyforge/db';
 import { currentSession } from '@/server/auth/session';
-import { ReviewPanel } from './ReviewPanel';
+import { BuildPanel } from './BuildPanel';
 
-export default async function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BuildPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await currentSession();
-  if (!session) redirect(`/login?next=/projects/${id}/review`);
+  if (!session) redirect(`/login?next=/projects/${id}/build`);
   const workspaceId = session.session.activeWorkspaceId;
   if (!workspaceId) redirect('/');
 
@@ -18,16 +18,15 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   return (
     <main style={{ maxWidth: 1200 }}>
       <p>
-        <Link href={`/projects/${id}/voc`}>← VOC</Link>
-        {' · '}
-        <Link href={`/projects/${id}/build`}>Build →</Link>
+        <Link href={`/projects/${id}/review`}>← Strategy Review</Link>
       </p>
-      <h1>Strategy Review — G2</h1>
+      <h1>Build — full funnel fan-out</h1>
       <p style={{ color: 'var(--muted)' }}>
-        The human checkpoint: five markets side by side. Approval snapshots the strategy —
-        the build fan-out stays locked until it passes.
+        One click builds every asset for every approved market, in cache-optimal order (all of
+        market one, then market two…). Kill it, cancel it, resume it — steps never regenerate
+        what already exists.
       </p>
-      <ReviewPanel projectId={id} />
+      <BuildPanel projectId={id} />
     </main>
   );
 }

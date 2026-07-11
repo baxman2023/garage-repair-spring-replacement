@@ -122,5 +122,21 @@ export {
   type CreatePromptVersionInput,
   type ResolvePromptOptions,
 } from './prompts.js';
+export {
+  startFunnelBuild,
+  enqueueBuildStep,
+  getBuild,
+  getBuildStep,
+  listBuildSteps,
+  updateBuildStep,
+  setBuildStatus,
+  cancelFunnelBuild,
+  resumeFunnelBuild,
+  buildCacheStats,
+  latestBuild,
+  type FunnelBuildRow,
+  type FunnelBuildStepRow,
+  type BuildCacheStats,
+} from './builds.js';
 export * as schema from './schema/index.js';
 export * from './schema/index.js';

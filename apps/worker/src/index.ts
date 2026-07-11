@@ -11,8 +11,10 @@ import {
   createHarvestHandler,
   createRegenBlockHandler,
   createGenerateHandler,
+  createBuildStepHandler,
   createCouncilJobHandler,
   createVocMineHandler,
+  BUILD_STEP_JOB,
   GENOME_DECOMPOSE_JOB,
   GENOME_HARVEST_JOB,
   ASSET_REGEN_BLOCK_JOB,
@@ -43,6 +45,7 @@ const handlers: HandlerRegistry = {
   [GENOME_HARVEST_JOB]: createHarvestHandler(),
   [ASSET_REGEN_BLOCK_JOB]: createRegenBlockHandler(),
   [ASSET_GENERATE_JOB]: createGenerateHandler(),
+  [BUILD_STEP_JOB]: createBuildStepHandler(),
   [ASSET_COUNCIL_JOB]: createCouncilJobHandler(),
 };
 

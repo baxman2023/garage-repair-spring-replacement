@@ -13,6 +13,7 @@ export const JOB_TYPES = {
   assetRegenBlock: 'asset.regen_block',
   assetGenerate: 'asset.generate',
   assetCouncil: 'asset.council',
+  buildStep: 'build.step',
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

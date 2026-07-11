@@ -6,6 +6,12 @@ export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
 export { AI_TELLS, findAiTells, hasEmDashOveruse } from './aiTells.js';
 export {
+  FUNNEL_ASSET_SEQUENCE,
+  buildFunnelPlan,
+  type FunnelAssetType,
+  type BuildPlanStep,
+} from './buildPlan.js';
+export {
   MERGE_FIELDS,
   extractMergeFields,
   findUnknownMergeFields,

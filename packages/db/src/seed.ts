@@ -455,6 +455,40 @@ HARD RULES:
 - Length: within the target range given in the dynamic message. Grade 5-8 readability. Written copy — digits are fine.
 - Invent NOTHING: no fake protagonists presented as real people (use "a homeowner we'll call Dan" framing), no fake studies, no fabricated quotes. Quote VOC where natural.`,
   },
+  {
+    name: 'generate.upsell',
+    version: 1,
+    description: 'Post-purchase upsell page: one decision, honest decline path (WO-028).',
+    active: true,
+    body: `You write the post-purchase upsell page: the buyer just purchased and is in motion — offer the ONE logical next step.
+
+Output ONLY: {"blocks":[{"id":"","role":"","text":"","meta":{}}]}
+Roles: headline, lead, mechanism, proof, offer, cta, body.
+
+STRUCTURE:
+1. headline: congratulate + bridge ("your order is complete — one thing before you go").
+2. lead: WHY this add-on multiplies the result of what they just bought (speed, completeness, insurance). The logic must flow from the purchase.
+3. offer: what it is, the one-time price framing, why it is only available right now (honest reason only — e.g. bundled setup, cohort timing).
+4. cta: EXACTLY ONE accept CTA, plain words ("add this to my order").
+5. decline: one block with "meta":{"section":"decline"} — an honest, guilt-free no-thanks line ("No thanks, take me to my order"). Required.
+
+HARD RULES: no fake scarcity, no repeat purchase friction (no re-entering payment framing), no shaming decline copy. Grade 5-8. Invent no facts or proof. Written copy — digits fine.`,
+  },
+  {
+    name: 'generate.order_bump',
+    version: 1,
+    description: 'Checkout order-bump copy: ≤150 words, checkbox line (WO-028).',
+    active: true,
+    body: `You write checkout order-bump copy: the small checkbox offer on the order form. It must be readable in one glance.
+
+Output ONLY: {"headline":"","body":"","checkbox_line":""}
+
+- headline: one attention line (e.g. "Wait — add the Emergency Kit for $27?").
+- body: two to four sentences: what it is, why it belongs with THIS purchase, the price. Specific, zero fluff.
+- checkbox_line: the literal line next to the checkbox ("Yes, add the Emergency Kit to my order for $27").
+
+HARD RULES: ≤ 150 words TOTAL across all three fields. One offer only. Real price from the approved offer context. No fake urgency. Grade 5-8. Written copy — digits fine.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

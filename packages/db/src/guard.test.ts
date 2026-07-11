@@ -47,6 +47,8 @@ const entries: Entry[] = [
   { label: 'seatAssignments', table: s.seatAssignments, values: () => ({ licenseId: newId(), userId: newId() }) },
   { label: 'licenses', table: s.licenses, values: (x) => ({ key: `lic-${x}` }) },
   { label: 'harvestQueries', table: s.harvestQueries, values: () => ({ niche: 'n', query: {} }) },
+  { label: 'funnelBuilds', table: s.funnelBuilds, values: () => ({ projectId: newId(), plan: {} }) },
+  { label: 'funnelBuildSteps', table: s.funnelBuildSteps, values: () => ({ buildId: newId(), marketId: newId(), assetType: 'vsl', seq: 1 }) },
 ];
 
 const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;

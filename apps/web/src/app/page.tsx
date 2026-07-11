@@ -49,6 +49,7 @@ export default async function HomePage() {
       </div>
       <p style={{ color: 'var(--muted)' }}>
         Signed in as <code>{session.user.email}</code> ({membership?.role ?? 'member'}) ·{' '}
+        <Link href="/projects">Projects</Link> ·{' '}
         <Link href="/settings/api-key">API key settings</Link>
       </p>
 

@@ -49,6 +49,20 @@ import {
 
 type TenantTable = MySqlTable & { workspaceId: MySqlColumn; id: MySqlColumn };
 
+/**
+ * Insert payload for a tenant table: everything except `workspace_id`, which
+ * the guard stamps itself. (`id` stays optional — ULID default.)
+ *
+ * NOTE: this is a key-remapped mapped type rather than `Omit<…>` because TS
+ * defers `Omit` over `InferInsertModel<T>` in generic positions and then
+ * drops the optional properties from excess-property checking, rejecting
+ * valid fields at call sites. The homomorphic `as`-remap form resolves
+ * correctly at instantiation.
+ */
+export type TenantInsert<T extends MySqlTable> = {
+  [K in keyof InferInsertModel<T> as K extends 'workspaceId' ? never : K]: InferInsertModel<T>[K];
+};
+
 /** The tenant business/commerce tables the guard enforces. */
 export const TENANT_TABLES = [
   projects,
@@ -154,9 +168,9 @@ export function tenantDb(workspaceId: string) {
 
     insert: async <T extends TenantTable>(
       table: T,
-      values: Omit<InferInsertModel<T>, 'workspaceId' | 'id'> & { id?: string },
+      values: TenantInsert<T>,
     ): Promise<string> => {
-      const id = values.id ?? newId();
+      const id = (values as { id?: string }).id ?? newId();
       await db.insert(table as any).values({ ...values, id, workspaceId } as any);
       return id;
     },

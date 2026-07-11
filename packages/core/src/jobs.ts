@@ -1,0 +1,9 @@
+/**
+ * Canonical job-type identifiers. Defined in core so enqueuers (web, cli) and
+ * the worker's handler registry share one vocabulary.
+ */
+export const JOB_TYPES = {
+  intakeExtractProfile: 'intake.extract_profile',
+} as const;
+
+export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];

@@ -58,10 +58,34 @@ const FEATURE_FLAG_SEEDS: { key: string; enabled: boolean; description: string }
 /**
  * Prompt registry seeds. Generation prompts are authored by their owning work
  * orders (Council WO-020, generators WO-022+, etc.) and appended here as they
- * land. Empty at WO-002 by design — the registry mechanism is what ships now.
+ * land.
  */
-const PROMPT_SEEDS: { name: string; version: number; body: string; description: string; active: boolean }[] =
-  [];
+const PROMPT_SEEDS: { name: string; version: number; body: string; description: string; active: boolean }[] = [
+  {
+    name: 'intake.extract_profile',
+    version: 1,
+    description:
+      'Sales Detective dump-mode extraction: raw dump text → product_profile.json fields (WO-009).',
+    active: true,
+    body: `You are the Sales Detective for a direct-response funnel system. You are given a raw dump of material about a product or offer: sales pages, notes, transcripts, emails, or web copy.
+
+Extract everything you can into the product profile JSON below. Rules:
+- Output ONLY a single JSON object, no prose, no code fences.
+- Use empty strings / empty arrays for anything the dump does not contain. NEVER invent facts, numbers, testimonials, or guarantees that are not in the dump.
+- "promise" is the single biggest outcome promised to the buyer, in one sentence.
+- "mechanism.problem_mechanism" is WHY the problem persists; "mechanism.solution_mechanism" is WHY this solution works where others fail; "mechanism.name" is the branded name of the mechanism if one exists.
+- "proof_assets" entries: {"type": one of "testimonial"|"study"|"demo"|"statistic"|"credential"|"other", "ref": the concrete proof text, "strength": "strong"|"medium"|"weak"}.
+- "enemy" is the villain the buyer blames (a person, industry, habit, or belief).
+- "price": {"amount": number (0 if unknown), "model": e.g. "one-time"|"subscription"|"tiers"}.
+- "constraints.compliance_mode": "health" if the offer makes health/body claims, "finance" if it makes money/earnings claims, else "none".
+- "founder_voice_samples": verbatim passages (1-3) that best capture the founder's natural voice, if any.
+- "prior_attempts": past marketing attempts and their outcomes mentioned in the dump.
+- "links": URLs mentioned in the dump.
+
+JSON shape:
+{"schema_version":"1","name":"","category":"","promise":"","mechanism":{"problem_mechanism":"","solution_mechanism":"","name":""},"origin_story":"","founder_voice_samples":[],"proof_assets":[],"enemy":"","price":{"amount":0,"model":""},"guarantees":[],"constraints":{"compliance_mode":"none","banned_claims":[]},"prior_attempts":[],"links":[]}`,
+  },
+];
 
 async function seedModelRoutes(db: Db): Promise<number> {
   let inserted = 0;

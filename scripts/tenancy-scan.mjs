@@ -68,7 +68,12 @@ for (const rel of SCAN_DIRS) {
     if (enforced.length === 0) continue;
     const lines = source.split('\n');
     for (const name of enforced) {
-      const re = new RegExp(`\\.(from|insert|update|delete)\\(\\s*${name}\\s*[),]`);
+      // Raw drizzle calls take ONLY the table: `.from(tbl)`, `.insert(tbl).values(…)`,
+      // `.update(tbl).set(…)`, `.delete(tbl).where(…)`. Guard calls pass the table
+      // plus more arguments (`tenantDb().insert(tbl, values)`) and never match the
+      // no-comma form. Guard `.delete(tbl)` with an omitted `where` would also match —
+      // pass an explicit predicate to guard deletes.
+      const re = new RegExp(`\\.(from|insert|update|delete)\\(\\s*${name}\\s*\\)`);
       lines.forEach((line, i) => {
         if (re.test(line)) {
           violations.push({ file: file.replace(`${repoRoot}/`, ''), line: i + 1, table: name, code: line.trim() });

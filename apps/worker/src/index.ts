@@ -2,6 +2,7 @@ import { assertEnv } from '@copyforge/core';
 import { installConsoleRedaction } from '@copyforge/ai';
 import { closePool } from '@copyforge/db';
 import { runWorker, type HandlerRegistry } from './worker.js';
+import { createIntakeHandler, INTAKE_EXTRACT_JOB } from './handlers/intake.js';
 
 /**
  * CopyForge worker entrypoint. Validates the environment, installs secret
@@ -11,7 +12,9 @@ import { runWorker, type HandlerRegistry } from './worker.js';
  * are registered here as later work orders land them.
  */
 
-const handlers: HandlerRegistry = {};
+const handlers: HandlerRegistry = {
+  [INTAKE_EXTRACT_JOB]: createIntakeHandler(),
+};
 
 let shuttingDown = false;
 

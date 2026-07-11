@@ -419,3 +419,66 @@ idempotent.
 above with rationale.
 
 **Awaiting your go before starting Phase 1 (Intake & Strategy, WO-009 … WO-016).**
+
+> Go received — Phase 1 started.
+
+---
+
+## Phase 1 — Intake & Strategy
+
+### WO-009 — Sales Detective intake
+
+**Acceptance (restated):** Emit contract-valid `product_profile.json` via Dump mode (paste
+text / URL fetched by a worker job with readability extraction / txt-md upload) and
+Interrogation mode (adaptive flow over origin story, mechanism, proof, enemy, price, prior
+attempts, compliance mode, voice samples — asking only unanswered fields); profile editor
+UI; versioned saves.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **96 tests pass**
+(core 17, worker 7 incl. 4 intake). Verified: dump paste → contract-valid v1 profile with
+the seeded prompt as a cached system block; URL mode fetches via injectable fetcher,
+readability-extracts (script/style stripped), records the source URL in `links`; a second
+dump merges without clobbering (v2); a non-contract model response rejects with nothing
+saved; interrogation asks only unanswered fields (incl. the compliance-default subtlety);
+invalid choice/number answers rejected.
+
+**Files touched:**
+- `packages/core`: `contracts/productProfile.ts` (zod contract §4, `emptyProductProfile`,
+  `mergeProductProfiles`, `applyIntakeAnswer`, `unansweredProfileFields`,
+  `INTAKE_QUESTIONS`) + tests; `readability.ts` (HTML→text) + `jsonExtract.ts` (balanced
+  `{…}` parser) + tests; `jobs.ts` (shared job-type vocabulary).
+- `packages/db`: `profiles.ts` (versioned profile store: `getCurrentProfile`,
+  `saveProfileVersion` — transactional version bump + `is_current` flip +
+  `projects.current_profile_id`); seed: `intake.extract_profile` prompt v1.
+- `apps/worker`: `handlers/intake.ts` (one job type for paste+URL dumps: fetch →
+  readability → pinned prompt → haiku-stage extraction → contract parse → merge → new
+  version), registered in `index.ts`; `handlers/intake.test.ts`.
+- `apps/web`: routers `projects.ts` + `intake.ts` (profile/dumpText/dumpUrl/questions/
+  answer/saveProfile); UI `/projects` list + `/projects/[id]` IntakeWorkbench (dump
+  textarea, URL, file→text upload, one-question-at-a-time interrogation with skip,
+  JSON profile editor with versioned save).
+
+**Decisions:**
+- **Both dump variants run through one worker job** (`intake.extract_profile`); paste is
+  enqueued too, so all AI work happens in the worker (consistent with the later fan-out) and
+  the UI polls the profile.
+- **File upload** is read client-side (`File.text()`) and submitted through the paste path —
+  txt/md need no server-side parsing.
+- **Extraction stage = `classification`** (haiku per §1.1 — cheap/high-volume extraction);
+  prompt body forbids invented facts; extraction merges (non-empty wins, arrays union) so
+  repeated dumps enrich rather than overwrite; user edits survive because empty incoming
+  values never clobber.
+- **`compliance_mode` interrogation subtlety:** its contract default `'none'` is also a
+  legitimate answer, so value alone can't mark it answered. `unansweredProfileFields` takes
+  the interview's explicitly-answered set (client-held); every other field retires on data
+  presence alone.
+- **Two toolchain fixes along the way:**
+  (1) `Omit<InferInsertModel<T>>` in a generic position defers and then drops optional
+  properties from excess-property checks (TS rejects valid insert fields). Replaced with a
+  key-remapped mapped type `TenantInsert<T>` — resolves correctly; negative case
+  (`workspaceId` supplied) still rejects.
+  (2) The tenancy scan matched guard-mediated calls (`ctx.db.insert(projects, …)`).
+  Tightened to the raw-drizzle no-comma form (`.insert(tbl).values`-style); verified still
+  fails closed on planted raw queries.
+
+**Open questions:** none blocking.

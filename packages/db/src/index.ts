@@ -13,6 +13,12 @@ export {
   type JobError,
 } from './queue.js';
 export {
+  getCurrentProfile,
+  listProfileVersions,
+  saveProfileVersion,
+  type ProductProfileRow,
+} from './profiles.js';
+export {
   getPrompt,
   getPromptById,
   listPromptVersions,

@@ -1674,3 +1674,47 @@ list shrinks to the two prompts (WO-037/38).
   subdirectory with a numbered index.
 
 **Open questions:** none blocking.
+
+### WO-037 — Macaly prompt compiler
+
+**Acceptance (restated):** Versioned registry template rendering page goal,
+section-by-section VERBATIM copy injection (DO-NOT-REWRITE fenced), design-brief
+directives, mobile-first + load-speed directives, VideoObject/schema embed instructions,
+quiz embed snippet, form/CTA wiring, final self-check list; copy-to-clipboard UI.
+Acceptance: prompt contains 100% of copy blocks verbatim (asserted); ≤ Macaly practical
+length budget (config) with overflow strategy (split into build + refine prompts).
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **337 tests pass**
+(core +4, pipeline assertions extended). Verified: the compiled prompt carries every
+copy block character-for-character inside DO-NOT-REWRITE fences — asserted independently
+in the test AND enforced fail-closed by `assertBlocksVerbatim` inside the compiler; a
+20-section fixture over a 6k budget splits into PART 1 (BUILD, with placeholder
+instructions for later parts) + REFINE parts, each within ~budget, whose UNION still
+carries every block verbatim; the pipeline test confirms the stored package's
+`renderings.macaly_prompt` contains all VSL blocks and G7's missing list has shrunk to
+just the universal prompt. The template lives in the prompt registry (`macaly.build` v1)
+so it versions like every other prompt; the compiler itself is deterministic
+substitution — checksum-safe, zero AI.
+
+**Files touched:**
+- `packages/core/src/macalyCompile.ts` (+ test): `compileMacalyPrompt` (template vars:
+  page_goal / sections / cta_wiring / schema_embed / quiz_embed / self_check /
+  part_note), `DEFAULT_MACALY_BUDGET_CHARS` (24k, parameterized), overflow splitter,
+  `assertBlocksVerbatim`, `joinPromptParts`.
+- Seed `macaly.build` v1 (the one-shot build template: copy rule, mobile-first +
+  load-speed directives, CTA wiring, structured data, self-check).
+- `packageJob.ts`: compiles the Macaly prompt after file export and persists it into
+  the package renderings.
+- Web `packages` router + `/assets/[assetId]/prompts` page with copy-to-clipboard
+  cards for both prompts and the live G7 missing-list.
+
+**Decisions:**
+- **The compiler is code; the template is registry content.** Wording iterations ship
+  as new prompt versions (pinnable per asset like all prompts); the mechanical
+  guarantees (verbatim fences, budget, split) live in tested code.
+- **Verbatim assertion is fail-closed inside the compiler** — a template edit that
+  drops `{{sections}}` cannot silently ship a prompt without the copy.
+- Split parts each restate the full copy rule and self-check — a refine prompt pasted
+  into a fresh Macaly session still carries its own guardrails.
+
+**Open questions:** none blocking.

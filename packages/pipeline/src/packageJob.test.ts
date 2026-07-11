@@ -167,10 +167,18 @@ describe('package composer job — G7 (WO-035)', () => {
     const promise = variants.find((v) => v.utm_content === 'meta_ad:primary-1')!;
     expect(promise.headline_block).toBe('hook-big_promise');
 
-    // G7 blocked: renderings missing.
+    // G7 blocked: only the universal prompt is still missing (files exported
+    // by WO-036, Macaly prompt compiled by WO-037).
     const g7 = await latestG7(workspaceId, vslId);
     expect(g7!.pass).toBe(false);
-    expect((g7!.report as { missing: string[] }).missing).toContain('renderings.macaly_prompt');
+    expect((g7!.report as { missing: string[] }).missing).toEqual(['renderings.universal_llm_prompt']);
+
+    // The Macaly prompt carries every copy block verbatim (WO-037 acceptance).
+    const stored = (await latestPackage(workspaceId, vslId))!.package as unknown as PageBuildPackage;
+    for (const b of VSL_BLOCKS('big_promise')) {
+      expect(stored.renderings.macaly_prompt).toContain(b.text);
+    }
+    expect(stored.renderings.macaly_prompt).toContain('DO-NOT-REWRITE');
 
     // Checksum stable across identical re-composition (acceptance).
     await handler(makeJob(workspaceId, { projectId, assetId: vslId, marketId }));

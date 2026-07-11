@@ -21,6 +21,13 @@ export {
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
 export {
+  DEFAULT_MACALY_BUDGET_CHARS,
+  compileMacalyPrompt,
+  assertBlocksVerbatim,
+  joinPromptParts,
+  type MacalyCompileResult,
+} from './macalyCompile.js';
+export {
   contentChecksum,
   renderMarkdown,
   renderHtml,

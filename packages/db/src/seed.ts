@@ -526,6 +526,42 @@ Output ONLY: {"style_card":{"tone":"","sentence_habits":"","signature_phrases":[
 Be strict: generic marketing polish scores LOW against a distinct voice.`,
   },
   {
+    name: 'macaly.build',
+    version: 1,
+    description: 'Macaly one-shot build prompt template (WO-037). Placeholders filled deterministically by the compiler.',
+    active: true,
+    body: `You are building a complete, production-ready landing page in Macaly. Build it in ONE pass from this brief.
+
+{{part_note}}
+
+## PAGE GOAL
+{{page_goal}}
+
+## NON-NEGOTIABLE COPY RULE
+Every section below contains final, approved copy between DO-NOT-REWRITE fences. Inject it CHARACTER-FOR-CHARACTER: no paraphrasing, no shortening, no "improving", no reordering, no added headlines. If a fence contains a typo, ship the typo.
+
+## SECTIONS (in this exact order)
+{{sections}}
+
+## DESIGN DIRECTIVES
+- Mobile-first: design at 375px, then scale up. No horizontal scroll at any width.
+- Load speed: system font stack or one swap-safe webfont; no render-blocking scripts; lazy-load below-fold images; total page weight under one megabyte.
+- Visual hierarchy follows the per-section design notes above — the page's visual weight must track the persuasion sequence, not decoration.
+- No navigation bar, no footer link farm, no exit points except the CTA.
+
+## CTA WIRING
+{{cta_wiring}}
+
+## STRUCTURED DATA
+{{schema_embed}}
+
+## QUIZ EMBED
+{{quiz_embed}}
+
+## FINAL SELF-CHECK — verify every line before you declare done
+{{self_check}}`,
+  },
+  {
     name: 'deslop.rewrite',
     version: 1,
     description: 'Targeted de-slop rewrite: fix only failing dimensions, specifics from source material only (WO-030 / G5).',

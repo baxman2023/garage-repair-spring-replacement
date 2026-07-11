@@ -163,8 +163,22 @@ export function createPackageHandler() {
 
     // Render the file artifacts (WO-036) — fills renderings.file_paths.
     const { exportAssetFiles } = await import('./exporter.js');
-    const { files } = await exportAssetFiles({ workspaceId: job.workspaceId, assetId });
+    const { packageId, files } = await exportAssetFiles({ workspaceId: job.workspaceId, assetId });
     pkg.renderings.file_paths = files.map((f) => f.path);
+
+    // Compile the Macaly build prompt (WO-037) from the registry template.
+    const { compileMacalyPrompt, joinPromptParts } = await import('@copyforge/core');
+    const { getPrompt, updatePackageRenderings } = await import('@copyforge/db');
+    const macalyTemplate = await getPrompt('macaly.build');
+    if (macalyTemplate) {
+      const compiled = compileMacalyPrompt(pkg, macalyTemplate.body);
+      pkg.renderings.macaly_prompt = joinPromptParts(compiled.prompts);
+    }
+    await updatePackageRenderings({
+      workspaceId: job.workspaceId,
+      packageId,
+      renderings: pkg.renderings,
+    });
 
     const g7 = checkG7(pkg);
     await recordAssetGate({

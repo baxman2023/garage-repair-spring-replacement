@@ -19,6 +19,7 @@ import { focusGroupRouter } from './focusGroup';
 import { claimsRouter } from './claims';
 import { complianceRouter } from './compliance';
 import { gatesRouter } from './gates';
+import { packagesRouter } from './packages';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -48,6 +49,7 @@ export const appRouter = router({
   claims: claimsRouter,
   compliance: complianceRouter,
   gates: gatesRouter,
+  packages: packagesRouter,
 });
 
 export type AppRouter = typeof appRouter;

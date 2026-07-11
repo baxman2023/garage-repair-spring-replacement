@@ -81,6 +81,8 @@ export function GenomePanel() {
         </p>
       </section>
 
+      <HarvesterSection />
+
       <section style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <h2 style={{ margin: 0 }}>Components</h2>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -122,5 +124,73 @@ export function GenomePanel() {
         </div>
       </section>
     </div>
+  );
+}
+
+function HarvesterSection() {
+  const utils = trpc.useUtils();
+  const queries = trpc.genome.harvestQueries.useQuery(undefined, { refetchInterval: 6000 });
+  const [niche, setNiche] = useState('');
+  const [terms, setTerms] = useState('');
+  const save = trpc.genome.saveHarvestQuery.useMutation({
+    onSuccess: () => {
+      setNiche('');
+      setTerms('');
+      void utils.genome.harvestQueries.invalidate();
+    },
+  });
+  const run = trpc.genome.runHarvest.useMutation({
+    onSuccess: () => void utils.genome.harvestQueries.invalidate(),
+  });
+
+  return (
+    <section style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxWidth: 860 }}>
+      <h2 style={{ margin: 0 }}>Ad Library harvester</h2>
+      <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
+        Saved per-niche queries pull long-running (≥90 day) ads into the genome. If the API is
+        unavailable the run degrades to guided manual paste — same pipeline either way.
+      </p>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <input placeholder="niche" value={niche} onChange={(e) => setNiche(e.target.value)} style={box} />
+        <input
+          placeholder="search terms (e.g. garage door repair)"
+          value={terms}
+          onChange={(e) => setTerms(e.target.value)}
+          style={{ ...box, minWidth: 280 }}
+        />
+        <button
+          onClick={() => save.mutate({ niche, terms, country: 'US' })}
+          disabled={save.isPending || !niche.trim() || !terms.trim()}
+          style={btn}
+        >
+          Save query
+        </button>
+      </div>
+      {queries.data?.map((q) => {
+        const result = q.lastResult as { status?: string; stored?: number; guidance?: string } | null;
+        return (
+          <div key={q.id} style={{ ...box, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <strong>
+                {q.niche} — “{String((q.query as { terms?: string }).terms ?? '')}”
+              </strong>
+              <button onClick={() => run.mutate({ queryId: q.id })} disabled={run.isPending} style={btn}>
+                Harvest now
+              </button>
+            </div>
+            {result?.status === 'ok' && (
+              <span style={{ color: 'var(--ok)', fontSize: 13 }}>
+                Last run stored {result.stored} long-running ad(s).
+              </span>
+            )}
+            {result?.status === 'degraded' && (
+              <span style={{ color: '#f0c674', fontSize: 13 }}>⚠ {result.guidance}</span>
+            )}
+            {!result && <span style={{ color: 'var(--muted)', fontSize: 13 }}>never run</span>}
+          </div>
+        );
+      })}
+      {run.isError && <p style={{ color: 'salmon' }}>{run.error.message}</p>}
+    </section>
   );
 }

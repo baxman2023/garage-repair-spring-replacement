@@ -32,6 +32,16 @@ export {
 } from './markets.js';
 export { seedGenomeCorpus } from './seedGenome.js';
 export {
+  saveHarvestQuery,
+  listHarvestQueries,
+  getHarvestQuery,
+  recordHarvestResult,
+  triggerHarvest,
+  hasGenomeFeedEntitlement,
+  scheduleHarvest,
+  type HarvestQueryRow,
+} from './harvest.js';
+export {
   addSwipe,
   getSwipe,
   listSwipes,

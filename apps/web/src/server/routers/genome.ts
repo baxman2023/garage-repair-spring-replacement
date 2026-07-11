@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { JOB_TYPES } from '@copyforge/core';
-import { addSwipe, enqueueJob, listSwipes, queryGenomeComponents } from '@copyforge/db';
+import {
+  addSwipe,
+  enqueueJob,
+  listHarvestQueries,
+  listSwipes,
+  queryGenomeComponents,
+  saveHarvestQuery,
+  triggerHarvest,
+} from '@copyforge/db';
 import { router, workspaceProcedure } from '../trpc';
 
 /**
@@ -81,5 +89,42 @@ export const genomeRouter = router({
         tags: c.tags,
         shared: c.workspaceId === null,
       }));
+    }),
+
+  /** Saved Ad Library queries per niche (WO-019). */
+  harvestQueries: workspaceProcedure.query(async ({ ctx }) => {
+    const rows = await listHarvestQueries(ctx.workspaceId);
+    return rows.map((q) => ({
+      id: q.id,
+      niche: q.niche,
+      query: q.query,
+      lastRunAt: q.lastRunAt,
+      lastResult: q.lastResult,
+    }));
+  }),
+
+  saveHarvestQuery: workspaceProcedure
+    .input(
+      z.object({
+        niche: z.string().min(1).max(128),
+        terms: z.string().min(1).max(255),
+        country: z.string().length(2).default('US'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const id = await saveHarvestQuery({
+        workspaceId: ctx.workspaceId,
+        niche: input.niche,
+        query: { terms: input.terms, country: input.country },
+      });
+      return { id };
+    }),
+
+  /** Manual harvest trigger — always allowed (scheduling is entitlement-gated). */
+  runHarvest: workspaceProcedure
+    .input(z.object({ queryId: z.string().length(26) }))
+    .mutation(async ({ ctx, input }) => {
+      const jobId = await triggerHarvest(ctx.workspaceId, input.queryId);
+      return { jobId };
     }),
 });

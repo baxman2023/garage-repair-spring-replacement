@@ -21,7 +21,7 @@ const TENANT_TABLE_NAMES = new Set([
   'focusGroupRuns', 'claims', 'gateReports', 'pageBuildPackages', 'exports',
   'quizDefinitions', 'quizSessions', 'quizAnswers', 'quizLeads', 'utmVariantMaps',
   'events', 'controls', 'challengers', 'predictions', 'usageLedger',
-  'apiKeys', 'subscriptions', 'seatAssignments', 'licenses',
+  'apiKeys', 'subscriptions', 'seatAssignments', 'licenses', 'harvestQueries',
 ]);
 
 const SCAN_DIRS = ['apps/web/src', 'apps/worker/src', 'apps/cli/src'];

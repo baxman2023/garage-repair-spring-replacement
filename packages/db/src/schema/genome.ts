@@ -76,3 +76,18 @@ export const genomePacks = mysqlTable(
   },
   (t) => [index('genome_packs_niche_idx').on(t.niche)],
 );
+
+export const harvestQueries = mysqlTable(
+  'harvest_queries',
+  {
+    id: idColumn(),
+    // Tenant-scoped: each workspace curates its own niche queries (WO-019).
+    workspaceId: ulidRef('workspace_id').notNull(),
+    niche: varchar('niche', { length: 128 }).notNull(),
+    query: json('query').$type<Record<string, unknown>>().notNull(),
+    lastRunAt: timestamp('last_run_at'),
+    lastResult: json('last_result').$type<Record<string, unknown>>(),
+    ...timestamps(),
+  },
+  (t) => [index('harvest_queries_ws_idx').on(t.workspaceId, t.niche)],
+);

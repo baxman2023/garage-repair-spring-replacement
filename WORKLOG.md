@@ -877,3 +877,44 @@ invisible); packs resolve by curated ids or filters.
   "curated retrieval sets" reading and practical dynamic packs).
 
 **Open questions:** none blocking.
+
+### WO-019 — Meta Ad Library harvester (manual-trigger v1)
+
+**Acceptance (restated):** Per-niche saved queries; worker fetch of Ad Library results;
+filter to ads running ≥90 days; store to `swipes` (first_seen/last_seen/days_running) →
+auto-decompose via WO-017; ToS-respecting rate limits; degrade to a guided manual-paste
+flow with the same downstream path when blocked. Genome Feed entitlement gates scheduled
+runs; nothing scheduled without entitlement.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **176 tests pass**
+(db +1 guard entry, pipeline +3). Verified: a run over a mixed-age fixture keeps only
+≥90-day ads (200d + boundary-90d kept, 30d filtered), stores them with first/last-seen +
+days_running + `adlib:<id>` tags, and enqueues a `genome.decompose` job per swipe; a
+blocked fetch records `status:"degraded"` with paste guidance and the job succeeds
+cleanly; scheduling refuses with the platform flag off, refuses with the flag on but no
+entitlement, and enqueues once an active Genome-Feed subscription exists; manual triggers
+work without any entitlement.
+
+**Files touched:**
+- Schema: `harvest_queries` (workspace-scoped; niche + query JSON + last_run/last_result;
+  migration `0004`), added to the tenancy guard + scan + cross-tenant suite.
+- `packages/db/src/harvest.ts`: query CRUD, `recordHarvestResult`, `triggerHarvest`
+  (manual), `hasGenomeFeedEntitlement`, `scheduleHarvest` (flag + entitlement gate).
+- `packages/pipeline/src/harvest.ts` (+ test), registered: injectable `AdLibraryFetcher`
+  port; default uses the OFFICIAL `graph.facebook.com/ads_archive` API with
+  `META_ADLIB_TOKEN`, paced 2s between pages (≤3 pages); `HarvestBlockedError` →
+  degradation path.
+- `apps/web`: genome router harvest endpoints; GenomePanel harvester section (save query,
+  Harvest now, ok/degraded status display).
+
+**Decisions:**
+- **ToS honesty:** only the official Ad Library API is used — no scraping. No token / API
+  refusal degrades to guided manual paste, which flows through the identical
+  swipe→decompose path (spec §10 risk 1).
+- **Degradation is a successful job outcome** (recorded, not thrown) — retries won't
+  hammer a blocked API; the UI surfaces the guidance.
+- **`harvest_queries` is an additive table** (not in §3's canonical list) — needed a home
+  for per-niche saved queries + last-run results; guard-enforced like all tenant tables.
+- Boundary rule: exactly 90 days running counts as in (≥).
+
+**Open questions:** none blocking.

@@ -46,6 +46,7 @@ const entries: Entry[] = [
   { label: 'subscriptions', table: s.subscriptions, values: () => ({ status: 'active' }) },
   { label: 'seatAssignments', table: s.seatAssignments, values: () => ({ licenseId: newId(), userId: newId() }) },
   { label: 'licenses', table: s.licenses, values: (x) => ({ key: `lic-${x}` }) },
+  { label: 'harvestQueries', table: s.harvestQueries, values: () => ({ niche: 'n', query: {} }) },
 ];
 
 const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;

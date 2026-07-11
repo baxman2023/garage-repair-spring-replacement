@@ -9,3 +9,13 @@ export { createMarketSelectHandler, MARKET_SELECT_JOB } from './marketSelect.js'
 export { createMarketProfileHandler, MARKET_PROFILE_JOB } from './marketProfile.js';
 export { createVocMineHandler, VOC_MINE_JOB, type VocMineDeps } from './vocMine.js';
 export { createGenomeDecomposeHandler, GENOME_DECOMPOSE_JOB, MIN_TYPED_RATIO, URL_SWIPE_PREFIX, type GenomeDecomposeDeps } from './genomeDecompose.js';
+export {
+  createHarvestHandler,
+  defaultAdLibraryFetcher,
+  HarvestBlockedError,
+  GENOME_HARVEST_JOB,
+  MIN_DAYS_RUNNING,
+  type AdLibraryFetcher,
+  type HarvestedAd,
+  type HarvestDeps,
+} from './harvest.js';

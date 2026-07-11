@@ -4,6 +4,7 @@ import { newId } from '@copyforge/core';
 import { getDb } from './client.js';
 import {
   apiKeys,
+  harvestQueries,
   assetVersions,
   assets,
   challengers,
@@ -94,6 +95,7 @@ export const TENANT_TABLES = [
   subscriptions,
   seatAssignments,
   licenses,
+  harvestQueries,
 ] as const;
 
 /**
@@ -130,6 +132,7 @@ export const TENANT_TABLE_NAMES: readonly string[] = [
   'subscriptions',
   'seatAssignments',
   'licenses',
+  'harvestQueries',
 ];
 
 /**

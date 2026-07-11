@@ -29,6 +29,13 @@
       "when": 1783733132053,
       "tag": "0003_shallow_silver_samurai",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1783737488537,
+      "tag": "0004_easy_warbird",
+      "breakpoints": true
     }
   ]
 }

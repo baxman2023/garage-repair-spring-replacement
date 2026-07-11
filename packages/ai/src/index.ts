@@ -37,3 +37,21 @@ export const CACHE_BLOCK_ROLES = [
 ] as const;
 
 export type CacheBlockRole = (typeof CACHE_BLOCK_ROLES)[number];
+
+export {
+  encryptSecret,
+  decryptSecret,
+  storeWorkspaceKey,
+  getWorkspaceKey,
+  getWorkspaceKeyMeta,
+  requireWorkspaceKey,
+  deleteWorkspaceKey,
+  testWorkspaceKey,
+  defaultAnthropicPing,
+  type EncryptedSecret,
+  type KeyMeta,
+  type Pinger,
+  type TestKeyResult,
+} from './vault.js';
+export { redact, installConsoleRedaction, REDACTED } from './redact.js';
+export { WorkspaceKeyError } from './errors.js';

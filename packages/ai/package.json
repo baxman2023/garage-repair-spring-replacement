@@ -13,9 +13,18 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@copyforge/core": "workspace:*"
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@copyforge/core": "workspace:*",
+    "@copyforge/db": "workspace:*",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "dotenv": "^16.4.7",
+    "vitest": "^3.0.2"
   }
 }

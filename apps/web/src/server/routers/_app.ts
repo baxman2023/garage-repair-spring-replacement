@@ -2,6 +2,7 @@ import { env } from '@copyforge/core';
 import { publicProcedure, router } from '../trpc';
 import { authRouter } from './auth';
 import { workspaceRouter } from './workspace';
+import { apiKeyRouter } from './apiKey';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -14,6 +15,7 @@ export const appRouter = router({
   })),
   auth: authRouter,
   workspace: workspaceRouter,
+  apiKey: apiKeyRouter,
 });
 
 export type AppRouter = typeof appRouter;

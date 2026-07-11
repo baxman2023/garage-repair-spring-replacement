@@ -1,4 +1,5 @@
 import { assertEnv } from '@copyforge/core';
+import { installConsoleRedaction } from '@copyforge/ai';
 
 /**
  * CopyForge worker entrypoint.
@@ -22,6 +23,7 @@ function shutdown(signal: NodeJS.Signals): void {
 }
 
 async function main(): Promise<void> {
+  installConsoleRedaction();
   const env = assertEnv();
   console.log(
     `[worker] started (env=${env.NODE_ENV}, concurrency=${env.WORKER_CONCURRENCY})`,

@@ -48,7 +48,8 @@ export default async function HomePage() {
         </form>
       </div>
       <p style={{ color: 'var(--muted)' }}>
-        Signed in as <code>{session.user.email}</code> ({membership?.role ?? 'member'})
+        Signed in as <code>{session.user.email}</code> ({membership?.role ?? 'member'}) ·{' '}
+        <Link href="/settings/api-key">API key settings</Link>
       </p>
 
       <h2>Members</h2>

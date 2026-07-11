@@ -203,3 +203,49 @@ structural coverage checks; full suite 41 tests green.
   `entries` covers exactly `TENANT_TABLES`, catching drift on the DB side.
 
 **Open questions:** none blocking.
+
+### WO-005 — BYO Anthropic key vault
+
+**Acceptance (restated):** AES-256-GCM encrypt/decrypt under `MASTER_KEY`, storing only
+ciphertext+iv+tag+last4; a "test key" 1-token Messages ping; key rotation; redaction so keys
+never appear in logs/errors. Keys round-trip; logs key-free under a forced error; a
+workspace without a valid key gets an actionable error on any AI call.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green, tenancy scan clean, **55 tests
+pass** (ai +14). Verified: AES-GCM round-trip + fresh IV + tamper-detection; the raw
+`api_keys` row contains no plaintext (only ciphertext/iv/tag/last4); rotation resets
+`verified_at`; `requireWorkspaceKey` throws an actionable `WorkspaceKeyError` when unset;
+a failed ping's error is redacted (no `sk-ant`); `installConsoleRedaction` scrubs console
+output.
+
+**Files touched:**
+- `packages/ai/src/`: `vault.ts` (crypto, store/get/rotate/delete, `requireWorkspaceKey`,
+  `testWorkspaceKey` + `defaultAnthropicPing`), `redact.ts`, `errors.ts`, `index.ts`;
+  `vault.test.ts`, `redact.test.ts`, `vitest.{config,setup}.ts`; package.json
+  (@anthropic-ai/sdk, @copyforge/db, drizzle-orm, vitest, dotenv, @types/node).
+- `apps/web/src/server/routers/apiKey.ts` (+ mounted in `_app.ts`);
+  `app/settings/api-key/{page,ApiKeyPanel}.tsx`; `instrumentation.ts` (redaction on boot);
+  dashboard link.
+- `apps/worker/src/index.ts` — `installConsoleRedaction()` at boot.
+
+**Decisions:**
+- **MASTER_KEY decoding is flexible:** 64-hex → 32 bytes; else a 32-byte base64; else
+  sha256-derived. AES-256-GCM with a random 12-byte IV per encryption; GCM tag stored
+  separately, so tampering fails decryption.
+- **The vault lives in `packages/ai`** (the "resolve workspace key" concern per WO-006) and
+  accesses `api_keys` via `getDb()` directly — it is the canonical, always-workspace-scoped
+  access point for that table (the CI scan covers app code, not this infra module). It's the
+  one sanctioned reader/writer of `api_keys`.
+- **`testWorkspaceKey` takes an injectable `Pinger`** (default = real 1-token Anthropic
+  Messages call, model resolved from `model_routes.classification`, never hardcoded). Tests
+  inject fakes so CI spends no tokens and needs no network — consistent with the mock-AI
+  harness formalized in WO-006. It returns `{ok:false, error}` (redacted) rather than
+  throwing, so the UI can show a clean failure.
+- **Redaction is defense-in-depth:** `redact()` scrubs `sk-(ant-)?…` from strings/errors/
+  objects, and `installConsoleRedaction()` (wired into Next `instrumentation.ts` and the
+  worker boot) wraps console methods so even third-party log lines are scrubbed.
+- **Only owners manage keys** (`ownerProcedure`); status is readable by any member.
+
+**Open questions:** none blocking. The live Anthropic ping path is real but unexercised
+against the API here (no real key / egress); it's covered structurally + via injected
+pingers, and will run for real once a workspace key + the WO-006 client exist.

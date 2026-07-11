@@ -60,7 +60,11 @@ function PromptCard({ title, text }: { title: string; text: string }) {
 }
 
 export function PromptsPanel({ assetId }: { assetId: string }) {
+  const utils = trpc.useUtils();
   const latest = trpc.packages.latest.useQuery({ assetId }, { refetchInterval: 5000 });
+  const compileUniversal = trpc.packages.compileUniversal.useMutation({
+    onSuccess: () => void utils.packages.latest.invalidate({ assetId }),
+  });
   const pkg = latest.data?.package;
 
   if (!pkg) {
@@ -81,6 +85,22 @@ export function PromptsPanel({ assetId }: { assetId: string }) {
         </span>
       </section>
       <PromptCard title="Macaly build prompt" text={pkg.macalyPrompt} />
+      <section style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <span style={{ color: 'var(--muted)', fontSize: 13 }}>Universal prompt stack:</span>
+        {(['single-html', 'nextjs'] as const).map((stack) => (
+          <button
+            key={stack}
+            onClick={() => compileUniversal.mutate({ assetId, stack })}
+            disabled={compileUniversal.isPending}
+            style={btn}
+          >
+            {stack}
+          </button>
+        ))}
+        {compileUniversal.isError && (
+          <span style={{ color: 'salmon' }}>{compileUniversal.error.message}</span>
+        )}
+      </section>
       <PromptCard title="Universal LLM build prompt" text={pkg.universalPrompt} />
     </div>
   );

@@ -166,13 +166,17 @@ export function createPackageHandler() {
     const { packageId, files } = await exportAssetFiles({ workspaceId: job.workspaceId, assetId });
     pkg.renderings.file_paths = files.map((f) => f.path);
 
-    // Compile the Macaly build prompt (WO-037) from the registry template.
-    const { compileMacalyPrompt, joinPromptParts } = await import('@copyforge/core');
+    // Compile the build prompts (WO-037/038) from the registry templates.
+    const { compileMacalyPrompt, joinPromptParts, compileUniversalPrompt } = await import('@copyforge/core');
     const { getPrompt, updatePackageRenderings } = await import('@copyforge/db');
     const macalyTemplate = await getPrompt('macaly.build');
     if (macalyTemplate) {
       const compiled = compileMacalyPrompt(pkg, macalyTemplate.body);
       pkg.renderings.macaly_prompt = joinPromptParts(compiled.prompts);
+    }
+    const universalTemplate = await getPrompt('universal.build');
+    if (universalTemplate) {
+      pkg.renderings.universal_llm_prompt = compileUniversalPrompt(pkg, universalTemplate.body, 'single-html');
     }
     await updatePackageRenderings({
       workspaceId: job.workspaceId,

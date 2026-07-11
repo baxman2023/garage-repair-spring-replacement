@@ -1718,3 +1718,46 @@ substitution — checksum-safe, zero AI.
   into a fresh Macaly session still carries its own guardrails.
 
 **Open questions:** none blocking.
+
+### WO-038 — Universal LLM prompt compiler
+
+**Acceptance (restated):** Template producing role framing, full package payload, tech
+constraints (single-file HTML or user-selected stack), explicit acceptance criteria, a
+self-QA checklist the model must verify line-by-line before declaring done, and the
+zero-placeholders output instruction; variant flags `--stack single-html|nextjs`.
+Acceptance: prompt tested against a live model on one fixture package renders passing
+its own checklist (manual sign-off ok).
+
+**Status:** ✅ Complete (structural). Typecheck/build/lint green, scans clean, **355
+tests pass** (core +3). Verified: copy blocks ride in plain-text DO-NOT-REWRITE fences —
+verbatim even for text containing quotes/newlines (a JSON-only payload would escape them
+and break the guarantee), asserted fail-closed by the shared `assertBlocksVerbatim`; the
+canonical payload carries the design brief / CTA choreography / media schema / variants
+but NOT copy_blocks (no duplication drift); stack variants swap the tech-constraints
+section (`single-html`: one self-contained file that renders from file://; `nextjs`: App
+Router + file tree + `next build` clean) and an unknown stack throws; criteria and QA are
+numbered for the line-by-line verification instruction. The package job compiles the
+default single-html variant — with WO-036–038 all wired, **G7 now passes end-to-end**:
+the pipeline test asserts an empty missing list and both prompts verbatim, and the CLI
+headless fixture now shows the full gate ladder G3–G7 = pass.
+
+**Files touched:**
+- `packages/core/src/universalCompile.ts` (+ test): `compileUniversalPrompt`,
+  `UNIVERSAL_STACKS`, per-stack constraint config.
+- Seed `universal.build` v1 (role framing, locked-copy rule, payload application
+  directives incl. utm variant swap implementation, line-by-line QA, zero-placeholder
+  output rules).
+- `packageJob.ts` compiles the universal prompt (default stack) after Macaly.
+- Web `packages.compileUniversal` mutation (the `--stack` variant flag surface) +
+  stack buttons in the prompts panel.
+
+**Decisions:**
+- **Copy travels in fences, payload in JSON** — the verbatim guarantee must survive
+  JSON escaping, so the copy is never only inside the payload.
+- **The live-model acceptance is intentionally left as the user's manual sign-off**
+  (the acceptance text allows it): CI never spends tokens per the WO-006 mandate, so
+  the harness proves composition, and the human proves the render once against a real
+  model from the prompts page.
+
+**Open questions:** live-model sign-off pending (user action; one fixture package via
+the copy-to-clipboard prompt).

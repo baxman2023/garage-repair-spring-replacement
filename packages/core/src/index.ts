@@ -21,6 +21,11 @@ export {
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
 export {
+  UNIVERSAL_STACKS,
+  compileUniversalPrompt,
+  type UniversalStack,
+} from './universalCompile.js';
+export {
   DEFAULT_MACALY_BUDGET_CHARS,
   compileMacalyPrompt,
   assertBlocksVerbatim,

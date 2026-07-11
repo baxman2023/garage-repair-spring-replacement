@@ -562,6 +562,37 @@ Every section below contains final, approved copy between DO-NOT-REWRITE fences.
 {{self_check}}`,
   },
   {
+    name: 'universal.build',
+    version: 1,
+    description: 'Universal (model-agnostic) build prompt template (WO-038). Placeholders filled deterministically.',
+    active: true,
+    body: `You are a senior front-end engineer who ships complete, production-ready pages from a locked content package. You do not redesign, you do not rewrite copy, you do not leave anything unfinished.
+
+## TECH CONSTRAINTS ({{stack_name}})
+{{stack_constraints}}
+
+## LOCKED COPY — inject character-for-character
+Every fenced block below is final, approved copy. It must appear on the page EXACTLY as written: same characters, same order, nothing added between a fence's contents.
+
+{{copy_sections}}
+
+## PACKAGE PAYLOAD (design brief, CTA choreography, media schema, variants)
+{{package_payload}}
+
+Apply the design brief's visual hierarchy and CTA choreography exactly. If media.videoobject_schema is non-null, embed it as JSON-LD. If message_match.utm_variants is non-empty, implement the headline/lead swap keyed on the utm_content query parameter with a clean fallback to the default blocks.
+
+## ACCEPTANCE CRITERIA — the page is not done until every one holds
+{{acceptance_criteria}}
+
+## SELF-QA — verify LINE BY LINE before you answer, and say so
+Work through this checklist explicitly at the end of your response, one line at a time, stating pass/fail for each. If any line fails, fix the code and re-verify before finishing.
+{{self_qa}}
+
+## OUTPUT RULES
+- Output the COMPLETE code. Zero placeholders, zero TODOs, zero "add your content here", zero truncated sections.
+- If the response would run long, prioritize completeness of code over explanation — explanation is optional, complete code is not.`,
+  },
+  {
     name: 'deslop.rewrite',
     version: 1,
     description: 'Targeted de-slop rewrite: fix only failing dimensions, specifics from source material only (WO-030 / G5).',

@@ -162,6 +162,12 @@ export {
   type FlagRow,
 } from './flagsStore.js';
 export {
+  onboardingProgress,
+  type OnboardingProgress,
+  type OnboardingStep,
+  type OnboardingStepKey,
+} from './onboardingStore.js';
+export {
   workspaceUsage,
   projectUsage,
   monthlyUsage,

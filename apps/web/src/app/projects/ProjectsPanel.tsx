@@ -62,7 +62,11 @@ export function ProjectsPanel() {
           </li>
         ))}
         {list.data?.length === 0 && (
-          <li style={{ color: 'var(--muted)' }}>No projects yet — create your first one above.</li>
+          <li style={{ color: 'var(--muted)' }}>
+            No projects yet — create your first one above, skim the{' '}
+            <a href="/docs/getting-started">first-funnel guide</a>, or study the{' '}
+            <a href="/demo">read-only sample build</a> first.
+          </li>
         )}
       </ul>
     </div>

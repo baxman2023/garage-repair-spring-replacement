@@ -2485,3 +2485,53 @@ it near-exact; the assertion is the honest ratio band).
   basis is displayed to the user instead of implied.
 
 **Open questions:** none blocking.
+
+### WO-054 — Onboarding: "First Funnel Today"
+
+**Acceptance (restated):** Guided first-run (Sales Detective doubles as onboarding);
+progress checklist (profile → offer → math → markets → build → delivery); read-only
+sample demo project showing a finished 5-market build; contextual MDX docs; empty
+states point to the next action. Acceptance: a new user reaches an approved strategy
+(G2) following only on-screen guidance on a fixture product.
+
+**Done.** The checklist (`onboardingProgress`) derives ONLY from real pipeline
+state — named profile version, G0-approved offer, passing G1 math run, approved G2
+snapshot, completed build, packages/exports — so it cannot drift from what the
+gates actually enforce. Each step carries its page href, a next-action hint written
+as guidance ("Forge offer variants and approve one — nothing generates until G0
+passes."), and a contextual docs link. It renders at the top of every project page
+with the next undone step highlighted; when everything is done it hands off to the
+dashboard. Acceptance test walks a fresh workspace through the guided path on the
+fixture product (SpringGuard) asserting at every step that the pointer names the
+right next action, the right href, and the right docs page — and that after the
+five-market diagnosis + snapshot approval, `strategyApproved` is true (G2 reached)
+with the pointer moving on to build.
+
+Docs: real MDX via @next/mdx (`pageExtensions` + `mdx-components.tsx`) — five
+pages (overview, getting started, Sales Detective, gate ladder, delivery) with the
+compliance-disclaimer and commercial-rights language consistent with WO-055.
+Demo: `/demo` renders the read-only sample funnel — a curated static snapshot of a
+finished 5-market SpringGuard build (five diagnosed markets with awareness/
+sophistication/entry-conversation, four assets each, all G3–G7 pass) linking into
+the getting-started guide. Empty states: the projects list now points at the guide
+and the demo; project-level empty states are the checklist itself, which is always
+present and always points somewhere.
+
+**Files touched:**
+- `packages/db/src/onboardingStore.ts` (+ acceptance test).
+- Web: `onboarding` router; `OnboardingChecklist` component on the project page;
+  `/demo` page + static fixture data; `/docs` layout + five `.mdx` pages;
+  `next.config.mjs` MDX wiring; deps @next/mdx, @mdx-js/loader, @mdx-js/react,
+  @types/mdx; ProjectsPanel empty state.
+
+**Decisions:**
+- The demo is a static read-only PAGE rather than a seeded per-workspace project:
+  genuinely immutable, visible before signup, zero schema/mutation-guard sprawl.
+  Documented here as a deliberate interpretation of "sample demo project
+  (read-only)".
+- Checklist state is derived, never stored — no onboarding table to fall out of
+  sync with reality.
+
+**Open questions:** the human walkthrough of the guided path (like WO-042's UX
+sign-off) is a user action; the mechanical acceptance (guidance → G2 on a fixture
+product) is test-verified.

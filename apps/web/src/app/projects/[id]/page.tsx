@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { projects, tenantDb } from '@copyforge/db';
 import { currentSession } from '@/server/auth/session';
 import { IntakeWorkbench } from './IntakeWorkbench';
+import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,6 +22,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         <Link href="/projects">← Projects</Link>
       </p>
       <h1>{project.name}</h1>
+      <OnboardingChecklist projectId={id} />
       <p style={{ color: 'var(--muted)' }}>
         Sales Detective intake — feed it everything you have, answer what it can’t find. Then
         continue to the <Link href={`/projects/${id}/offer`}>Offer Forge (G0) →</Link>

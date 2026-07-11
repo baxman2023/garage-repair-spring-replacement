@@ -1945,3 +1945,48 @@ live walk, spoken assets get the teleprompter step, incomplete packages point at
   left to the user's walkthrough.
 
 **Open questions:** none blocking.
+
+### WO-043 — Event ingestion
+
+**Acceptance (restated):** `events` per §4 with dedupe_key uniqueness; adapters — Ringba
+webhook (call_start/qualified, campaign→market map UI), native quiz events (WO-040),
+generic pixel + webhook (page_view, vsl_quartile 25/50/75/95, optin, sale, refund),
+email metrics CSV import; per-project ingest keys; replay-safe. Acceptance: duplicate
+deliveries collapse; fixture streams populate dashboards; unmapped events land in triage,
+not dropped.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **373 tests pass**
+(core +2, db +4 heavy, +2 guard coverage entries). Migration 0006: `projects.ingest_key`
+(unique), `event_triage`, `campaign_market_maps` — both new tables tenant-guarded (guard
++ scan list + coverage test). Verified: ingest keys generate/rotate and the OLD key dies
+on rotation; Ringba deliveries with unmapped campaigns park in triage with an actionable
+reason and record ZERO events, then route with the marketId attached once the campaign is
+mapped, with duplicate call deliveries collapsing on `ringba:<callId>:<event>`; the pixel
+adapter validates quartiles (25/50/75/95), dedupes per session/type/quartile, and parks
+junk (bad quartile, unknown type, missing sessionRef) in triage; the email CSV path
+parses case-insensitively with per-row deterministic dedupe hashes so a full re-import
+records 0 and collapses 2/2. Triage rows resolve/discard with status tracking. The
+public adapter route (`/api/ingest/<key>/<ringba|pixel>`) returns 202 for triaged
+deliveries so senders don't retry parked payloads. UI: key + endpoints, campaign→market
+map editor, CSV import, triage queue with resolve/discard.
+
+**Files touched:**
+- Migration 0006 + `schema/ingest.ts` (event_triage, campaign_market_maps) +
+  `projects.ingest_key`; guard/scan/coverage updates.
+- `packages/core/src/emailCsv.ts` (+ test): CSV parse with per-row dedupe hashing.
+- `packages/db/src/ingestStore.ts` (+ test): keys, triage, campaign maps, and the
+  three adapters (`ingestRingbaEvent`, `ingestPixelEvent`, `ingestEmailMetrics`).
+- Web: public `/api/ingest/[key]/[adapter]` route, `ingest` tRPC router,
+  `/projects/[id]/ingest` settings page.
+
+**Decisions:**
+- **Triage is the only failure destination** — every malformed or unmapped delivery
+  becomes a queryable row with a human-readable reason; nothing is silently dropped.
+- **202 for triaged deliveries**: the payload is safely parked, so upstream retry loops
+  (which would just re-triage) are discouraged at the HTTP level.
+- Ingest keys are `ck_`-prefixed 48-hex, unique at the DB level, and the ONLY
+  authentication on the public adapters — rotation is the kill switch.
+- "Fixture streams populate dashboards" completes in WO-046 when the dashboards exist;
+  the event fixtures written here are the streams those dashboards will render.
+
+**Open questions:** none blocking.

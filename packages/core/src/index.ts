@@ -22,6 +22,7 @@ export {
 } from './contracts/pageBuildPackage.js';
 export { renderMessageMatchSnippet, type MmSnippetInputs } from './mmSnippet.js';
 export { nextStepsForAsset, type NextStepsInputs } from './nextSteps.js';
+export { parseEmailMetricsCsv, type EmailMetricRow, type EmailCsvParseResult } from './emailCsv.js';
 export {
   renderQuizEmbedHtml,
   type QuizEmbedInputs,

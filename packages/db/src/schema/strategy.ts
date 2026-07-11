@@ -27,9 +27,14 @@ export const projects = mysqlTable(
     currentProfileId: ulidRef('current_profile_id'),
     currentOfferId: ulidRef('current_offer_id'),
     createdByUserId: ulidRef('created_by_user_id'),
+    // Per-project ingest key (WO-043): authenticates the public event adapters.
+    ingestKey: varchar('ingest_key', { length: 64 }),
     ...timestamps(),
   },
-  (t) => [index('projects_ws_created_idx').on(t.workspaceId, t.createdAt)],
+  (t) => [
+    index('projects_ws_created_idx').on(t.workspaceId, t.createdAt),
+    uniqueIndex('projects_ingest_key_uq').on(t.ingestKey),
+  ],
 );
 
 export const productProfiles = mysqlTable(

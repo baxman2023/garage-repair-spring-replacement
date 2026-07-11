@@ -128,6 +128,21 @@ export {
 } from './prompts.js';
 export { recordEvent, type EventType } from './eventsStore.js';
 export {
+  ensureIngestKey,
+  rotateIngestKey,
+  resolveIngestKey,
+  triageEvent,
+  listTriage,
+  setTriageStatus,
+  setCampaignMap,
+  listCampaignMaps,
+  ingestRingbaEvent,
+  ingestPixelEvent,
+  ingestEmailMetrics,
+  type IngestContext,
+  type IngestOutcome,
+} from './ingestStore.js';
+export {
   seedUtmVariantMaps,
   lookupUtmVariant,
   utmMapWorkspace,

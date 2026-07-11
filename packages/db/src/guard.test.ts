@@ -49,6 +49,8 @@ const entries: Entry[] = [
   { label: 'harvestQueries', table: s.harvestQueries, values: () => ({ niche: 'n', query: {} }) },
   { label: 'funnelBuilds', table: s.funnelBuilds, values: () => ({ projectId: newId(), plan: {} }) },
   { label: 'funnelBuildSteps', table: s.funnelBuildSteps, values: () => ({ buildId: newId(), marketId: newId(), assetType: 'vsl', seq: 1 }) },
+  { label: 'eventTriage', table: s.eventTriage, values: () => ({ projectId: newId(), source: 'pixel', payload: {}, reason: 'r' }) },
+  { label: 'campaignMarketMaps', table: s.campaignMarketMaps, values: (x) => ({ projectId: newId(), campaign: `c-${x}`, marketId: newId() }) },
 ];
 
 const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;

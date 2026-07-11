@@ -27,6 +27,8 @@ module.exports = {
       autorestart: true,
       env: {
         NODE_ENV: 'production',
+        // Shared hosts run many apps: the deploy script picks a free port.
+        PORT: process.env.WEB_PORT || '3000',
       },
     },
     {
@@ -46,6 +48,7 @@ module.exports = {
       autorestart: true,
       env: {
         NODE_ENV: workerDev ? 'development' : 'production',
+        WORKER_HEALTH_PORT: process.env.WORKER_HEALTH_PORT || '8787',
       },
     },
   ],

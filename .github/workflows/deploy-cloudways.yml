@@ -79,6 +79,7 @@ jobs:
       - name: Verify public URL
         run: |
           sleep 5
-          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.app_url }}/api/health"
-          echo
+          BODY="$(curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.app_url }}/api/health")"
+          echo "$BODY"
+          echo "$BODY" | grep -q '"app":"CopyForge"' || { echo "public URL is not serving CopyForge"; exit 1; }
           echo "Deployed: ${{ inputs.app_url }}"

@@ -20,10 +20,19 @@ DB_USER="${DB_USER:-$APP_FOLDER}"
 DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PASSWORD="${DB_PASSWORD:?set DB_PASSWORD}"
 APP_URL="${APP_URL:?set APP_URL (e.g. https://phpstack-xxx.cloudwaysapps.com)}"
-WEB_PORT="${WEB_PORT:-3000}"
+WEB_PORT="${WEB_PORT:-3457}"
+WORKER_HEALTH_PORT="${WORKER_HEALTH_PORT:-8961}"
 SRC_DIR="${SRC_DIR:-$HOME/copyforge}"
 
 log() { echo "[deploy] $(date -u +%H:%M:%S) $*"; }
+
+# Shared servers run many Node apps — never assume a port is ours.
+port_busy() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null && { exec 3>&- 3<&-; return 0; } || return 1; }
+pick_free_port() {
+  local p="$1"
+  while port_busy "$p"; do p=$((p + 1)); done
+  echo "$p"
+}
 
 # --- 1. Locate the Cloudways application webroot -----------------------------------
 APP_BASE=""
@@ -101,7 +110,13 @@ log "database migrate + seed"
 (cd packages/db && pnpm db:migrate && pnpm db:seed)
 
 # --- 5. PM2 --------------------------------------------------------------------------
+# Free OUR old ports first, then pick free ports (other tenants keep theirs).
 pm2 delete copyforge-web copyforge-worker >/dev/null 2>&1 || true
+sleep 2
+WEB_PORT="$(pick_free_port "$WEB_PORT")"
+WORKER_HEALTH_PORT="$(pick_free_port "$WORKER_HEALTH_PORT")"
+log "ports: web=$WEB_PORT worker-health=$WORKER_HEALTH_PORT"
+export WEB_PORT WORKER_HEALTH_PORT
 pm2 start ecosystem.config.cjs
 pm2 save >/dev/null
 # Survive server reboots without root: resurrect from cron.
@@ -121,11 +136,12 @@ log ".htaccess proxy → 127.0.0.1:$WEB_PORT installed"
 
 # --- 7. Verify -----------------------------------------------------------------------
 sleep 8
-if curl -fsS -m 10 "http://127.0.0.1:$WEB_PORT/api/health"; then
-  echo
+HEALTH="$(curl -fsS -m 10 "http://127.0.0.1:$WEB_PORT/api/health" || true)"
+echo "$HEALTH"
+if echo "$HEALTH" | grep -q '"app":"CopyForge"'; then
   log "LOCAL HEALTH OK — deployment complete"
 else
-  echo
-  log "WARNING: local health check failed; inspect with: pm2 logs copyforge-web"
+  log "health did not answer as CopyForge; recent web log:"
+  pm2 logs copyforge-web --lines 25 --nostream || true
   exit 1
 fi

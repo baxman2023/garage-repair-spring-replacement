@@ -1,42 +1,53 @@
 import { assertEnv } from '@copyforge/core';
 import { installConsoleRedaction } from '@copyforge/ai';
+import { closePool } from '@copyforge/db';
+import { runWorker, type HandlerRegistry } from './worker.js';
 
 /**
- * CopyForge worker entrypoint.
+ * CopyForge worker entrypoint. Validates the environment, installs secret
+ * redaction, and runs the job-claim loop with graceful shutdown.
  *
- * Responsibilities beyond this bootstrap — the atomic job-claim loop
- * (`FOR UPDATE SKIP LOCKED`), round-robin fair scheduling, heartbeats, the
- * stale-claim reaper, and the generators/gates — are delivered in WO-007 and
- * later. This file is the real process runtime: it validates the environment,
- * installs graceful-shutdown handlers, and keeps the process supervised.
+ * Handlers for concrete job types (generators, gates, harvesters, ledger jobs)
+ * are registered here as later work orders land them.
  */
 
-let shuttingDown = false;
-let keepAlive: NodeJS.Timeout | null = null;
+const handlers: HandlerRegistry = {};
 
-function shutdown(signal: NodeJS.Signals): void {
-  if (shuttingDown) return;
-  shuttingDown = true;
-  console.log(`[worker] received ${signal}, shutting down`);
-  if (keepAlive) clearInterval(keepAlive);
-  process.exit(0);
-}
+let shuttingDown = false;
 
 async function main(): Promise<void> {
   installConsoleRedaction();
   const env = assertEnv();
+  const workerId = `worker-${process.pid}`;
   console.log(
-    `[worker] started (env=${env.NODE_ENV}, concurrency=${env.WORKER_CONCURRENCY})`,
+    `[worker] started ${workerId} (env=${env.NODE_ENV}, concurrency=${env.WORKER_CONCURRENCY})`,
   );
+
+  const worker = runWorker({
+    handlers,
+    workerId,
+    concurrency: env.WORKER_CONCURRENCY,
+  });
+
+  const shutdown = (signal: NodeJS.Signals): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[worker] received ${signal}, draining…`);
+    void worker
+      .stop()
+      .then(() => closePool())
+      .then(() => {
+        console.log('[worker] shutdown complete');
+        process.exit(0);
+      })
+      .catch((err) => {
+        console.error('[worker] error during shutdown', err);
+        process.exit(1);
+      });
+  };
 
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
-
-  // Keep the process supervised and the event loop alive. The atomic
-  // job-claim loop (WO-007) replaces this idle heartbeat with real work.
-  keepAlive = setInterval(() => {
-    /* idle until the job-claim loop is installed in WO-007 */
-  }, 30_000);
 }
 
 main().catch((err) => {

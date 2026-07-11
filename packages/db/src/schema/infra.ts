@@ -27,7 +27,9 @@ export const jobs = mysqlTable(
     attempts: int('attempts').notNull().default(0),
     maxAttempts: int('max_attempts').notNull().default(5),
     claimedBy: varchar('claimed_by', { length: 64 }),
-    heartbeatAt: timestamp('heartbeat_at'),
+    // Millisecond precision: the fair scheduler orders workspaces by their most
+    // recent claim (MAX heartbeat); second-resolution would tie constantly.
+    heartbeatAt: timestamp('heartbeat_at', { fsp: 3 }),
     lastError: json('last_error').$type<Record<string, unknown>>(),
     ...timestamps(),
   },

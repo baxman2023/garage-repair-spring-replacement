@@ -1,0 +1,1 @@
+ALTER TABLE `jobs` MODIFY COLUMN `heartbeat_at` timestamp(3);

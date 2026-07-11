@@ -303,3 +303,48 @@ such); real per-model prices can be corrected in the admin surface (WO-052).
 WO-001 … WO-006 complete, committed, and pushed. Remaining in Phase 0: WO-007 (job queue +
 fair scheduler), WO-008 (prompt registry + pinning). Running totals: 65 tests, live MariaDB
 bootstrapped in-container, two CI guard scans (tenancy, ai-boundary).
+
+### WO-007 — Job queue + fair scheduler
+
+**Acceptance (restated):** Atomic claim via `FOR UPDATE SKIP LOCKED`; round-robin fairness
+(least-recently-served workspace first); heartbeat + stale-claim reaper; retries with backoff
+→ `failed` with error JSON; `job_runs` audit; graceful shutdown; env-tunable concurrency.
+Fairness: A's 100 jobs don't starve B's 2; a crash mid-job is reclaimed exactly once.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green, scans clean, **74 tests pass**
+(db +6 queue, worker +3). Verified: B's 2 jobs served within the first scheduling window
+against A's 100; no job claimed twice under concurrent drain; retry→backoff→failed after max
+attempts with error JSON + two `job_runs`; crashed (stale-heartbeat) job reaped once and
+completed by another worker; heartbeat only refreshes for the owning worker; worker loop
+dispatches to handlers, fails on throw / missing handler, and stops gracefully.
+
+**Files touched:**
+- `packages/db/src/queue.ts` (enqueue/claim/heartbeat/complete/fail/reap + `retryDelayMs`),
+  exported from `index.ts`; `queue.test.ts`.
+- `packages/db/src/schema/infra.ts` — `heartbeat_at` → `timestamp(fsp:3)`; migration
+  `0002_*.sql`.
+- `apps/worker/src/worker.ts` (runtime loop, handler registry, reaper, graceful stop),
+  `index.ts` (wire loop + signal handlers), `worker.test.ts`, vitest config/setup, deps.
+
+**Decisions:**
+- **MariaDB `SKIP LOCKED` semantics.** MariaDB applies `LIMIT` *before* `SKIP LOCKED`
+  removes locked rows, so `LIMIT 1 … FOR UPDATE SKIP LOCKED` returns empty (not the next
+  row) when its single candidate is locked, and a batch `FOR UPDATE` locks the whole batch.
+  Confirmed with a two-connection probe. The spec mandates `FOR UPDATE SKIP LOCKED`, so the
+  claim keeps it and the **worker polls** — a transient empty under contention just means
+  "retry shortly," never a lost job. Tests model this by draining across polling rounds; the
+  worker-loop test proves exactly-once processing under concurrency 2.
+- **Fairness via `MAX(heartbeat_at)` per workspace**, NULL (never served) first. Needed
+  millisecond precision (`fsp:3`) — second-resolution timestamps tied constantly and
+  collapsed fairness to FIFO (which starved B). Now round-robins correctly.
+- **Retry/backoff:** exponential `1s·2^(attempts-1)` capped at 5 min; re-queues with a future
+  `run_after` until `max_attempts`, then `failed` with the error stored as JSON. Every
+  attempt writes a `job_runs` row (`running`→`succeeded`/`retrying`/`failed`/`reaped`).
+- **Graceful shutdown:** `stop()` flips a flag, clears the reaper interval, and awaits all
+  in-flight loop iterations; the entrypoint wires SIGINT/SIGTERM → drain → `closePool` →
+  exit.
+- **Handlers registered by type** in the worker entrypoint (empty now; generators/gates
+  register theirs in later WOs). Unknown type → immediate `failJob` with an actionable
+  message.
+
+**Open questions:** none blocking.

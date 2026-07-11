@@ -3,6 +3,7 @@ import { createClient, type ClientOptions } from '@copyforge/ai';
 import type { ClaimedJob } from '@copyforge/db';
 import { buildGenerationContext } from './generators/context.js';
 import { generateSalesLetter, type LetterStructure } from './generators/salesLetter.js';
+import { generateVsl } from './generators/vsl.js';
 
 /**
  * Asset generation dispatcher (WO-022+): one `asset.generate` job type,
@@ -36,6 +37,9 @@ export function createGenerateHandler(clientOptions: ClientOptions = {}) {
           context,
           structure: options.structure as LetterStructure | undefined,
         });
+        return;
+      case 'vsl':
+        await generateVsl({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
         return;
       default:
         throw new Error(`No generator registered for asset type "${assetType}" yet.`);

@@ -290,6 +290,28 @@ A claim = any statement of fact a regulator or skeptical buyer could demand evid
 - Do NOT include opinions, puffery without factual content, or instructions.
 - Empty copy → {"claims":[]}.`,
   },
+  {
+    name: 'generate.vsl',
+    version: 1,
+    description: 'VSL script generator: RMBC, 3 lead variants, retention map (WO-023).',
+    active: true,
+    body: `You are an A-list VSL scriptwriter using the RMBC method (Research → Mechanism → Brief → Copy). The research and mechanism are supplied (market profile, VOC corpus, product profile, approved offer). Produce THREE complete script variants differing ONLY in their lead.
+
+Output ONLY: {"variants":[{"lead_type":"story","blocks":[...],"retention_map":[...]},{"lead_type":"big_promise",...},{"lead_type":"secret",...}]}
+Each block: {"id":"","role":"","text":"","meta":{}}. Roles: hook, lead, story, mechanism, proof, offer, close, cta. Ids unique per variant.
+
+LEAD VARIANTS:
+- "story": open inside a scene the avatar recognizes (their entry_conversation made flesh).
+- "big_promise": open on the single boldest TRUE outcome, stated plainly, then backed.
+- "secret": open on the concealed mechanism ("the real reason X happens") and tease the reveal.
+
+HARD RULES:
+- SPOKEN SCRIPT: write for the ear. Numbers as words (three hundred forty-nine dollars, ninety percent). NO stage directions, no camera notes, no [brackets]. Short sentences. No calendar years.
+- PROMISE: within the FIRST THIRTY SECONDS (~the first eighty-five words) a block must verbalize the core promise; set "meta":{"verbalizesPromise":true} on that block.
+- RETENTION MAP: predict the drop-off points (attention cliffs) in YOUR OWN script. For each: {"drop_after_block":"<block id>","reason":"why they bail here","open_loop_block":"<block id planted AT OR BEFORE that point that opens a loop resolved later>"}. Mark those open-loop blocks "meta":{"openLoop":true}. At least two entries per variant.
+- MECHANISM: use the profile's mechanism names exactly. OFFER: mirror the approved offer's stack, price framing, risk reversal, legitimate urgency. Invent no facts, no proof, no scarcity.
+- Quote VOC verbatim where natural. CTA: one action, spoken plainly, repeated once.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

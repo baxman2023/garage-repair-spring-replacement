@@ -25,3 +25,4 @@ export { createGenerateHandler, ASSET_GENERATE_JOB } from './generate.js';
 export { createCouncilJobHandler, ASSET_COUNCIL_JOB } from './councilJob.js';
 export { buildGenerationContext, type GenerationContext } from './generators/context.js';
 export { generateSalesLetter, defaultStructure, LETTER_STRUCTURES, type LetterStructure } from './generators/salesLetter.js';
+export { generateVsl, assertPromiseInFirst30Seconds, VSL_LEAD_TYPES, type VslLeadType } from './generators/vsl.js';

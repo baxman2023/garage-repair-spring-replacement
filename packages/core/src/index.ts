@@ -5,6 +5,18 @@ export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
 export {
+  SPOKEN_WPM,
+  integerToWords,
+  numbersToWords,
+  stripStageDirections,
+  scrubYears,
+  applySpokenConventions,
+  wordCount,
+  blockDurationSeconds,
+  timestampBlocks,
+  totalDurationSeconds,
+} from './spokenScript.js';
+export {
   ASSET_STATUSES,
   canTransition,
   assertTransition,

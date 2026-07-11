@@ -1056,3 +1056,45 @@ market refuses generation before any model call.
   feeding WO-031's inventory.
 
 **Open questions:** none blocking.
+
+### WO-023 — Generator: VSL script
+
+**Acceptance (restated):** RMBC construction; THREE lead variants (story | big promise |
+secret) as sibling versions; 170-WPM timestamps per block; retention map with open-loop
+blocks planted before predicted drop-offs; promise verbalized inside 30s (asserted);
+post-processor (digits→words, stage-direction strip, scrubYears) unit-tested; duration
+calc within ±5% of wordcount/170.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **216 tests pass**
+(core +8 spoken-script, pipeline +3 VSL). Verified: 3 sibling versions with distinct
+`leadType` metas; stored text has `$349`→"three hundred forty-nine dollars",
+`in 2023`→"a while back", `1,200`→words, `[PAUSE]` stripped, and **zero digits**;
+timestamps sequential and total duration within ±5% of wordcount/170; open-loop blocks
+flagged `meta.openLoop` and validated to sit at-or-before their predicted drop block
+(violation → hard reject); a promise flagged after 30s rejects the whole generation; claims
+extracted per variant; auto-G3 enqueued. Post-processor unit tests: integers to words up to
+millions, $/%/decimals/comma-groups, cue-parenthetical vs content-parenthetical stripping,
+year evergreening ("back in 2019"→"a while back", "since 2020"→"for years now").
+
+**Files touched:**
+- `packages/core/src/spokenScript.ts` (+ test): `integerToWords`/`numbersToWords`,
+  `stripStageDirections` (brackets always; parentheticals only on performance-cue words),
+  `scrubYears`, `applySpokenConventions` (**order matters:** strip → scrubYears →
+  numbersToWords — years must be scrubbed before digit conversion eats them; caught by
+  test), `timestampBlocks`/`totalDurationSeconds` at the 170-WPM basis.
+- `packages/pipeline/src/generators/vsl.ts` (+ vsl.test): RMBC prompt-driven generation,
+  strict variant contract (exactly 3, typed leads, ≥1 retention entries), per-variant
+  post-processing + stamping, retention-map placement validation,
+  `assertPromiseInFirst30Seconds` (model flags `meta.verbalizesPromise`; generator asserts
+  timestampStart < 30), sibling-version persistence with retention map in version meta,
+  claims per variant, auto-council. Registered as `assetType: 'vsl'` in the dispatcher.
+- Seed: `generate.vsl` v1.
+
+**Decisions:**
+- **Promise assertion contract:** the model must flag the block that verbalizes the promise;
+  the generator asserts it exists and lands < 30 s by 170-WPM math. Semantic promise-
+  matching would be fuzzy; the flag + timing check is deterministic and testable.
+- **Retention map is validated, not trusted:** unknown block ids or loops planted after
+  their drop point reject the generation.
+
+**Open questions:** none blocking.

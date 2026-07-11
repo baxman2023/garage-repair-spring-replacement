@@ -1,8 +1,9 @@
 import { config } from 'dotenv';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { env } from '@copyforge/core';
+import { env, FUNNEL_ASSET_SEQUENCE, type FunnelAssetType } from '@copyforge/core';
 import { runStrategyPhase } from './strategy.js';
+import { runBuildPhase } from './build.js';
 
 // Load the repo-root .env so headless runs see DATABASE_URL etc.
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
@@ -12,8 +13,9 @@ config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env')
  *
  *   produce --project <id> --phase strategy [--auto-approve] [--dump-file f]
  *           [--price 1000] [--margin 0.8] [--refund 0.05] [--cpc meta=2,search=3.5]
+ *   produce --project <id> --phase build [--markets 1,2] [--assets vsl,email_sequence]
  *
- * Later phases: build (WO-034), challenge (WO-049).
+ * Later phases: challenge (WO-049).
  */
 
 const VERSION = '0.1.0';
@@ -44,14 +46,20 @@ function printHelp(): void {
 
 Usage:
   produce --project <id> --phase strategy [options]
+  produce --project <id> --phase build [--markets 1,2] [--assets vsl,email_sequence]
 
-Options:
+Strategy options:
   --auto-approve      Auto-approve gates G0 (best passing variant) and G2
   --dump-file <path>  Ingest a txt/md dump through Sales Detective first
   --price <n>         Funnel-math price (default: approved offer price)
   --margin <0-1>      Contribution margin (default 0.8)
   --refund <0-1>      Refund rate (default 0.05)
   --cpc a=1.5,b=3     Channel CPC list (default meta=2)
+
+Build options:
+  --markets 1,2       Market ranks to build (default: all approved markets)
+  --assets a,b        Asset types (default: full funnel: ${FUNNEL_ASSET_SEQUENCE.join(',')})
+
   --help, --version
 `);
 }
@@ -105,10 +113,24 @@ async function main(): Promise<number> {
     return summary.ok ? 0 : 1;
   }
 
+  if (phase === 'build') {
+    const marketsFlag = flags.get('markets');
+    const assetsFlag = flags.get('assets');
+    const markets =
+      typeof marketsFlag === 'string'
+        ? marketsFlag.split(',').map((n) => Number(n.trim())).filter((n) => Number.isInteger(n) && n >= 1 && n <= 5)
+        : undefined;
+    const assets =
+      typeof assetsFlag === 'string'
+        ? (assetsFlag.split(',').map((a) => a.trim()).filter(Boolean) as FunnelAssetType[])
+        : undefined;
+    const summary = await runBuildPhase({ projectId, markets, assets });
+    console.log(JSON.stringify(summary, null, 2));
+    return summary.ok ? 0 : 1;
+  }
+
   if (typeof phase === 'string') {
-    console.error(
-      `[produce] phase "${phase}" is not available yet (build → WO-034, challenge → WO-049).`,
-    );
+    console.error(`[produce] phase "${phase}" is not available yet (challenge → WO-049).`);
     return 2;
   }
 

@@ -1543,3 +1543,42 @@ approve are audited status actions; an empty reason is refused.
   tables the query reads, so no push infrastructure is needed yet.
 
 **Open questions:** none blocking.
+
+### WO-034 — produce CLI v2
+
+**Acceptance (restated):** `npm run produce -- --project <id> --phase build
+[--markets 1,2] [--assets vsl,email]` — streams progress, emits a JSON summary with
+per-asset gate outcomes, exits non-zero on any blocked asset. Acceptance: a fixture
+project builds end-to-end headless in CI with mocked AI; the summary schema is stable.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **315 tests pass**
+(cli +3). The acceptance test is the real thing: a fixture project (G0–G2 complete, 5
+diagnosed markets) runs `runBuildPhase` with a content-ROUTED mock transport and drains
+the entire cascade inline — build.step chain → generators → claims → G3 council (6
+lenses × 2 assets = 12 routed lens calls) → G4 focus group (20 personas × 2 assets = 8
+batched calls, persona ids echoed from the request) → G5 de-slop (deterministic; the
+fixture copy is calibrated to pass in-band) → G6 compliance → `packaging`. Summary
+asserts: stable top-level schema (exact key set), build done, steps done, both assets
+`{G3..G6: pass, G7: null}`, zero failed jobs, progress lines streamed. The blocked path:
+a sloppy upsell whose G5 rewrite fixes nothing exhausts its loops → asset `blocked`,
+`summary.blocked` carries it, `ok:false` (→ exit 1). Missing G2 → `error` mentions G2.
+
+**Files touched:**
+- `apps/cli/src/build.ts` (+ `build.test.ts`): `runBuildPhase` — starts the fan-out
+  build, drains THIS workspace's queue inline with the same handler registry the worker
+  uses (build.step / generate / council / focus_group / deslop / compliance), streams
+  per-job progress, assembles the summary from build steps + `projectGateGrid`.
+- `apps/cli/src/index.ts`: `--phase build` wiring with `--markets`/`--assets` parsing,
+  JSON summary to stdout, exit code from `summary.ok`; help text updated.
+
+**Decisions:**
+- **The drain is workspace-scoped and registry-filtered** — it processes only THIS
+  workspace's jobs of known types, never claiming another tenant's work (the global
+  fair-scheduler claim path is the worker's job, not the CLI's).
+- **Headless failures don't retry** — a failed job is marked failed immediately and
+  surfaces in the summary; retry/backoff is queue-worker behavior, not CI behavior.
+- Failed-job cap (`maxJobs`, default 2000) backstops runaway chains in CI.
+- Summary schema is asserted key-for-key in the test, making accidental breaking
+  changes to the contract a test failure (acceptance: "summary schema stable").
+
+**Open questions:** none blocking.

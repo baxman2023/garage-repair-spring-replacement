@@ -127,6 +127,17 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  ASSET_GATES,
+  projectGateGrid,
+  gateReportDetail,
+  overrideGate,
+  blockAsset,
+  approveAsset,
+  type AssetGate,
+  type GateCell,
+  type GateGridRow,
+} from './gatesDashboard.js';
+export {
   COMPLIANCE_ACK_ACTION,
   recordComplianceAck,
   listComplianceAckKeys,

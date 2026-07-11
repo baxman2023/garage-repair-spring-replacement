@@ -1504,3 +1504,42 @@ rule.
   disclaimer-required rules in the same pass.
 
 **Open questions:** none blocking.
+
+### WO-033 — Gate dashboard
+
+**Acceptance (restated):** Project view of the market × asset grid with G3–G7 states;
+block/approve/override (owner-only, audited with reason); gate report drill-ins; bulk
+actions. Acceptance: override writes `audit_log` + `gate_reports.overridden_by`; grid
+reflects live worker updates.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **312 tests pass**
+(db +4). Verified: the grid derives each asset's G3–G7 cells from the LATEST gate report
+(ULID tiebreak), marking overrides distinctly; drill-in returns the full report with
+override metadata. Override records a passing report carrying `overridden_by` + reason,
+writes a `gate.override` audit row, resumes the asset at the post-gate stage (with the
+audited `blocked`-override path when needed) and re-enqueues the next automated gate job
+(G3→focus group, G4→deslop, G5→compliance) — asserted end-to-end: a blocked asset
+overridden at G5 lands in `compliance` with an `asset.compliance` job queued. Block and
+approve are audited status actions; an empty reason is refused.
+
+**Files touched:**
+- `packages/db/src/gatesDashboard.ts` (+ test): `projectGateGrid`, `gateReportDetail`,
+  `overrideGate` (report + audit + resume + re-enqueue), `blockAsset`, `approveAsset`,
+  gate→post-status/job maps.
+- Web `gates` router: grid/report queries (workspace), override/block/approve mutations
+  (**ownerProcedure**, arrays for bulk, reason min-length enforced) — mounted in _app.
+- `/projects/[id]/gates` page: checkbox multi-select with bulk action bar, per-cell
+  glyphs (● pass / ✕ fail / ◉ override / · not run), click-to-drill JSON report,
+  3-second polling so worker updates surface live.
+
+**Decisions:**
+- **Override = a new PASSING gate report, never a mutation of the failing one** — the
+  failure stays in history; the override sits on top with its author and reason.
+- **Override also re-arms the pipeline** (status + next gate job) — a dashboard override
+  should put the asset back in motion, not leave it stranded mid-flow.
+- Bulk actions iterate server-side over the id array with the same single-asset code
+  path — no separate bulk semantics to test or drift.
+- "Live" is client polling (3s) against the grid query; the workers write the same
+  tables the query reads, so no push infrastructure is needed yet.
+
+**Open questions:** none blocking.

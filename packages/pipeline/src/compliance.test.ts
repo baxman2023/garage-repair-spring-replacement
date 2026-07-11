@@ -118,7 +118,7 @@ describe('compliance pre-flight — G6 (WO-032)', () => {
 
     let report = await latestG6(workspaceId, assetId);
     expect(report!.pass).toBe(false);
-    let detail = report!.report as { unacknowledgedWarnings: ComplianceFinding[]; acknowledgeable: boolean };
+    const detail = report!.report as { unacknowledgedWarnings: ComplianceFinding[]; acknowledgeable: boolean };
     expect(detail.acknowledgeable).toBe(true);
     expect(detail.unacknowledgedWarnings.length).toBeGreaterThanOrEqual(2);
     expect(detail.unacknowledgedWarnings.map((f) => f.blockId)).toEqual(

@@ -530,3 +530,44 @@ offer; store is workspace-scoped end to end.
   a small bounded `withTxRetry` helper.
 
 **Open questions:** none blocking.
+
+### WO-011 — Funnel Math (G1)
+
+**Acceptance (restated):** Inputs (price, margin, refund est., channel CPCs, benchmark CVR
+table in config) → outputs (allowable CPA, breakeven ROAS, projected CPA per channel,
+required LTV); pass/fail; HARD STOP with a ranked fix list routing back to G0; printable
+report. Math unit-tested incl. edge cases; a failing project cannot enqueue generation jobs.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **120 tests pass**
+(core +6 math, db +3 store/hard-stop). Verified: full metric derivations; hard stop with
+ranked (ascending-effort) quantified fixes against the best channel; benchmark CVR fallback
+by channel name → default; boundary (CPA == allowable) passes; invalid inputs rejected;
+`enqueueGenerationJob` refuses with no run and after a failing run, flows after a pass, and
+a later failing run re-arms the stop; both verdicts land as project-level G1 gate reports.
+
+**Files touched:**
+- `packages/core/src/funnelMath.ts` (+ test): zod inputs, `BENCHMARK_CVRS` config defaults,
+  `computeFunnelMath` → net revenue/sale, allowable CPA, breakeven ROAS, per-channel
+  projected CPA + required LTV, ranked `fixes`.
+- `packages/db/src/funnelMath.ts` (+ test): `recordFunnelMathRun` (run + G1 gate report,
+  transactional), `latestFunnelMathRun`, `assertG1Passed`, **`enqueueGenerationJob`** — the
+  single enqueue path for generation-class jobs, enforcing the hard stop.
+- `apps/web`: `routers/funnelMath.ts` (run — requires approved G0 offer; latest),
+  `/projects/[id]/math` page + `FunnelMathPanel` (inputs form, report tables, fix list,
+  print stylesheet + Print button). Offer page links onward.
+
+**Decisions:**
+- **Benchmark CVR table lives in core config** (`BENCHMARK_CVRS`, documented as directional
+  defaults, overridable per run via each channel's explicit CVR). Admin-editable storage can
+  layer on in WO-052 without changing the math.
+- **Hard-stop enforcement is structural:** generation-class enqueues must go through
+  `enqueueGenerationJob(projectId, …)`, which throws before touching the queue unless the
+  *latest* run passed. WO-012+ (market selection, fan-out) use it; intake/offer-forge are
+  pre-G1 by design.
+- **DAG order enforced:** `funnelMath.run` refuses without an approved offer (G0 first);
+  fail verdicts are recorded (never hidden) and the report renders either way.
+- **Fix list is quantified against the best channel** (smallest gap): price ×, CVR ×, CPC ÷,
+  AOV target, margin (marked impossible when >100% needed), refund call-out — sorted by
+  required-change factor so the easiest lever leads.
+
+**Open questions:** none blocking.

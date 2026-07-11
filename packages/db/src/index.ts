@@ -19,6 +19,13 @@ export {
   type ProductProfileRow,
 } from './profiles.js';
 export {
+  recordFunnelMathRun,
+  latestFunnelMathRun,
+  assertG1Passed,
+  enqueueGenerationJob,
+  type FunnelMathRunRow,
+} from './funnelMath.js';
+export {
   listOffers,
   saveOfferVariants,
   selectOffer,

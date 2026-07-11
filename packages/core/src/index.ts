@@ -5,6 +5,17 @@ export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { extractJsonObject } from './jsonExtract.js';
 export {
+  computeFunnelMath,
+  funnelMathInputsSchema,
+  channelInputSchema,
+  BENCHMARK_CVRS,
+  DEFAULT_CVR,
+  type FunnelMathInputs,
+  type FunnelMathReport,
+  type FunnelMathFix,
+  type ChannelProjection,
+} from './funnelMath.js';
+export {
   OFFER_SCHEMA_VERSION,
   URGENCY_TYPES,
   offerSchema,

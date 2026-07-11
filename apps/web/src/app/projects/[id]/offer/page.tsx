@@ -23,7 +23,8 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
       <h1>Offer Forge — G0</h1>
       <p style={{ color: 'var(--muted)' }}>
         Diagnose and strengthen the offer before any copy is written. Nothing advances until a
-        selected offer passes the G0 checklist.
+        selected offer passes the G0 checklist. Then run{' '}
+        <Link href={`/projects/${id}/math`}>Funnel Math (G1) →</Link>
       </p>
       <OfferForgePanel projectId={id} />
     </main>

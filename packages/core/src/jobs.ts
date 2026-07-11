@@ -13,6 +13,8 @@ export const JOB_TYPES = {
   assetRegenBlock: 'asset.regen_block',
   assetGenerate: 'asset.generate',
   assetCouncil: 'asset.council',
+  assetFocusGroup: 'asset.focus_group',
+  assetFocusFix: 'asset.focus_fix',
   buildStep: 'build.step',
 } as const;
 

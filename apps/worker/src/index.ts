@@ -13,7 +13,11 @@ import {
   createGenerateHandler,
   createBuildStepHandler,
   createCouncilJobHandler,
+  createFocusGroupHandler,
+  createFocusFixHandler,
   createVocMineHandler,
+  ASSET_FOCUS_GROUP_JOB,
+  ASSET_FOCUS_FIX_JOB,
   BUILD_STEP_JOB,
   GENOME_DECOMPOSE_JOB,
   GENOME_HARVEST_JOB,
@@ -47,6 +51,8 @@ const handlers: HandlerRegistry = {
   [ASSET_GENERATE_JOB]: createGenerateHandler(),
   [BUILD_STEP_JOB]: createBuildStepHandler(),
   [ASSET_COUNCIL_JOB]: createCouncilJobHandler(),
+  [ASSET_FOCUS_GROUP_JOB]: createFocusGroupHandler(),
+  [ASSET_FOCUS_FIX_JOB]: createFocusFixHandler(),
 };
 
 let shuttingDown = false;

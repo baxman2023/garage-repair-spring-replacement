@@ -123,6 +123,11 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  insertFocusGroupRun,
+  latestFocusGroupRun,
+  type FocusGroupRunRow,
+} from './focusGroupStore.js';
+export {
   startFunnelBuild,
   enqueueBuildStep,
   getBuild,

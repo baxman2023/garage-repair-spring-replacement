@@ -24,6 +24,12 @@ export { createRegenBlockHandler, ASSET_REGEN_BLOCK_JOB } from './regenBlock.js'
 export { createGenerateHandler, dispatchGeneration, ASSET_GENERATE_JOB, type DispatchArgs } from './generate.js';
 export { createBuildStepHandler, BUILD_STEP_JOB } from './buildStep.js';
 export { createCouncilJobHandler, ASSET_COUNCIL_JOB } from './councilJob.js';
+export {
+  createFocusGroupHandler,
+  createFocusFixHandler,
+  ASSET_FOCUS_GROUP_JOB,
+  ASSET_FOCUS_FIX_JOB,
+} from './focusGroup.js';
 export { buildGenerationContext, type GenerationContext } from './generators/context.js';
 export { generateSalesLetter, defaultStructure, LETTER_STRUCTURES, type LetterStructure } from './generators/salesLetter.js';
 export { generateVsl, assertPromiseInFirst30Seconds, VSL_LEAD_TYPES, type VslLeadType } from './generators/vsl.js';

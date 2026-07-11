@@ -12,6 +12,20 @@ export {
   type BuildPlanStep,
 } from './buildPlan.js';
 export {
+  DEFAULT_FOCUS_GROUP_CONFIG,
+  samplePersonas,
+  personaResultSchema,
+  focusBatchSchema,
+  aggregateFocusGroup,
+  composeFocusFixBrief,
+  renderFocusReportMarkdown,
+  type FocusGroupConfig,
+  type FocusPersona,
+  type PersonaResult,
+  type FocusAnnotation,
+  type FocusGroupReport,
+} from './focusGroup.js';
+export {
   MERGE_FIELDS,
   extractMergeFields,
   findUnknownMergeFields,

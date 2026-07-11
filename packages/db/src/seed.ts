@@ -489,6 +489,24 @@ Output ONLY: {"headline":"","body":"","checkbox_line":""}
 
 HARD RULES: ≤ 150 words TOTAL across all three fields. One offer only. Real price from the approved offer context. No fake urgency. Grade 5-8. Written copy — digits fine.`,
   },
+  {
+    name: 'focus_group.simulate',
+    version: 1,
+    description: 'Synthetic focus group: batched persona consumption simulation (WO-029 / G4).',
+    active: true,
+    body: `You simulate COLD-TRAFFIC consumption of direct-response copy. You are given a batch of personas (from the diagnosed market) and a block-structured draft. Inhabit EACH persona separately — their skepticism level, awareness stage, and primary objection — and simulate them reading/watching the draft from the top, cold, distracted, with one thumb on the back button.
+
+Output ONLY: {"results":[{"persona_id":"","reached_cta":true,"attention_drop_block":null,"disbelief_claims":[],"bounce_reason":"","spouse_test_quote":""} ...]} — exactly one result per persona, in the given order.
+
+Per persona:
+- reached_cta: did they genuinely stay to the call to action? High-skepticism personas at low awareness bail EARLY unless the copy earns each block.
+- attention_drop_block: the EXACT block id (from the [block <id> · <role>] markers) where attention broke — even for personas who still reached the CTA (a skim-dip counts). null ONLY if attention truly never dropped.
+- disbelief_claims: entries from the CLAIMS INVENTORY (verbatim or near-verbatim) that made THIS persona snort "yeah right". Skeptics 4-5 disbelieve unproven numbers on sight.
+- bounce_reason: if they bailed, why — in the persona's own words ("felt like every other ad", "the price came out of nowhere"). Empty string if they stayed.
+- spouse_test_quote: what they'd say to their spouse about this offer tonight, one sentence, their voice — honest, not polite.
+
+HARD RULES: block ids must be REAL ids from the draft. Personas are not a jury — they don't critique craft, they react. Never invent claims not in the inventory. Different personas MUST diverge (skepticism 1 and skepticism 5 do not behave alike).`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

@@ -1317,3 +1317,49 @@ in the harness. Upsell: exactly one accept CTA + required honest decline block
 - Cache observability rides the existing ledger (`jobId` linkage) — no new metering.
 
 **Open questions:** none blocking.
+
+### WO-029 — Synthetic Focus Group (G4)
+
+**Acceptance (restated):** 20 personas sampled from the market profile (skepticism and
+awareness varied within the diagnosed band) consume the draft in batched fable-5 calls;
+per persona: attention-drop block, disbelief-spike claims, bounce reason, spouse-test
+quote; aggregate report + marked-up draft with annotations anchored to block ids; §5 G4
+thresholds (≥70% reach CTA, no claim disbelieved by ≥50%) config-driven; one-click "fix
+annotations" revision pass; report exportable.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **273 tests pass**
+(core +7, pipeline +4). Verified: deterministic cohort (skepticism cycles 1–5, awareness
+= diagnosed stage ± one, personas lead with real market objections; no RNG — CI-stable);
+consumption batched (20 personas / 5 per call → 4 calls asserted); annotations anchor to
+REAL block ids — an unknown id is a contract violation that fails the run; disbelief
+matched to the claims inventory by normalized containment with one vote per persona per
+claim, and each spiking claim's annotation lands on the block that carries it; thresholds
++ cohort size + batch size all config-driven (custom config flips outcomes in tests);
+pass → G4 gate report + status `focus_group → deslop`; fail → run + annotations persist,
+asset stays in `focus_group`; fix-annotations builds the brief from the failing run's
+annotations, produces one revision version (`meta.focusFix`), and re-enters Council
+(which now chains a passing G3 straight into G4). Markdown export via
+`renderFocusReportMarkdown` + tRPC `focusGroup.exportMarkdown` + download button.
+
+**Files touched:**
+- `packages/core/src/focusGroup.ts` (+ test): config, `samplePersonas`,
+  persona/batch contracts, `aggregateFocusGroup`, `composeFocusFixBrief`,
+  `renderFocusReportMarkdown`.
+- `packages/db/src/focusGroupStore.ts`: `insertFocusGroupRun`, `latestFocusGroupRun`
+  (existing `focus_group_runs` table — no migration needed).
+- `packages/pipeline/src/focusGroup.ts` (+ test): `asset.focus_group` +
+  `asset.focus_fix` handlers; councilJob chains G3 pass → G4.
+- Worker registrations; seed `focus_group.simulate` v1 (fable-5 route already seeded);
+  web `focusGroup` router (latest/run/fixAnnotations/exportMarkdown) +
+  `/assets/[assetId]/focus` report page.
+
+**Decisions:**
+- **Fail leaves the asset in `focus_group`, not `blocked`** — G4's failure artifact is a
+  marked-up draft awaiting the human's one-click fix; `blocked` is for G3 escalation and
+  hard gate failures. The fix pass routes `focus_group → revising → council → (G4 again)`.
+- **Persona sampling is code, not model output** — the cohort's composition (skepticism
+  spread, awareness band, objection coverage) is guaranteed deterministically; the model
+  only simulates behavior.
+- Batch result cardinality is enforced (a batch must return exactly its personas).
+
+**Open questions:** none blocking.

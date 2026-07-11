@@ -1582,3 +1582,52 @@ a sloppy upsell whose G5 rewrite fixes nothing exhausts its loops → asset `blo
   changes to the contract a test failure (acceptance: "summary schema stable").
 
 **Open questions:** none blocking.
+
+### WO-035 — Page Build Package composer (G7)
+
+**Acceptance (restated):** Composer assembling copy_blocks + design brief (visual
+hierarchy mapped to the persuasion sequence; CTA choreography — sticky CTA timing, buy
+reveal keyed to VSL timestamp or letter block), VideoObject JSON-LD for VSL pages, quiz
+embed ref, message-match variant map, acceptance_criteria + self_qa_checklist generation;
+contract validation + checksum; G7 record. Acceptance: package validates; checksum stable
+across identical inputs; missing renderings block G7.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **324 tests pass**
+(core +6, pipeline +3). Verified: identical inputs compose byte-identical packages with
+equal checksums, and two live handler runs on the same asset persist rows with the SAME
+checksum; changing one block changes it. Renderings are excluded from the checksum by
+design (they carry machine-local paths and are filled by WO-036–038), proven by test.
+Missing renderings fail `checkG7` with the exact missing list; after
+`updatePackageRenderings` a recompose preserves them, keeps the checksum, and G7 passes.
+VideoObject JSON-LD derives from the 170-WPM stamps (754s → PT12M34S) with
+`t:` choreography (buy reveal at the offer's timestamp, sticky CTA one beat earlier);
+letters key off `block:` ids. The message-match variant map derives from WO-027's
+ad↔lead tags at BOTH granularities (per-block Meta pieces, whole-script YouTube/
+advertorial), resolving each tagged lead to that variant's headline/lead block ids.
+Acceptance criteria + self-QA are content-driven (video adds the JSON-LD line, quiz adds
+the embed line, variants add the no-layout-shift line). G6 pass now chains
+`asset.package`; worker + headless CLI registries updated (CLI summary now shows G7
+'fail' until the renderers land).
+
+**Files touched:**
+- `packages/core/src/contracts/pageBuildPackage.ts`: the §4 contract (zod) + `checkG7`.
+- `packages/core/src/packageCompose.ts` (+ test): deterministic composer —
+  `buildDesignBrief` (role→weight/directive maps), `buildVideoObject`,
+  `buildAcceptanceCriteria`, `buildSelfQaChecklist`, `composePageBuildPackage`,
+  `packageChecksum` (canonical JSON, renderings excluded).
+- `packages/db/src/packagesStore.ts`: `savePackage`, `latestPackage`,
+  `updatePackageRenderings`.
+- `packages/pipeline/src/packageJob.ts` (+ test): `asset.package` handler +
+  `collectUtmVariants`; G6→G7 chaining; worker + CLI registration.
+
+**Decisions:**
+- **G7 composition is 100% deterministic — zero AI.** Checksum stability is an
+  acceptance criterion; a model call anywhere in the compose path would break it.
+- **Checksum covers content, not renderings** — the checksum identifies the deliverable
+  the renderings must faithfully carry; filling them in cannot change identity.
+- **Packages are insert-newest (full history), latest wins** — recomposition after a
+  copy change yields a new row and a new checksum; nothing is destroyed.
+- G7 pass does NOT auto-approve: `packaging → approved` stays the owner's signature
+  (WO-033 dashboard).
+
+**Open questions:** none blocking.

@@ -12,6 +12,24 @@ export {
   type BuildPlanStep,
 } from './buildPlan.js';
 export {
+  PACKAGE_SCHEMA_VERSION,
+  pageBuildPackageSchema,
+  parsePageBuildPackage,
+  checkG7,
+  type PageBuildPackage,
+  type PackageDesignBrief,
+  type PackageUtmVariant,
+} from './contracts/pageBuildPackage.js';
+export {
+  composePageBuildPackage,
+  packageChecksum,
+  buildDesignBrief,
+  buildVideoObject,
+  buildAcceptanceCriteria,
+  buildSelfQaChecklist,
+  type ComposeInputs,
+} from './packageCompose.js';
+export {
   COMPLIANCE_RULES,
   packsForMode,
   runCompliancePacks,

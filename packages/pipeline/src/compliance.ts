@@ -8,6 +8,7 @@ import {
   type ComplianceMode,
 } from '@copyforge/core';
 import {
+  enqueueJob,
   getAsset,
   getCurrentAssetVersion,
   getCurrentProfile,
@@ -115,6 +116,15 @@ export function createComplianceHandler() {
 
     if (verdict.pass) {
       await setAssetStatus(job.workspaceId, assetId, 'packaging');
+      // Chain G7: compose the Page Build Package (WO-035).
+      const marketId = asset.marketId;
+      if (marketId) {
+        await enqueueJob({
+          workspaceId: job.workspaceId,
+          type: JOB_TYPES.assetPackage,
+          payload: { projectId, assetId, marketId },
+        });
+      }
     }
     // On fail the asset stays in `compliance` — acknowledge warnings or fix
     // errors, then re-run G6.

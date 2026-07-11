@@ -179,11 +179,12 @@ describe('produce --phase build (WO-034)', () => {
     expect(summary.blocked).toEqual([]);
 
     // Per-asset gate outcomes: both assets pass G3-G6 and sit in packaging.
+    // G7 composes but FAILS until renderings exist (WO-036–038 fill them).
     expect(summary.assets).toHaveLength(2);
     for (const asset of summary.assets) {
       expect(asset.marketRank).toBe(1);
       expect(asset.status).toBe('packaging');
-      expect(asset.gates).toEqual({ G3: 'pass', G4: 'pass', G5: 'pass', G6: 'pass', G7: null });
+      expect(asset.gates).toEqual({ G3: 'pass', G4: 'pass', G5: 'pass', G6: 'pass', G7: 'fail' });
     }
 
     // The cascade genuinely ran: generation, claims, 6 lenses × 2, focus batches.

@@ -127,6 +127,12 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  savePackage,
+  latestPackage,
+  updatePackageRenderings,
+  type PackageRow,
+} from './packagesStore.js';
+export {
   ASSET_GATES,
   projectGateGrid,
   gateReportDetail,

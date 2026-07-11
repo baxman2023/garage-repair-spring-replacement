@@ -17,6 +17,7 @@ export const JOB_TYPES = {
   assetFocusFix: 'asset.focus_fix',
   assetDeslop: 'asset.deslop',
   assetCompliance: 'asset.compliance',
+  assetPackage: 'asset.package',
   buildStep: 'build.step',
 } as const;
 

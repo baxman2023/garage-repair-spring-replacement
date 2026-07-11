@@ -19,11 +19,13 @@ import {
   createDeslopHandler,
   createFocusGroupHandler,
   createGenerateHandler,
+  createPackageHandler,
   ASSET_COMPLIANCE_JOB,
   ASSET_COUNCIL_JOB,
   ASSET_DESLOP_JOB,
   ASSET_FOCUS_GROUP_JOB,
   ASSET_GENERATE_JOB,
+  ASSET_PACKAGE_JOB,
   BUILD_STEP_JOB,
 } from '@copyforge/pipeline';
 
@@ -99,6 +101,7 @@ export async function runBuildPhase(
     [ASSET_FOCUS_GROUP_JOB]: createFocusGroupHandler(co),
     [ASSET_DESLOP_JOB]: createDeslopHandler(co),
     [ASSET_COMPLIANCE_JOB]: createComplianceHandler(),
+    [ASSET_PACKAGE_JOB]: createPackageHandler(),
   };
 
   let buildId: string;

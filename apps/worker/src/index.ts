@@ -1,9 +1,15 @@
-import { config } from 'dotenv';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 // Load the repo-root .env before anything reads `env` (dev/staging; PM2 prod
-// environments inject real vars and dotenv never overrides them).
-config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
+// environments inject real vars and dotenv never overrides them). dotenv is
+// required lazily via createRequire — a static import becomes a CJS shim in
+// the ESM bundle that plain `node dist/index.js` cannot execute.
+{
+  const require = createRequire(import.meta.url);
+  const { config } = require('dotenv') as typeof import('dotenv');
+  config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
+}
 
 import { createServer } from 'node:http';
 import { sql } from 'drizzle-orm';

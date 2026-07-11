@@ -18,7 +18,9 @@ module.exports = {
     {
       name: 'copyforge-web',
       cwd: webDir,
-      script: 'node_modules/.bin/next',
+      // The real JS entry — pnpm's node_modules/.bin/next is a POSIX shell
+      // shim that PM2 (which execs scripts with node) cannot run.
+      script: require.resolve('next/dist/bin/next', { paths: [webDir] }),
       args: 'start',
       instances: 1,
       exec_mode: 'fork',

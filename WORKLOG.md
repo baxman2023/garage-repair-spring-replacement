@@ -1906,3 +1906,42 @@ was never packaged. Impressions land in the ledger as replay-safe `page_view` ev
   one indexed read and zero joins to stay inside the 50ms budget.
 
 **Open questions:** none blocking.
+
+### WO-042 — Delivery Center
+
+**Acceptance (restated):** Per-project browse of packages/exports/prompts, copy buttons,
+regenerate-single-block, per-market ZIP download, quiz links + embed codes, message-match
+snippet, "what to do next" checklist per asset. Acceptance: a new user can go from
+approved build → live-ready files/prompts without touching another screen.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **365 tests pass**
+(core +3). The Delivery Center is one page (`/projects/[id]/delivery`) that aggregates
+every deliverable surface built in this phase: per-market asset cards with package/G7
+state, one-click copy for the Macaly prompt, the universal prompt, and the message-match
+snippet (fetched fresh via tRPC utils at click time), the quiz deploy strip (hosted link,
+single-file embed copy, live funnel metrics), the congruence warning strip for tagged
+ads with unseeded maps, an inline regenerate-single-block control (reusing the WO-021
+job), and per-market ZIP download streaming through a new authenticated, tenant-guarded
+export download route. The "what to do next" checklist is a pure, tested function of the
+asset's pipeline position: gate-stage assets get their fix-it action (fix annotations /
+proof linker / override), packaged assets get the copy-prompt → deploy → snippet → mark-
+live walk, spoken assets get the teleprompter step, incomplete packages point at G7.
+
+**Files touched:**
+- `packages/core/src/nextSteps.ts` (+ test): `nextStepsForAsset`.
+- Web `delivery` router (overview aggregation, marketZip build+download handle, export
+  history), authenticated `/api/exports/download` route (tenant-scoped via the guard,
+  410 on missing files), `/projects/[id]/delivery` page + panel; apps/web now depends
+  on @copyforge/pipeline (for the ZIP exporter).
+
+**Decisions:**
+- **Copy buttons fetch at click time** — prompts can be megabyte-scale, so the overview
+  stays light and the clipboard payload is always the freshest compile.
+- **Downloads stream through an authenticated route** rather than exposing filesystem
+  paths; the guard scopes the export row lookup, and a vanished file returns 410 with a
+  regenerate hint.
+- The acceptance is a UX property; the structural guarantee (every needed artifact and
+  action reachable from the one page) is in place, with the end-to-end click-through
+  left to the user's walkthrough.
+
+**Open questions:** none blocking.

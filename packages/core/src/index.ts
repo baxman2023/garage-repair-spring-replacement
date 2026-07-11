@@ -21,6 +21,7 @@ export {
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
 export { renderMessageMatchSnippet, type MmSnippetInputs } from './mmSnippet.js';
+export { nextStepsForAsset, type NextStepsInputs } from './nextSteps.js';
 export {
   renderQuizEmbedHtml,
   type QuizEmbedInputs,

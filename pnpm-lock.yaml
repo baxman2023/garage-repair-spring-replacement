@@ -69,6 +69,9 @@ importers:
       '@copyforge/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copyforge/pipeline':
+        specifier: workspace:*
+        version: link:../../packages/pipeline
       '@tanstack/react-query':
         specifier: ^5.64.1
         version: 5.101.2(react@19.2.7)

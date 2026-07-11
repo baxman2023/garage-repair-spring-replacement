@@ -22,6 +22,7 @@ import { gatesRouter } from './gates';
 import { packagesRouter } from './packages';
 import { quizRouter } from './quiz';
 import { messageMatchRouter } from './messageMatch';
+import { deliveryRouter } from './delivery';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -54,6 +55,7 @@ export const appRouter = router({
   packages: packagesRouter,
   quiz: quizRouter,
   messageMatch: messageMatchRouter,
+  delivery: deliveryRouter,
 });
 
 export type AppRouter = typeof appRouter;

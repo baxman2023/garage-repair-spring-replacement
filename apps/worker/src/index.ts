@@ -18,9 +18,11 @@ import {
   createDeslopHandler,
   createComplianceHandler,
   createPackageHandler,
+  createQuizGenerateHandler,
   createVocMineHandler,
   ASSET_COMPLIANCE_JOB,
   ASSET_PACKAGE_JOB,
+  QUIZ_GENERATE_JOB,
   ASSET_DESLOP_JOB,
   ASSET_FOCUS_GROUP_JOB,
   ASSET_FOCUS_FIX_JOB,
@@ -62,6 +64,7 @@ const handlers: HandlerRegistry = {
   [ASSET_DESLOP_JOB]: createDeslopHandler(),
   [ASSET_COMPLIANCE_JOB]: createComplianceHandler(),
   [ASSET_PACKAGE_JOB]: createPackageHandler(),
+  [QUIZ_GENERATE_JOB]: createQuizGenerateHandler(),
 };
 
 let shuttingDown = false;

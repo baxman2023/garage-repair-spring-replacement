@@ -610,6 +610,28 @@ HOW TO FIX EACH DIMENSION:
 
 HARD RULES: preserve meaning, claims, offer facts, and spoken-script conventions if present. Introduce NOTHING the source material cannot back.`,
   },
+  {
+    name: 'quiz.generate',
+    version: 1,
+    description: 'Market-routing quiz generator: questions, weights, prequal, bands (WO-039).',
+    active: true,
+    body: `You design a routing quiz whose ONLY job is sorting cold visitors into the five market buckets and prequalifying them — every question sounds like helpful discovery, never like a survey.
+
+Output ONLY one JSON object:
+{"questions":[{"id":"","kind":"routing|prequal","text":"","options":[{"id":"","text":"","weights":{"1":0},"disqualify":false}]}],
+ "lead_capture":{"headline":"","button":"","fields":["email"]},
+ "decline":{"headline":"","body":""},
+ "bands":[{"rank":1,"label":"","result_blocks":[{"id":"","role":"","text":""}]}]}
+
+RULES:
+- FIVE to EIGHT routing questions. Each option carries "weights": rank→number (1-5 from the MARKETS list). Weight 3 = strong signal, 1 = weak, omit = none. Every routing option needs at least one weight; every market must be the TOP weight of several options across the quiz (unreachable buckets fail validation).
+- Questions sort by SITUATION and SYMPTOM, not demographics ("What sound does your door make?" not "How old are you?"). Use each market's entry_conversation and avatar.situation as the raw material.
+- ONE or TWO prequal questions (kind "prequal"): budget floor and urgency. Mark truly-unqualified options "disqualify":true (e.g. "just browsing, no budget"). Prequal options carry no weights.
+- lead_capture: sits between the last question and results. Headline promises the personalized result ("Your door diagnosis is ready — where should we send it?").
+- decline: the decline-with-dignity page for disqualified respondents — honest, warm, zero shame, pointing them to a free resource. Never a hard sell.
+- bands: one per rank 1-5. label = the market's name in the respondent's words. result_blocks = that market's SHORT-FORM letter (headline, lead, mechanism, proof, offer, cta — 150-300 words total) written to THAT market's diagnosis, ending in one CTA.
+- Ids: short kebab-case, unique. Grade 5-8 language throughout. Invent no facts.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

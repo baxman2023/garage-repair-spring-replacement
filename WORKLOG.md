@@ -1761,3 +1761,50 @@ headless fixture now shows the full gate ladder G3–G7 = pass.
 
 **Open questions:** live-model sign-off pending (user action; one fixture package via
 the copy-to-clipboard prompt).
+
+### WO-039 — Quiz builder
+
+**Acceptance (restated):** Generator producing 5–8 questions sorting respondents into the
+5 market buckets (options weight-mapped to markets), prequal budget/urgency questions
+with disqualification, weighted scoring, score bands, per-band results copy (that
+market's short-form letter + CTA), lead capture between last question and results,
+editor UI for questions/weights/bands. Acceptance: routing simulator — 1,000 synthetic
+answer sets distribute to expected buckets; disqualified path renders
+decline-with-dignity and is tagged.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **349 tests pass**
+(core +6, pipeline +3). Verified: pure weighted-sum scoring with deterministic
+band-order tiebreak (a constructed genuine tie proves it) and any disqualifying option
+tagging the respondent; structural validation rejects too-few routing questions, missing
+disqualify options, unknown-market weights, and UNREACHABLE markets (no option
+top-weights them); the routing simulator generates 1,000 seeded synthetic answer sets
+(deterministic LCG — no Math.random, CI-stable), routes ≥70% of each market-biased
+cohort to its bucket, and tags 100/100 disqualified sets. **The simulator is a hard
+generation gate**: the pipeline handler validates, simulates, and refuses to persist an
+incoherent quiz (proven with a sabotage whose ambiguous equal weights pass structure but
+collapse routing — nothing lands in quiz_definitions). Generated weights are re-keyed
+from model-friendly ranks to real market ids; bands map 1:1 to markets with short-form
+letter + CTA result blocks; the decline page and lead-capture step persist in scoring.
+Editor UI: per-option weight matrix per market, save-with-validation, live simulation
+readout.
+
+**Files touched:**
+- `packages/core/src/contracts/quiz.ts` (+ test): quiz contract, `validateQuizDefinition`
+  (incl. the reachability rule), `scoreQuizAnswers`, `simulateRouting`, `seededRandom`.
+- `packages/db/src/quizStore.ts`: upsert-per-project definition, `getQuizBySlug`
+  (public runtime path for WO-040), editor update.
+- `packages/pipeline/src/quizBuilder.ts` (+ test): `quiz.generate` handler with the
+  validate→simulate→persist gate; rank→id weight mapping; worker registration.
+- Seed `quiz.generate` v1; web `quiz` router (generate/get+simulate/update) +
+  `/projects/[id]/quiz` editor page.
+
+**Decisions:**
+- **Simulation is a generation-time gate, not just a report** — a quiz that cannot route
+  never reaches the database, so the runtime (WO-040) can trust any stored definition.
+- **The model weights by market RANK** (1–5) — small, unambiguous keys a model won't
+  typo — and the handler re-keys to market ids on ingest.
+- Seeded LCG randomness keeps the 1,000-set simulation reproducible in CI; JS
+  integer-like object keys enumerate numerically (a real footgun found while testing —
+  documented here for posterity).
+
+**Open questions:** none blocking.

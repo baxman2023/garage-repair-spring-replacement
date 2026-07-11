@@ -18,6 +18,7 @@ export const JOB_TYPES = {
   assetDeslop: 'asset.deslop',
   assetCompliance: 'asset.compliance',
   assetPackage: 'asset.package',
+  quizGenerate: 'quiz.generate',
   buildStep: 'build.step',
 } as const;
 

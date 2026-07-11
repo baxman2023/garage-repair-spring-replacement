@@ -21,6 +21,26 @@ export {
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
 export {
+  QUIZ_SCHEMA_VERSION,
+  MIN_ROUTING_QUESTIONS,
+  MAX_ROUTING_QUESTIONS,
+  quizOptionSchema,
+  quizQuestionSchema,
+  quizBandSchema,
+  quizScoringSchema,
+  validateQuizDefinition,
+  scoreQuizAnswers,
+  simulateRouting,
+  seededRandom,
+  type QuizOption,
+  type QuizQuestion,
+  type QuizBand,
+  type QuizScoring,
+  type QuizDefinition,
+  type QuizScoreResult,
+  type RoutingSimulation,
+} from './contracts/quiz.js';
+export {
   UNIVERSAL_STACKS,
   compileUniversalPrompt,
   type UniversalStack,

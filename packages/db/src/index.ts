@@ -127,6 +127,13 @@ export {
   type ResolvePromptOptions,
 } from './prompts.js';
 export {
+  saveQuizDefinition,
+  getQuizForProject,
+  getQuizBySlug,
+  updateQuizDefinition,
+  type QuizDefinitionRow,
+} from './quizStore.js';
+export {
   recordExport,
   listExportsForAsset,
   listExportsForMarket,

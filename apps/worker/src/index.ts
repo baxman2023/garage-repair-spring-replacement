@@ -1,4 +1,14 @@
+import { config } from 'dotenv';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+// Load the repo-root .env before anything reads `env` (dev/staging; PM2 prod
+// environments inject real vars and dotenv never overrides them).
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
+
+import { createServer } from 'node:http';
+import { sql } from 'drizzle-orm';
 import { assertEnv } from '@copyforge/core';
+import { getDb } from '@copyforge/db';
 import { installConsoleRedaction } from '@copyforge/ai';
 import { closePool, enqueueDueNightlyLearning, reapLapsedSubscriptions } from '@copyforge/db';
 import { runWorker, type HandlerRegistry } from './worker.js';
@@ -101,6 +111,29 @@ async function main(): Promise<void> {
     concurrency: env.WORKER_CONCURRENCY,
   });
 
+  // Health endpoint for PM2/uptime checks (WO-056): GET /health → 200 when
+  // the loop is up AND the DB answers; 503 otherwise.
+  const startedAt = Date.now();
+  const health = createServer((req, res) => {
+    if (req.url !== '/health') {
+      res.writeHead(404).end();
+      return;
+    }
+    getDb()
+      .execute(sql`select 1`)
+      .then(() => {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, workerId, uptimeSec: Math.round((Date.now() - startedAt) / 1000) }));
+      })
+      .catch(() => {
+        res.writeHead(503, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, workerId, error: 'database unreachable' }));
+      });
+  });
+  health.listen(env.WORKER_HEALTH_PORT, () => {
+    console.log(`[worker] health endpoint on :${env.WORKER_HEALTH_PORT}/health`);
+  });
+
   // Nightly learning loop (WO-048): sweep every 15 minutes; the enqueue gate
   // itself is idempotent per workspace per UTC day, so this is safe to spam.
   const nightlySweep = setInterval(() => {
@@ -119,6 +152,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     console.log(`[worker] received ${signal}, draining…`);
     clearInterval(nightlySweep);
+    health.close();
     void worker
       .stop()
       .then(() => closePool())

@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { readCappedJson } from '@/server/publicBody';
 import { recordQuizAnswer } from '@copyforge/db';
 import { corsJson, corsOptions } from '../cors';
 
@@ -6,7 +7,8 @@ import { corsJson, corsOptions } from '../cors';
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
-  const body = (await req.json().catch(() => null)) as {
+  const capped = await readCappedJson(req);
+  const body = (capped.ok ? capped.body : null) as null | {
     sessionRef?: string;
     questionId?: string;
     optionId?: string;

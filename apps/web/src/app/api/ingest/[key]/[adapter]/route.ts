@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { readCappedJson } from '@/server/publicBody';
 import { NextResponse } from 'next/server';
 import { ingestPixelEvent, ingestRingbaEvent, resolveIngestKey } from '@copyforge/db';
 
@@ -23,7 +24,9 @@ export async function POST(
   const scope = await resolveIngestKey(key);
   if (!scope) return NextResponse.json({ error: 'Unknown ingest key.' }, { status: 401, headers: CORS });
 
-  const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  const capped = await readCappedJson(req);
+  if (!capped.ok) return NextResponse.json({ error: capped.error }, { status: capped.status });
+  const payload: Record<string, unknown> | null = capped.body;
   if (!payload) return NextResponse.json({ error: 'Body must be JSON.' }, { status: 400, headers: CORS });
 
   if (adapter === 'ringba') {

@@ -50,4 +50,11 @@ export {
 } from './vault.js';
 
 export { redact, installConsoleRedaction, REDACTED } from './redact.js';
+export {
+  reportError,
+  buildErrorEvent,
+  parseSentryDsn,
+  type ErrorReportContext,
+  type ReportFetcher,
+} from './errorReport.js';
 export { WorkspaceKeyError } from './errors.js';

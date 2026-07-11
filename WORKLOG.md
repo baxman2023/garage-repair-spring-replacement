@@ -2571,3 +2571,51 @@ pipeline compliance reports + test; CompliancePanel; `/legal/terms`,
 
 **Open questions:** none blocking. (Jurisdiction-specific counsel review of the
 ToS/privacy text is a business action, not a build task.)
+
+### WO-056 — Hardening & launch checklist
+
+**Acceptance (restated):** Rate limits (per-workspace API + job enqueue caps); input
+size caps on all intakes; error reporting with key-redaction verified; MariaDB backup
+job + restore runbook; load test — 20 concurrent workspace fan-outs; uptime/health
+endpoints for PM2; LAUNCH_CHECKLIST.md completed. Acceptance: load test completes
+with fair scheduling intact and zero cross-tenant anomalies; restore runbook executed
+once successfully on staging.
+
+**Done, both acceptance items EXECUTED on staging (this container):**
+- **Load test** (`apps/worker/scripts/load-test.ts`, real queue + real worker loop,
+  unrelated pending jobs shielded via the WO-052 pause switch): 800/800 jobs across
+  20 workspaces at ~187 jobs/s — cross-tenant anomalies 0 (every handler saw exactly
+  its payload's workspace), all 20 workspaces served within the first 40 claims,
+  worst first-service position 35 (< 60 bound), per-workspace completions 40/40.
+- **Restore runbook**: `scripts/db-backup.sh` (single-transaction dump, gzip,
+  integrity + completion-marker checks, retention prune, cron line documented) →
+  4.3 MB backup → `scripts/db-restore.sh` into `copyforge_restore_check` →
+  verified 54 tables, users=299, jobs=53, prompt_versions=151 → dropped.
+
+Hardening shipped: per-workspace API rate limit (sliding-window limiter in core,
+RATE_LIMIT_RPM default 600/min, enforced in workspaceProcedure — constructed
+lazily so `next build` never demands secrets); per-workspace job enqueue cap
+(JOB_ENQUEUE_CAP default 1000 pending, tested per-tenant + reopens on drain);
+input caps on every public route via `readCappedJson` (128 KiB → 413; Stripe
+webhook 1 MiB); Sentry-compatible error reporter where EVERY field passes
+`redact()` before leaving the process — test proves an sk-ant key in
+message/stack/tags never reaches the payload — wired into the worker failure
+path with console fallback when SENTRY_DSN is unset; health endpoints
+(web `/api/health`, worker `:8787/health`, both DB-pinging, both close on
+shutdown); LAUNCH_CHECKLIST.md with verified items, carried user sign-offs
+(Stripe test-mode, live-model, UX walkthroughs), and production pre-flight.
+
+**Also fixed en route:** the db package's ESM dist carried a module-scope dotenv
+CJS shim (via seedGenome's top-level `loadRootEnv()`) that crashed plain-node
+consumers — dotenv now loads lazily via createRequire inside `loadRootEnv`, the
+seed main calls it explicitly, and the worker entrypoint loads the root .env
+itself (dotenv never overrides real env, so PM2 production vars win).
+
+**Files touched:** core `rateLimit.ts` (+test) + env vars
+(RATE_LIMIT_RPM/JOB_ENQUEUE_CAP/WORKER_HEALTH_PORT); db `queue.ts` enqueue cap
+(+test); ai `errorReport.ts` (+test); web trpc limiter, `publicBody.ts` + five
+public routes, `/api/health`; worker health server + reporter wiring + .env
+load; `scripts/db-backup.sh`, `scripts/db-restore.sh`,
+`apps/worker/scripts/load-test.ts`, `LAUNCH_CHECKLIST.md`; db `loadEnv.ts`.
+
+**Open questions:** none blocking. Production-host items live in the checklist.

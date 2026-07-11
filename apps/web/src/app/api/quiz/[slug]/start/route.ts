@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { readCappedJson } from '@/server/publicBody';
 import { getQuizBySlug, publicQuizView, startQuizSession } from '@copyforge/db';
 import { corsJson, corsOptions } from '../cors';
 
@@ -6,7 +7,8 @@ import { corsJson, corsOptions } from '../cors';
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
-  const body = (await req.json().catch(() => ({}))) as { sessionRef?: string };
+  const capped = await readCappedJson(req);
+  const body = (capped.ok ? capped.body : {}) as { sessionRef?: string };
   const quiz = await getQuizBySlug(slug);
   if (!quiz) return corsJson({ error: 'Unknown quiz.' }, 404);
   const session = await startQuizSession({

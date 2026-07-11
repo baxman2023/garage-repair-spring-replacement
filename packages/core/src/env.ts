@@ -28,6 +28,11 @@ const envSchema = z
 
     // --- Worker ---
     WORKER_CONCURRENCY: z.coerce.number().int().positive().default(4),
+    WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(8787),
+
+    // --- Hardening (WO-056) ---
+    RATE_LIMIT_RPM: z.coerce.number().int().positive().default(600),
+    JOB_ENQUEUE_CAP: z.coerce.number().int().positive().default(1000),
 
     // --- Magic-link email transport (WO-003) ---
     EMAIL_HOST: z.string().optional(),

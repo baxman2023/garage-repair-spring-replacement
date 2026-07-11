@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, isNull, lt, lte, notInArray, or, sql } from 'drizzle-orm';
-import { newId } from '@copyforge/core';
+import { env, newId } from '@copyforge/core';
 import { getDb } from './client.js';
 import { jobRuns, jobs } from './schema/index.js';
 
@@ -41,6 +41,21 @@ export interface EnqueueParams {
 }
 
 export async function enqueueJob(params: EnqueueParams): Promise<string> {
+  // Per-workspace backlog cap (WO-056): a runaway enqueuer cannot flood the
+  // queue past JOB_ENQUEUE_CAP pending jobs. Fairness protects other tenants
+  // from slow service; this protects the table itself.
+  const cap = env.JOB_ENQUEUE_CAP;
+  const [pending] = await getDb()
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(jobs)
+    .where(and(eq(jobs.workspaceId, params.workspaceId), eq(jobs.status, 'pending')));
+  if (Number(pending?.n ?? 0) >= cap) {
+    throw new Error(
+      `Job enqueue cap reached: this workspace already has ${cap} pending jobs. ` +
+        'Let the queue drain (or cancel stale work) before enqueueing more.',
+    );
+  }
+
   const id = newId();
   await getDb()
     .insert(jobs)

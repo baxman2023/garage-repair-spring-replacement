@@ -3,6 +3,7 @@ export { newId, type Id } from './id.js';
 export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, GENERATION_JOB_TYPES, type JobType } from './jobs.js';
+export { SlidingWindowLimiter, type RateLimiterOptions } from './rateLimit.js';
 export {
   COMMERCIAL_RIGHTS_STATEMENT,
   COMPLIANCE_DISCLAIMER,

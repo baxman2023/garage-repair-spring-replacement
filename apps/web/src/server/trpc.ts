@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
+import { env, SlidingWindowLimiter } from '@copyforge/core';
 import { tenantDb, workspaceAccess, type TenantDb } from '@copyforge/db';
 import type { WorkspaceRole } from '@copyforge/db';
 import { getMembership, getSessionContext, type SessionContext } from './auth/service';
@@ -48,10 +49,25 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
  * workspace-scoped `db` (tenantDb) into the context. Every workspace-scoped
  * procedure builds on this so cross-tenant access is structurally impossible.
  */
+/**
+ * Per-workspace API rate limit (WO-056): RATE_LIMIT_RPM requests/minute.
+ * Constructed lazily — `env` is validated on first ACCESS, and touching it at
+ * module scope would make `next build` demand production secrets.
+ */
+let apiLimiterInstance: SlidingWindowLimiter | null = null;
+const apiLimiter = (): SlidingWindowLimiter =>
+  (apiLimiterInstance ??= new SlidingWindowLimiter({ limit: env.RATE_LIMIT_RPM, windowMs: 60_000 }));
+
 export const workspaceProcedure = protectedProcedure.use(async ({ ctx, next, path, type }) => {
   const workspaceId = ctx.auth.session.activeWorkspaceId;
   if (!workspaceId) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active workspace.' });
+  }
+  if (!apiLimiter().allow(workspaceId)) {
+    throw new TRPCError({
+      code: 'TOO_MANY_REQUESTS',
+      message: `Rate limit: this workspace exceeded ${env.RATE_LIMIT_RPM} API requests per minute.`,
+    });
   }
   const membership = await getMembership(workspaceId, ctx.auth.user.id);
   if (!membership) {

@@ -1,3 +1,4 @@
+import { reportError } from '@copyforge/ai';
 import {
   claimNextJob,
   completeJob,
@@ -56,6 +57,8 @@ export function runWorker(opts: WorkerOptions): RunningWorker {
       await failJob(job.id, job.jobRunId, {
         message: err instanceof Error ? err.message : String(err),
       });
+      // Redaction-first error reporting (WO-056); never throws.
+      await reportError(err, { jobType: job.type, jobId: job.id, attempts: job.attempts });
     } finally {
       clearInterval(beat);
     }

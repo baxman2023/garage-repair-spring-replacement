@@ -8,8 +8,6 @@ import { loadRootEnv } from './loadEnv.js';
 import { getDb } from './client.js';
 import { genomeComponents, swipes } from './schema/index.js';
 
-loadRootEnv();
-
 /**
  * Seed-corpus loader (WO-018): owner-provided genome files in /seed/genome
  * load onto the SHARED layer (workspace_id NULL). Idempotent: swipe ids are
@@ -98,6 +96,7 @@ export async function seedGenomeCorpus(seedDir: string): Promise<{ swipes: numbe
 // Direct execution: `pnpm db:seed-genome`
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
+  loadRootEnv();
   const here = dirname(fileURLToPath(import.meta.url));
   const seedDir = resolve(here, '../../../seed/genome');
   seedGenomeCorpus(seedDir)

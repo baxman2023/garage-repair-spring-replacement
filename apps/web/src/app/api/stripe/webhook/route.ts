@@ -14,6 +14,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Stripe webhook not configured.' }, { status: 503 });
   }
   const payload = await req.text();
+  if (payload.length > 1024 * 1024) {
+    return NextResponse.json({ error: 'Payload too large.' }, { status: 413 });
+  }
   const signature = req.headers.get('stripe-signature') ?? '';
   if (!verifyStripeSignature({ payload, header: signature, secret })) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 400 });

@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { readCappedJson } from '@/server/publicBody';
 import { NextResponse } from 'next/server';
 import { recordVariantImpression } from '@copyforge/db';
 
@@ -12,7 +13,8 @@ const CORS = {
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ assetId: string }> }) {
   const { assetId } = await ctx.params;
-  const body = (await req.json().catch(() => null)) as {
+  const capped = await readCappedJson(req);
+  const body = (capped.ok ? capped.body : null) as null | {
     utm_content?: string;
     matched?: boolean;
     ref?: string;

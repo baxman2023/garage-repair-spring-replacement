@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { newId } from '@copyforge/core';
+import { __resetEnvCache, newId } from '@copyforge/core';
 import {
   claimNextJob,
   closePool,
@@ -192,5 +192,35 @@ describe('kill switch: paused job types (WO-052)', () => {
     const released = await claimNextJob('kw1');
     expect(released?.id).toBe(pausedId);
     await completeJob(released!.id, released!.jobRunId);
+  });
+});
+
+describe('job enqueue cap (WO-056)', () => {
+  it('refuses to enqueue past JOB_ENQUEUE_CAP pending jobs per workspace', async () => {
+    if (!dbUp) return;
+    const prev = process.env.JOB_ENQUEUE_CAP;
+    process.env.JOB_ENQUEUE_CAP = '3';
+    __resetEnvCache();
+    try {
+      const ws = newId();
+      for (let i = 0; i < 3; i++) {
+        await enqueueJob({ workspaceId: ws, type: 'cap.test', payload: { i } });
+      }
+      await expect(enqueueJob({ workspaceId: ws, type: 'cap.test', payload: {} })).rejects.toThrow(
+        /enqueue cap reached/,
+      );
+      // Another workspace is unaffected (the cap is per tenant)…
+      await expect(
+        enqueueJob({ workspaceId: newId(), type: 'cap.test', payload: {} }),
+      ).resolves.toBeTruthy();
+      // …and draining the backlog reopens the door.
+      const job = await claimNextJob('capw');
+      await completeJob(job!.id, job!.jobRunId);
+      await expect(enqueueJob({ workspaceId: ws, type: 'cap.test', payload: {} })).resolves.toBeTruthy();
+    } finally {
+      if (prev === undefined) delete process.env.JOB_ENQUEUE_CAP;
+      else process.env.JOB_ENQUEUE_CAP = prev;
+      __resetEnvCache();
+    }
   });
 });

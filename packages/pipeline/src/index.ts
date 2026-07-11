@@ -36,6 +36,7 @@ export { createPackageHandler, collectUtmVariants, ASSET_PACKAGE_JOB } from './p
 export { exportAssetFiles, exportMarketZip, exportRoot, type ExportedFile } from './exporter.js';
 export { createQuizGenerateHandler, QUIZ_GENERATE_JOB } from './quizBuilder.js';
 export { createWebhookHandler, WEBHOOK_DELIVER_JOB, type WebhookFetcher } from './webhook.js';
+export { createChallengerGenerateHandler, buildChallengerBrief, CHALLENGER_GENERATE_JOB } from './challenger.js';
 export { buildGenerationContext, type GenerationContext } from './generators/context.js';
 export { generateSalesLetter, defaultStructure, LETTER_STRUCTURES, type LetterStructure } from './generators/salesLetter.js';
 export { generateVsl, assertPromiseInFirst30Seconds, VSL_LEAD_TYPES, type VslLeadType } from './generators/vsl.js';

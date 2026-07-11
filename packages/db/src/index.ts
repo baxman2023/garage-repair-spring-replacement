@@ -128,6 +128,18 @@ export {
 } from './prompts.js';
 export { recordEvent, type EventType } from './eventsStore.js';
 export {
+  designateControlIfFirst,
+  createChallenger,
+  setChallengerLive,
+  promoteChallenger,
+  markChallengerLost,
+  armMetrics,
+  controlLineage,
+  listControls,
+  type ControlRow,
+  type ChallengerRow,
+} from './controlsStore.js';
+export {
   ensureIngestKey,
   rotateIngestKey,
   resolveIngestKey,

@@ -221,4 +221,12 @@ export async function approveAsset(params: {
     targetId: params.assetId,
     meta: {},
   });
+  // First approved asset per (project, market, type) auto-designates as
+  // control (WO-044); later approvals never steal the slot.
+  const { designateControlIfFirst } = await import('./controlsStore.js');
+  await designateControlIfFirst({
+    workspaceId: params.workspaceId,
+    assetId: params.assetId,
+    actorUserId: params.actorUserId,
+  });
 }

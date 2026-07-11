@@ -24,6 +24,13 @@ export { renderMessageMatchSnippet, type MmSnippetInputs } from './mmSnippet.js'
 export { nextStepsForAsset, type NextStepsInputs } from './nextSteps.js';
 export { parseEmailMetricsCsv, type EmailMetricRow, type EmailCsvParseResult } from './emailCsv.js';
 export {
+  DEFAULT_PROMOTION_CONFIG,
+  evaluatePromotion,
+  type PromotionConfig,
+  type ArmMetrics,
+  type PromotionVerdict,
+} from './promotion.js';
+export {
   renderQuizEmbedHtml,
   type QuizEmbedInputs,
   type PublicQuizQuestion,

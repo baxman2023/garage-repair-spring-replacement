@@ -1990,3 +1990,53 @@ map editor, CSV import, triage queue with resolve/discard.
   the event fixtures written here are the streams those dashboards will render.
 
 **Open questions:** none blocking.
+
+### WO-044 — Controls & challengers
+
+**Acceptance (restated):** Control designation per (project, market, asset_type) — first
+approved asset auto-control; challenger creation from Council escalation notes,
+focus-group annotations, or ledger weak points; lifecycle queued→live→won|lost;
+promotion rule = min sample size AND uplift beyond a significance heuristic (config,
+documented honestly as directional); promotion swaps the control with full history
+retained. Acceptance: promotion impossible below min volume; history immutable; UI shows
+control lineage.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **383 tests pass**
+(core +5, db +3, pipeline +2). Verified: the FIRST owner-approved asset per
+(project, market, type) auto-designates as control from inside `approveAsset`, and a
+second approval never steals the slot; the promotion heuristic (one-sided two-proportion
+z-test + relative-uplift floor + per-arm volume floor, all config) refuses below-volume
+data even at massive challenger uplift, refuses sub-floor uplift even at n=100k, refuses
+insignificant z, and its promote message SAYS it is directional; `promoteChallenger`
+throws below volume (control pointer proven untouched), and on success swaps the
+pointer, marks the challenger `won`, and appends `control.promoted` to the lineage —
+designation → creation → promotion read back ordered and append-only, with challenger
+rows retained forever. Losing challengers mark `lost` without moving the control.
+Challenger generation briefs from the control's OWN recorded weaknesses (revise-verdict
+council top_fixes, focus-group annotations with block anchors, ledger CVR) and produces
+a parent-linked asset with `createdBy: 'challenger'` that re-enters the gates at G3.
+
+**Files touched:**
+- `packages/core/src/promotion.ts` (+ test): `evaluatePromotion` +
+  `DEFAULT_PROMOTION_CONFIG` (200/arm, +10% uplift, z≥1.64) with the honesty note in
+  the doc comment AND the promote reason.
+- `packages/db/src/controlsStore.ts` (+ test): designation, lifecycle, `armMetrics`
+  (ledger page_view/sale counts), `promoteChallenger`, `controlLineage`, `listControls`;
+  `approveAsset` now auto-designates.
+- `packages/pipeline/src/challenger.ts` (+ test): `buildChallengerBrief` +
+  `challenger.generate` handler; worker registration.
+- Web `controls` router (list with metrics+lineage, createChallenger, setLive,
+  owner-only promote/markLost) + `/projects/[id]/controls` page with the lineage
+  disclosure per control.
+
+**Decisions:**
+- **Lineage lives in append-only audit rows + immutable challenger rows** — the controls
+  table stays one-pointer-per-slot (as the schema demands) while history is
+  reconstructable and tamper-evident.
+- **The heuristic's honesty is part of the API**: the promote verdict text itself warns
+  it is directional; the config doc comment lists what it does NOT correct for
+  (peeking, multiple comparisons, novelty).
+- Challenger briefs quote the control's real weaknesses verbatim — the generation is
+  aimed, not random.
+
+**Open questions:** none blocking.

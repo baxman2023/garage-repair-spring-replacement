@@ -20,6 +20,7 @@ export const JOB_TYPES = {
   assetPackage: 'asset.package',
   quizGenerate: 'quiz.generate',
   webhookDeliver: 'webhook.deliver',
+  challengerGenerate: 'challenger.generate',
   buildStep: 'build.step',
 } as const;
 

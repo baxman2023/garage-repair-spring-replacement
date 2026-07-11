@@ -2284,3 +2284,54 @@ Promotion remains a human decision behind WO-044's volume/uplift refusals.
   slot IS the evidence.
 
 **Open questions:** none blocking.
+
+### WO-050 — Licensing & seats
+
+**Acceptance (restated):** License keys (issue/activate/revoke); seat model — named
+users per workspace, seat count on license; assignment UI; over-seat lockout with a
+clear upsell message; Forge Vault beta flag (license type `beta` with expiry).
+Acceptance: seat 3 on a 2-seat license cannot authenticate into the workspace; beta
+expiry downgrades gracefully (read-only).
+
+**Done.** Lifecycle: `issueLicense` mints an unbound `lic_`+40hex key (or binds
+directly when the caller — WO-051's checkout — passes a workspace);
+`activateLicenseKey` binds it exactly once (idempotent same-workspace, refused
+cross-workspace, refused when revoked); `revokeLicense[ByKey]` kills it and every
+seat on it goes inert. Seats are NAMED users: `assignSeat` is idempotent per user,
+refuses invalid licenses, and refuses seat N+1 with the upsell in the error itself
+("All 2 seats… $1,000 per named user — purchase more seats"). Enforcement is
+`workspaceAccess(workspaceId, userId)` → full | readonly | locked, wired into
+`workspaceProcedure` so EVERY workspace-scoped call checks it: locked → FORBIDDEN
+with the upsell; readonly → queries pass, mutations FORBIDDEN. The `licensing.*`
+router is deliberately exempt so a locked-out owner can still see the overview,
+activate a key, and assign seats — a lockout shows the fix, not a dead end. Beta
+(Forge Vault) licenses carry `expiresAt`; a lazy reaper stamps them `expired` at
+read time, and a user whose ONLY seat is on an expired beta gets read-only (work
+stays visible/exportable) instead of lockout — a fresh standard seat restores full
+access. Licenses schema change: `workspace_id` now NULLABLE (migration 0008) so
+issued-but-unactivated keys can exist; unbound rows are invisible to tenant reads.
+
+Acceptance verified: 2-seat license, seats 1–2 assigned, seat 3 refused with the
+$1,000 upsell AND `workspaceAccess` = locked for the unseated user; freeing a seat
+admits them and locks the removed user. Beta expiry → readonly with the graceful
+message; expired STANDARD licenses lock (only beta degrades). Unlicensed
+workspaces remain fully accessible (trial mode — first license arrives via WO-051
+checkout; decision documented).
+
+**Files touched:**
+- `packages/db/src/licenseStore.ts` (+ test), schema/identity.ts (nullable
+  workspace_id), migration 0008.
+- `apps/web/src/server/trpc.ts`: seat enforcement in workspaceProcedure
+  (licensing.* exempt; access verdict injected into ctx).
+- Web `licensing` router (overview/activate/assignSeat/unassignSeat) +
+  `/settings/licensing` page (license list with masked keys, seat counts,
+  expiry; member list with assign/remove seat; lockout/read-only banner).
+
+**Decisions:**
+- Unlicensed workspace = full access (trial). Enforcement arms itself the moment
+  the first license lands — otherwise every pre-purchase signup would be locked
+  out of the product they're evaluating.
+- Owners are NOT exempt from lockout, but the licensing surface is — the owner's
+  path out of lockout is self-service.
+
+**Open questions:** none blocking.

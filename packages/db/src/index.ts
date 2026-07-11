@@ -150,6 +150,25 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  SEAT_PRICE_USD,
+  UPSELL_MESSAGE,
+  SEATS_FULL_MESSAGE,
+  BETA_EXPIRED_MESSAGE,
+  issueLicense,
+  activateLicenseKey,
+  revokeLicense,
+  revokeLicenseByKey,
+  licenseValid,
+  assignSeat,
+  unassignSeat,
+  workspaceAccess,
+  licenseOverview,
+  type LicenseRow,
+  type AccessMode,
+  type WorkspaceAccess,
+  type LicenseOverview,
+} from './licenseStore.js';
+export {
   BRIER_ACCURACY_MAX,
   findLearningWinners,
   internalWinnerTag,

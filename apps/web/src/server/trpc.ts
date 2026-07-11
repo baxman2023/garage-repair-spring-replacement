@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
-import { tenantDb, type TenantDb } from '@copyforge/db';
+import { tenantDb, workspaceAccess, type TenantDb } from '@copyforge/db';
 import type { WorkspaceRole } from '@copyforge/db';
 import { getMembership, getSessionContext, type SessionContext } from './auth/service';
 import { SESSION_COOKIE, parseCookieHeader } from './auth/cookies';
@@ -48,7 +48,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
  * workspace-scoped `db` (tenantDb) into the context. Every workspace-scoped
  * procedure builds on this so cross-tenant access is structurally impossible.
  */
-export const workspaceProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+export const workspaceProcedure = protectedProcedure.use(async ({ ctx, next, path, type }) => {
   const workspaceId = ctx.auth.session.activeWorkspaceId;
   if (!workspaceId) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active workspace.' });
@@ -57,9 +57,24 @@ export const workspaceProcedure = protectedProcedure.use(async ({ ctx, next }) =
   if (!membership) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Not a member of this workspace.' });
   }
+
+  // Seat enforcement (WO-050): $1,000/user, structurally. The licensing
+  // surface itself stays reachable so owners can fix a lockout (assign or
+  // buy seats) without a support ticket.
+  const access = await workspaceAccess(workspaceId, ctx.auth.user.id);
+  const licensingSurface = path.startsWith('licensing.');
+  if (!licensingSurface) {
+    if (access.mode === 'locked') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: access.reason ?? 'No licensed seat.' });
+    }
+    if (access.mode === 'readonly' && type === 'mutation') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: access.reason ?? 'Workspace is read-only.' });
+    }
+  }
+
   const db: TenantDb = tenantDb(workspaceId);
   const role: WorkspaceRole = membership.role;
-  return next({ ctx: { ...ctx, workspaceId, role, db } });
+  return next({ ctx: { ...ctx, workspaceId, role, db, access } });
 });
 
 /** Requires the caller to be an owner of the active workspace. */

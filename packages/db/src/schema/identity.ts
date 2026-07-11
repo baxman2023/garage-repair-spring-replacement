@@ -54,7 +54,9 @@ export const licenses = mysqlTable(
   'licenses',
   {
     id: idColumn(),
-    workspaceId: ulidRef('workspace_id').notNull(),
+    // NULLABLE (WO-050): a freshly issued key is unbound; activation binds it
+    // to the activating workspace. Tenant reads never see unbound rows.
+    workspaceId: ulidRef('workspace_id'),
     key: varchar('key', { length: 64 }).notNull(),
     status: mysqlEnum('status', LICENSE_STATUSES).notNull().default('active'),
     type: mysqlEnum('type', LICENSE_TYPES).notNull().default('standard'),

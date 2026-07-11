@@ -1,0 +1,1 @@
+ALTER TABLE `licenses` MODIFY COLUMN `workspace_id` char(26);

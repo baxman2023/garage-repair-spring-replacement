@@ -30,6 +30,20 @@ export {
   type MarketRow,
   type EngineCandidate,
 } from './markets.js';
+export {
+  createAsset,
+  getAsset,
+  getCurrentAssetVersion,
+  listAssetVersions,
+  insertAssetVersion,
+  insertCouncilReviews,
+  listCouncilReviewsForAsset,
+  recordAssetGate,
+  setAssetStatus,
+  type AssetRow,
+  type AssetVersionRow,
+  type CouncilReviewRow,
+} from './assetsStore.js';
 export { seedGenomeCorpus } from './seedGenome.js';
 export {
   saveHarvestQuery,

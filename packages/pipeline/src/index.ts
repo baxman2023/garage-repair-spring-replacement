@@ -19,3 +19,4 @@ export {
   type HarvestedAd,
   type HarvestDeps,
 } from './harvest.js';
+export { createCouncilRunner, type CouncilRunOptions, type CouncilOutcome, type CouncilLoopRecord } from './council.js';

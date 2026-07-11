@@ -5,6 +5,21 @@ export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
 export {
+  COUNCIL_LENSES,
+  lensResultSchema,
+  parseLensResult,
+  DEFAULT_COUNCIL_CONFIG,
+  WEIGHT_MIN,
+  WEIGHT_MAX,
+  clampWeights,
+  aggregateCouncil,
+  composeRevisionNotes,
+  type CouncilLens,
+  type LensResult,
+  type CouncilConfig,
+  type CouncilVerdict,
+} from './council.js';
+export {
   componentWeight,
   rankComponents,
   estimateTokens,

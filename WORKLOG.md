@@ -918,3 +918,53 @@ work without any entitlement.
 - Boundary rule: exactly 90 days running counts as in (≥).
 
 **Open questions:** none blocking.
+
+### WO-020 — Council engine (G3)
+
+**Acceptance (restated):** Cached persona blocks + rubrics per §6; parallel fable-5 lens
+calls; aggregation in pure `council.ts`; verdicts persisted to `council_reviews`; revision
+prompt composed ONLY from failing lenses; loop max 3 then escalate with notes UI; per-asset
+report view. Fixture bad-draft fails then improves across loops on record; thresholds
+config-driven; aggregate math unit-tested.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **188 tests pass**
+(core +9 aggregation, pipeline +3 engine). Verified: the corporate bad-draft fixture fails
+round 1 (aggregate 67.5, halbert 55 / carlton 58 below floor), the revision improves it,
+round 2 passes at 88 — with six `council_reviews` rows per version on record; the revision
+prompt contained HALBERT + CARLTON notes and none of the passing lenses; both §1.2 cached
+blocks (persona corpus + market profile) ride every lens call; three failing loops →
+escalation notes recorded in a failing G3 gate report and the asset goes `blocked`; a
+lenient config passes what defaults fail (thresholds config-driven). Aggregate math:
+boundary 80/70 passes, one sub-70 lens fails a 95-aggregate, weights clamp to ±20% and
+floors are immune to weighting.
+
+**Files touched:**
+- `packages/core/src/council.ts` (+ test): lens-result contract, `DEFAULT_COUNCIL_CONFIG`
+  (80/70, weights 1.0), `clampWeights` (±20% band for WO-045), `aggregateCouncil`
+  (weighted mean, floor rule, focused failing-lens selection), `composeRevisionNotes`.
+- Seeds: `council.personas` v1 — all six persona+rubric definitions in ONE cached block
+  (§1.2 block 1: shared across every council call) with a uniform JSON output contract —
+  and `council.revise` v1.
+- `packages/db/src/assetsStore.ts`: asset/version store seeded for the Council
+  (createAsset, insertAssetVersion with word counts + pointer update,
+  insertCouncilReviews, listCouncilReviewsForAsset, recordAssetGate, setAssetStatus —
+  the enforced transition machine arrives in WO-021).
+- `packages/pipeline/src/council.ts` (+ test): `createCouncilRunner` — 6 parallel lens
+  calls (stage `council`), persist → aggregate → revise (failing lenses only, stage
+  `asset_drafting`) → new version → loop ≤3 → escalate.
+- `apps/web`: `routers/council.ts` (per-asset report: reviews grouped by version + latest
+  G3 gate + escalation notes), `/assets/[assetId]/council` report view with lens grid and
+  escalation panel.
+
+**Decisions:**
+- **Failing-lens selection is focused:** lenses that said `revise` or broke the floor;
+  only when none did but the aggregate still fails does it fall back to sub-threshold
+  lenses. Keeps the brief from sweeping in passing lenses' non-notes (surfaced by the
+  fixture test).
+- **Persona corpus is one prompt-registry entry** (versioned/pinnable per WO-008), not six
+  — matching §1.2's "shared across all council calls" cache design; the dynamic block
+  names the lens per call.
+- On pass, the runner records G3 and leaves the asset in `council` status — the status
+  machine that advances assets between gates is WO-021's contract.
+
+**Open questions:** none blocking.

@@ -482,3 +482,51 @@ invalid choice/number answers rejected.
   fails closed on planted raw queries.
 
 **Open questions:** none blocking.
+
+### WO-010 — Offer Forge (G0)
+
+**Acceptance (restated):** fable-5 pass producing diagnosis + 3 strengthened variants
+(quantified value stack, risk reversal, legitimate urgency, price framing, name candidates);
+side-by-side picker; selected offer versioned to `offers`; G0 recorded. Cannot advance
+without an approved offer meeting the G0 checklist; fake scarcity structurally excluded.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **111 tests pass**
+(core +7 offer/G0, db +5 offer store, worker +3 forge). Verified: forge persists exactly 3
+unapproved variants with the seeded prompt cached and the profile as the user block; forge
+output containing fake scarcity is rejected at contract-parse with nothing persisted; G0
+fail leaves no approved offer (advance blocked) and writes a failing project-level gate
+report; pass approves + sets `projects.current_offer_id`; G0 refused on a non-selected
+offer; store is workspace-scoped end to end.
+
+**Files touched:**
+- `packages/core/src/contracts/offer.ts` (+ test): offer contract with `URGENCY_TYPES` enum
+  + fabricated-scarcity text refinement, `offerForgeResultSchema` (exactly 3 variants), pure
+  `checkG0` checklist.
+- `packages/db`: `offers.ts` store (variants/select/edit/`recordG0`/`getApprovedOffer`) +
+  test; `txRetry.ts`; schema: `gate_reports.asset_id` now nullable + `project_id` column +
+  index (migration `0003`); seed: `offer.forge` prompt v1.
+- `apps/worker`: `handlers/offerForge.ts` (+ test), registered.
+- `apps/web`: `routers/offers.ts` (list w/ per-offer G0 preview, forge, select, saveEdit,
+  approve, status), `/projects/[id]/offer` page + `OfferForgePanel` (side-by-side cards,
+  checklist ticks, select/edit/approve).
+
+**Decisions:**
+- **Fake scarcity is excluded at three layers:** the prompt's urgency menu lists only the
+  six legitimate types and forbids invention; the contract's `type` enum can't express
+  anything else; a text refinement rejects fabricated-scarcity language (`fake`, `evergreen
+  countdown`, `artificial`, …) in descriptions/legitimacy fields. Contract-invalid forge
+  output persists nothing.
+- **G0 verdicts are recorded even when failing** (auditable gate history), as project-level
+  `gate_reports` rows (`asset_id` NULL). Schema needed `gate_reports.project_id` since
+  G0–G2 are project-scoped — flagged as the spec's §3 lists only `asset_id`; this is an
+  additive change in the same spirit as the §5 gate table.
+- **Approval path:** UI can only approve the *selected* offer; the router recomputes
+  `checkG0` server-side (never trusts the client), records the verdict, and only a pass
+  marks `approved` + project pointer. `getApprovedOffer` is the advancement key WO-011 will
+  require.
+- **Deadlock fix:** `FOR UPDATE` on empty version ranges (profiles/offers) took InnoDB gap
+  locks that deadlocked concurrent first-inserts (surfaced as test flake). Removed the row
+  locks; the unique `(project_id, version)` indexes turn races into duplicates, retried by
+  a small bounded `withTxRetry` helper.
+
+**Open questions:** none blocking.

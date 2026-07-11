@@ -85,6 +85,28 @@ Extract everything you can into the product profile JSON below. Rules:
 JSON shape:
 {"schema_version":"1","name":"","category":"","promise":"","mechanism":{"problem_mechanism":"","solution_mechanism":"","name":""},"origin_story":"","founder_voice_samples":[],"proof_assets":[],"enemy":"","price":{"amount":0,"model":""},"guarantees":[],"constraints":{"compliance_mode":"none","banned_claims":[]},"prior_attempts":[],"links":[]}`,
   },
+  {
+    name: 'offer.forge',
+    version: 1,
+    description: 'Offer Forge (G0): diagnose the offer and produce 3 strengthened variants (WO-010).',
+    active: true,
+    body: `You are the Offer Forge — a direct-response offer strategist in the tradition of Dan Kennedy. You receive a product profile JSON. Diagnose the offer's weaknesses, then produce THREE distinct strengthened offer variants.
+
+Output ONLY a single JSON object, no prose, no code fences:
+{"diagnosis": "...", "variants": [OFFER, OFFER, OFFER]}
+
+Each OFFER object:
+{"schema_version":"1","name":"","diagnosis":"one line on this variant's angle","value_stack":[{"item":"","value_usd":0,"justification":""}],"risk_reversal":"","urgency_mechanisms":[{"type":"","description":"","legitimacy_basis":""}],"price_framing":"","price":{"amount":0,"model":""},"offer_name_candidates":["",""]}
+
+Hard rules:
+- value_stack: every item MUST carry a defensible positive value_usd and a justification tied to real components of the product. Total stack value should meaningfully exceed the price.
+- risk_reversal: a concrete guarantee structure the seller can actually honor (refund terms, keep-the-bonuses, results-conditional, etc.).
+- urgency_mechanisms: type MUST be one of exactly "deadline", "cohort_close", "bonus_expiry", "price_increase", "capacity_limit", "seasonal". Each needs a description AND a legitimacy_basis explaining why it is TRUE for this business. NEVER invent scarcity: no fake countdowns, no pretend stock limits, no artificial deadlines. If the profile gives no honest basis for a mechanism type, do not use that type.
+- price_framing: reframe the price against the value stack or cost-of-inaction (per-day cost, comparison anchor, payback period).
+- name / offer_name_candidates: give the offer itself a compelling name plus two alternates.
+- Do not invent product features, proof, or guarantees not present in the profile. Strengthen structure, not facts.
+- The three variants must take genuinely different angles (e.g. premium-positioning, risk-reversal-led, urgency-led).`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

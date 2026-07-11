@@ -5,6 +5,21 @@ export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { extractJsonObject } from './jsonExtract.js';
 export {
+  OFFER_SCHEMA_VERSION,
+  URGENCY_TYPES,
+  offerSchema,
+  urgencyMechanismSchema,
+  valueStackItemSchema,
+  offerForgeResultSchema,
+  parseOffer,
+  parseOfferForgeResult,
+  checkG0,
+  type Offer,
+  type OfferForgeResult,
+  type UrgencyType,
+  type G0Report,
+} from './contracts/offer.js';
+export {
   PROFILE_SCHEMA_VERSION,
   productProfileSchema,
   proofAssetSchema,

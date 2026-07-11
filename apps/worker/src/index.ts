@@ -3,6 +3,7 @@ import { installConsoleRedaction } from '@copyforge/ai';
 import { closePool } from '@copyforge/db';
 import { runWorker, type HandlerRegistry } from './worker.js';
 import { createIntakeHandler, INTAKE_EXTRACT_JOB } from './handlers/intake.js';
+import { createOfferForgeHandler, OFFER_FORGE_JOB } from './handlers/offerForge.js';
 
 /**
  * CopyForge worker entrypoint. Validates the environment, installs secret
@@ -14,6 +15,7 @@ import { createIntakeHandler, INTAKE_EXTRACT_JOB } from './handlers/intake.js';
 
 const handlers: HandlerRegistry = {
   [INTAKE_EXTRACT_JOB]: createIntakeHandler(),
+  [OFFER_FORGE_JOB]: createOfferForgeHandler(),
 };
 
 let shuttingDown = false;

@@ -19,6 +19,15 @@ export {
   type ProductProfileRow,
 } from './profiles.js';
 export {
+  listOffers,
+  saveOfferVariants,
+  selectOffer,
+  saveOfferEdit,
+  recordG0,
+  getApprovedOffer,
+  type OfferRow,
+} from './offers.js';
+export {
   getPrompt,
   getPromptById,
   listPromptVersions,

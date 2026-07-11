@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import { newId } from '@copyforge/core';
 import { getDb } from './client.js';
 import { tenantDb } from './guard.js';
+import { withTxRetry } from './txRetry.js';
 import { productProfiles, projects } from './schema/index.js';
 
 /**
@@ -45,14 +46,16 @@ export async function saveProfileVersion(params: {
   createdByUserId?: string | null;
 }): Promise<string> {
   const raw = getDb();
-  return raw.transaction(async (tx) => {
+  return withTxRetry(() => raw.transaction(async (tx) => {
+    // No FOR UPDATE here: locking an empty version range takes gap locks that
+    // deadlock concurrent first-inserts. The unique (project_id, version)
+    // index turns version races into duplicates, retried by withTxRetry.
     const prev = await tx
       .select({ id: productProfiles.id, version: productProfiles.version })
       .from(productProfiles)
       .where(eq(productProfiles.projectId, params.projectId))
       .orderBy(desc(productProfiles.version))
-      .limit(1)
-      .for('update');
+      .limit(1);
 
     // Tenancy: confirm the project belongs to this workspace before writing.
     const project = await tx
@@ -89,5 +92,5 @@ export async function saveProfileVersion(params: {
       .where(eq(projects.id, params.projectId));
 
     return id;
-  });
+  }));
 }

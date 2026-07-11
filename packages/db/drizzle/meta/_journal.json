@@ -22,6 +22,13 @@
       "when": 1783729409843,
       "tag": "0002_petite_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1783733132053,
+      "tag": "0003_shallow_silver_samurai",
+      "breakpoints": true
     }
   ]
 }

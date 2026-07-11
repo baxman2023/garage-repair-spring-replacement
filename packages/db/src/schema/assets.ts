@@ -129,7 +129,10 @@ export const gateReports = mysqlTable(
   {
     id: idColumn(),
     workspaceId: ulidRef('workspace_id').notNull(),
-    assetId: ulidRef('asset_id').notNull(),
+    // G3–G7 are asset-level; G0–G2 are project-level. Exactly one of
+    // asset_id / project_id is set (enforced in the gates store).
+    assetId: ulidRef('asset_id'),
+    projectId: ulidRef('project_id'),
     gate: mysqlEnum('gate', GATES).notNull(),
     pass: boolean('pass').notNull(),
     report: json('report').$type<Record<string, unknown>>().notNull(),
@@ -137,5 +140,8 @@ export const gateReports = mysqlTable(
     overrideReason: text('override_reason'),
     ...timestamps(),
   },
-  (t) => [index('gate_reports_ws_asset_gate_idx').on(t.workspaceId, t.assetId, t.gate)],
+  (t) => [
+    index('gate_reports_ws_asset_gate_idx').on(t.workspaceId, t.assetId, t.gate),
+    index('gate_reports_ws_project_gate_idx').on(t.workspaceId, t.projectId, t.gate),
+  ],
 );

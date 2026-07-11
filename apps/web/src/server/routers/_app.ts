@@ -6,6 +6,7 @@ import { apiKeyRouter } from './apiKey';
 import { promptsRouter } from './prompts';
 import { projectsRouter } from './projects';
 import { intakeRouter } from './intake';
+import { offersRouter } from './offers';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -22,6 +23,7 @@ export const appRouter = router({
   prompts: promptsRouter,
   projects: projectsRouter,
   intake: intakeRouter,
+  offers: offersRouter,
 });
 
 export type AppRouter = typeof appRouter;

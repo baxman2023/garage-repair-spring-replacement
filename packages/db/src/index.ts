@@ -150,6 +150,20 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  createAutopsy,
+  getAutopsy,
+  listAutopsies,
+  queueAutopsyRun,
+  setAutopsyStatus,
+  saveAutopsyPages,
+  saveAutopsyReport,
+  shareAutopsy,
+  revokeAutopsyShare,
+  getAutopsyByShareToken,
+  rebuildFromAutopsy,
+  type PublicAutopsyView,
+} from './autopsyStore.js';
+export {
   projectFunnel,
   assetRetentionCurve,
   brierTrend,

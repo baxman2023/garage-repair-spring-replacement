@@ -6,6 +6,7 @@ export * from './genome';
 export * from './assets';
 export * from './builds';
 export * from './ingest';
+export * from './autopsy';
 export * from './delivery';
 export * from './ledger';
 export * from './infra';

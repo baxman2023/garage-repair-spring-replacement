@@ -24,6 +24,8 @@ import {
   createChallengerGenerateHandler,
   createPredictionsResolveHandler,
   createCalibrationRunHandler,
+  createAutopsyRunHandler,
+  AUTOPSY_RUN_JOB,
   ASSET_COMPLIANCE_JOB,
   CALIBRATION_RUN_JOB,
   CHALLENGER_GENERATE_JOB,
@@ -77,6 +79,7 @@ const handlers: HandlerRegistry = {
   [CHALLENGER_GENERATE_JOB]: createChallengerGenerateHandler(),
   [PREDICTIONS_RESOLVE_JOB]: createPredictionsResolveHandler(),
   [CALIBRATION_RUN_JOB]: createCalibrationRunHandler(),
+  [AUTOPSY_RUN_JOB]: createAutopsyRunHandler(),
 };
 
 let shuttingDown = false;

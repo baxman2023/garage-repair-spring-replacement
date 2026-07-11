@@ -4,6 +4,7 @@ import { newId } from '@copyforge/core';
 import { getDb } from './client.js';
 import {
   apiKeys,
+  autopsies,
   campaignMarketMaps,
   eventTriage,
   harvestQueries,
@@ -104,6 +105,7 @@ export const TENANT_TABLES = [
   funnelBuildSteps,
   eventTriage,
   campaignMarketMaps,
+  autopsies,
 ] as const;
 
 /**
@@ -145,6 +147,7 @@ export const TENANT_TABLE_NAMES: readonly string[] = [
   'funnelBuildSteps',
   'eventTriage',
   'campaignMarketMaps',
+  'autopsies',
 ];
 
 /**

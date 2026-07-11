@@ -2129,3 +2129,59 @@ TOTAL row; the test asserts the exact header and exact data lines.
 **Open questions:** none blocking. Noted: one transient full-suite flake in the CLI
 end-to-end build test (passed on isolation and on immediate full re-run; suspected
 load-related timing in the fan-out fixture — watch on future full runs).
+
+### WO-047 — Autopsy Mode
+
+**Acceptance (restated):** Intake takes a funnel page by page (ad → landing → VSL
+transcript → checkout), each URL-auto-fetched or pasted; Council-scored teardown with
+persuasion sequence map, awareness/sophistication mismatch diagnosis, proof gap list,
+offer critique, and ranked rewrite priorities; shareable public-token report with a
+print view; "rebuild in CopyForge" CTA pre-filling Sales Detective. Acceptance:
+end-to-end on a fixture funnel; public link read-only and revocable.
+
+**Done.** End-to-end verified on the fixture rival-garage funnel: four pages in (one
+via URL through the injected fetcher + readability extraction, persisted back so the
+report and any rebuild work from the exact text analyzed), one `autopsy.run` job
+through the pinned prompt at the seeded `autopsy` model stage, and the teardown must
+parse against a hard zod contract before anything persists — all six Council lenses
+scored with notes, ≥3 persuasion beats mapped in funnel order, awareness/sophistication
+mismatch with diagnosis, severity-graded proof gaps, offer critique, and rewrite
+priorities that must rank 1..n contiguously (a rank hole fails the job and marks the
+autopsy failed with the reason). Public link: `shareAutopsy` mints `at_`+48hex
+(stable across repeat shares, refused before completion), `/a/[token]` renders
+title+report only — the read-only view's keys are asserted to be exactly
+{title, report, createdAt} — and revocation nulls the token so the link 404s
+immediately while the autopsy itself is untouched. Rebuild: creates
+"Rebuild: <title>", queues the standard `intake.extract_profile` over
+`autopsyToDumpText` (funnel pages in order + teardown findings), idempotent on
+second click.
+
+**Files touched:**
+- `packages/core/src/autopsy.ts` (+ test): intake/report contracts,
+  `orderAutopsyPages`, `parseAutopsyReport` (contiguous-rank rule),
+  `autopsyToDumpText` (deterministic Sales Detective handoff).
+- `packages/db/src/schema/autopsy.ts` + migration 0007: `autopsies` table
+  (status, pages json, report json, unique nullable share_token,
+  rebuilt_project_id); registered in TENANT_TABLES / TENANT_TABLE_NAMES /
+  tenancy-scan / guard cross-tenant matrix.
+- `packages/db/src/autopsyStore.ts` (+ test): CRUD, queue, share/revoke,
+  `getAutopsyByShareToken` (public read-only view), `rebuildFromAutopsy`.
+- `packages/pipeline/src/autopsy.ts` (+ test): the teardown job (URL auto-fetch →
+  prompt → contract validation → persist; failure path stamps status+error).
+- Seed: `autopsy.run` prompt (the `autopsy` model route already existed from WO-003).
+- Web: `autopsy` router; `/autopsy` intake+list, `/autopsy/[id]` report with
+  share/revoke/rebuild controls, PUBLIC `/a/[token]` (no auth, print stylesheet +
+  Print/Save-as-PDF button, marketing CTA footer hidden in print);
+  shared `AutopsyReportView` renderer used by both workspace and public views.
+
+**Decisions:**
+- The public view is assembled server-side from a whitelist (title/report/date) —
+  page URLs, ids, and workspace never reach the shared page, so a leaked link
+  exposes only the teardown itself.
+- "PDF-style print view" = print stylesheet + window.print on the public page
+  (browser Save-as-PDF), not a server PDF renderer — zero new dependencies,
+  same output.
+- Rebuild rides the EXISTING Sales Detective intake job rather than a bespoke
+  pre-fill path — the autopsy dump is just a very good dump.
+
+**Open questions:** none blocking.

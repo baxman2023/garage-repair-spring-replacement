@@ -3,6 +3,20 @@ export { newId, type Id } from './id.js';
 export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
+export {
+  AUTOPSY_PAGE_KINDS,
+  autopsyIntakeSchema,
+  autopsyPageSchema,
+  autopsyReportSchema,
+  autopsyToDumpText,
+  orderAutopsyPages,
+  parseAutopsyIntake,
+  parseAutopsyReport,
+  type AutopsyIntake,
+  type AutopsyPage,
+  type AutopsyPageKind,
+  type AutopsyReport,
+} from './autopsy.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
 export { AI_TELLS, findAiTells, hasEmDashOveruse } from './aiTells.js';
 export {

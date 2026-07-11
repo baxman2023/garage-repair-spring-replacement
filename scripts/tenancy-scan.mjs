@@ -22,7 +22,7 @@ const TENANT_TABLE_NAMES = new Set([
   'quizDefinitions', 'quizSessions', 'quizAnswers', 'quizLeads', 'utmVariantMaps',
   'events', 'controls', 'challengers', 'predictions', 'usageLedger',
   'apiKeys', 'subscriptions', 'seatAssignments', 'licenses', 'harvestQueries',
-  'funnelBuilds', 'funnelBuildSteps', 'eventTriage', 'campaignMarketMaps',
+  'funnelBuilds', 'funnelBuildSteps', 'eventTriage', 'campaignMarketMaps', 'autopsies',
 ]);
 
 const SCAN_DIRS = ['apps/web/src', 'apps/worker/src', 'apps/cli/src'];

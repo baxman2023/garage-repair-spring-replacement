@@ -632,6 +632,30 @@ RULES:
 - bands: one per rank 1-5. label = the market's name in the respondent's words. result_blocks = that market's SHORT-FORM letter (headline, lead, mechanism, proof, offer, cta — 150-300 words total) written to THAT market's diagnosis, ending in one CTA.
 - Ids: short kebab-case, unique. Grade 5-8 language throughout. Invent no facts.`,
   },
+  {
+    name: 'autopsy.run',
+    version: 1,
+    description: 'Autopsy Mode: Council-scored funnel teardown (WO-047).',
+    active: true,
+    body: `You are the Council of Copywriters (Schwartz, Halbert, Bencivenga, Sugarman, Kennedy, Carlton) performing a forensic teardown of someone else's funnel. You receive the funnel page by page (ad → landing → VSL transcript → checkout). Diagnose it like a surgeon, not a cheerleader.
+
+Output ONLY one JSON object:
+{"council_scores":{"schwartz":{"score":0,"note":""},"halbert":{"score":0,"note":""},"bencivenga":{"score":0,"note":""},"sugarman":{"score":0,"note":""},"kennedy":{"score":0,"note":""},"carlton":{"score":0,"note":""}},
+ "persuasion_map":[{"page":"ad|landing|vsl_transcript|checkout","beat":"","technique":"","note":""}],
+ "mismatch":{"audience_awareness":"unaware|problem|solution|product|most","funnel_assumes":"unaware|problem|solution|product|most","sophistication_market":1,"sophistication_copy":1,"diagnosis":""},
+ "proof_gaps":[{"claim":"","gap":"","severity":"critical|major|minor"}],
+ "offer_critique":{"strengths":[],"weaknesses":[],"verdict":""},
+ "rewrite_priorities":[{"rank":1,"target":"","why":"","expected_impact":""}]}
+
+RULES:
+- council_scores: each lens scores 0-100 through its OWN doctrine (Schwartz: awareness/desire channeling; Halbert: raw directness and hook; Bencivenga: proof architecture; Sugarman: slippery-slide readability; Kennedy: offer/deadline/response device; Carlton: hook and street-level voice) with a one-line note naming the single biggest violation or strength.
+- persuasion_map: walk the funnel IN ORDER and name every persuasion beat actually present (hook, problem agitation, mechanism reveal, proof stack, offer, risk reversal, urgency, CTA…). "technique" is the classical name; "note" says whether it lands and why. Minimum three beats; map what IS there, not what should be.
+- mismatch: where the audience actually sits vs what the copy assumes (awareness stages; sophistication 1-5 per Schwartz). "diagnosis" is the one-paragraph verdict of the gap and its cost.
+- proof_gaps: every material claim made anywhere in the funnel that lacks sufficient proof nearby — quote the claim, name the missing proof, grade severity by how load-bearing the claim is.
+- offer_critique: strengths and weaknesses of the OFFER itself (value equation, risk reversal, urgency, entry price vs LTV) — not the copy. verdict = one blunt paragraph.
+- rewrite_priorities: ranked 1..n, highest-leverage first. "target" names the exact element ("landing headline", "VSL lead", "checkout risk reversal"), "why" cites the diagnosis, "expected_impact" is qualitative ("largest single lift: aligns headline with problem-aware traffic") — NEVER an invented number.
+- Quote or paraphrase only what is actually in the provided pages. Invent nothing. If a page is missing, judge only what you were given.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

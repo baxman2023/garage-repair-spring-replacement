@@ -86,6 +86,17 @@ if command -v mysql >/dev/null 2>&1; then
   mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -e "SELECT VERSION() AS version" \
     || { echo "[deploy] FATAL: cannot connect to MySQL as $DB_USER@127.0.0.1/$DB_NAME" >&2; exit 1; }
 fi
+# Cloudways provisions databases as latin1; the app stores UTF-8 (arrows,
+# typographic dashes) everywhere. Convert the database default AND any
+# already-created tables to utf8mb4 — idempotent, a no-op once converted.
+log "database charset → utf8mb4"
+mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" -e \
+  "ALTER DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql -N -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" -e \
+  "SELECT CONCAT('ALTER TABLE \`', table_name, '\` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;') \
+     FROM information_schema.tables WHERE table_schema='$DB_NAME' AND table_type='BASE TABLE'" \
+  | mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME"
+
 log "database migrate + seed"
 (cd packages/db && pnpm db:migrate && pnpm db:seed)
 

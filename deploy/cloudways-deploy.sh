@@ -79,8 +79,15 @@ log "pnpm install (a few minutes on first run)"
 pnpm install --frozen-lockfile 2>&1 | tail -1
 log "pnpm build"
 pnpm build 2>&1 | tail -2
+# Pre-flight: prove the DB credentials work and show the server version
+# (MariaDB 10.2+/MySQL 8.0.13+ needed for the migrations' DEFAULT (now())).
+log "database connectivity check"
+if command -v mysql >/dev/null 2>&1; then
+  mysql -h 127.0.0.1 -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" -e "SELECT VERSION() AS version" \
+    || { echo "[deploy] FATAL: cannot connect to MySQL as $DB_USER@127.0.0.1/$DB_NAME" >&2; exit 1; }
+fi
 log "database migrate + seed"
-(cd packages/db && pnpm db:migrate && pnpm db:seed) 2>&1 | tail -2
+(cd packages/db && pnpm db:migrate && pnpm db:seed)
 
 # --- 5. PM2 --------------------------------------------------------------------------
 pm2 delete copyforge-web copyforge-worker >/dev/null 2>&1 || true

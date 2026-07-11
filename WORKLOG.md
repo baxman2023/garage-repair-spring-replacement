@@ -609,3 +609,43 @@ applies (matching the DAG: G1 → market selection).
   0–10 dimension scores × weights → 0–100 total, persisted to `markets.score_total`.
 
 **Open questions:** none blocking.
+
+### WO-013 — Market profiles (Schwartz diagnosis)
+
+**Acceptance (restated):** Full `market_profile.json` per selected market — awareness stage
++ sophistication with one-line justifications, resident emotion, avatar, ≥5 objections,
+entry_conversation, channels ranked — plus a profile editor. 5 contract-valid profiles;
+diagnosis fields non-empty and referenced later by generators (assert in G3 prompt inputs).
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **138 tests pass**
+(core +4, worker +3). Verified: all 5 markets get contract-valid profiles with rank/label/
+scores **pinned from the stored row** (the model's echo is ignored) and diagnosis mirrored
+into the `awareness_stage`/`sophistication`/`resident_emotion` columns; the user-origin
+marker survives profiling; an incomplete diagnosis (4 objections) persists nothing;
+`marketProfilePromptBlock` — the §1.2 market cache-block builder generators/Council will
+consume — carries every diagnosis field and **throws on an undiagnosed market** (the G3
+prompt-input assertion point).
+
+**Files touched:**
+- `packages/core/src/contracts/marketProfile.ts` (+ test): strict §4 contract (+
+  `awareness_justification` / `sophistication_justification` per the WO deliverable),
+  `marketProfilePromptBlock`.
+- `packages/db`: `markets.applyMarketProfile` (merge preserving `origin`, mirror columns);
+  seed `market.profile` prompt v1.
+- `apps/worker/src/handlers/marketProfile.ts` (+ test), registered. One job per market.
+- `apps/web`: markets router `profileAll` (per-market generation jobs via
+  `enqueueGenerationJob` → G1 applies) + `updateProfile` (contract-validated editor save,
+  marks user-origin) + `diagnosed` flag in list; MarketsPanel: "Diagnose all" button,
+  diagnosis status line, per-market profile JSON editor.
+
+**Decisions:**
+- **Justification fields are additive to the §4 contract** (`awareness_justification`,
+  `sophistication_justification`) — the WO deliverable explicitly requires one-line
+  justifications; recorded as a contract extension, not a deviation.
+- **Identity pinning:** rank/label/starving-crowd scores always come from the stored market
+  row, never from model output — profiles can't drift from the approved slate.
+- **The generator-side assertion** the acceptance asks for is implemented as the only path
+  to a market cache block: `marketProfilePromptBlock` parses strictly first, so WO-020/022+
+  physically cannot build prompts from undiagnosed markets.
+
+**Open questions:** none blocking.

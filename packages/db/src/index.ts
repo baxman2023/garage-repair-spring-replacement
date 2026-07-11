@@ -24,6 +24,7 @@ export {
   swapMarketRanks,
   updateMarket,
   addManualMarket,
+  applyMarketProfile,
   MAX_MARKETS,
   type MarketRow,
   type EngineCandidate,

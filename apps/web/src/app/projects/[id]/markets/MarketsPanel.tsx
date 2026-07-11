@@ -42,11 +42,21 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
     },
   });
 
+  const profileAll = trpc.markets.profileAll.useMutation();
+  const updateProfile = trpc.markets.updateProfile.useMutation({
+    onSuccess: () => {
+      setProfileEditId(null);
+      invalidate();
+    },
+  });
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editRationale, setEditRationale] = useState('');
   const [manualLabel, setManualLabel] = useState('');
   const [manualRationale, setManualRationale] = useState('');
+  const [profileEditId, setProfileEditId] = useState<string | null>(null);
+  const [profileDraft, setProfileDraft] = useState('');
 
   const rows = markets.data ?? [];
 
@@ -56,8 +66,19 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
         <button onClick={() => run.mutate({ projectId })} disabled={run.isPending} style={btn}>
           {run.isPending ? 'Queued…' : rows.length ? 'Re-run selection' : 'Run Market Selection'}
         </button>
+        {rows.length > 0 && (
+          <button
+            onClick={() => profileAll.mutate({ projectId })}
+            disabled={profileAll.isPending}
+            style={btn}
+          >
+            {profileAll.isPending ? 'Queued…' : 'Diagnose all (Schwartz profiles)'}
+          </button>
+        )}
         {run.isSuccess && <span style={{ color: 'var(--muted)' }}>Selecting — the list refreshes automatically.</span>}
+        {profileAll.isSuccess && <span style={{ color: 'var(--muted)' }}>Diagnosing all markets…</span>}
         {run.isError && <span style={{ color: 'salmon' }}>{run.error.message}</span>}
+        {profileAll.isError && <span style={{ color: 'salmon' }}>{profileAll.error.message}</span>}
         {rows.some((r) => r.origin === 'user') && (
           <span style={{ color: 'var(--muted)' }}>Your edited markets survive re-runs.</span>
         )}
@@ -114,6 +135,56 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
                       {Object.entries(m.scores)
                         .map(([k, v]) => `${k.replaceAll('_', ' ')} ${v}`)
                         .join(' · ')}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12 }}>
+                    {m.diagnosed ? (
+                      <span style={{ color: 'var(--ok)' }}>
+                        ✓ diagnosed — {String((m.profile as { awareness_stage?: string }).awareness_stage)} /
+                        soph {String((m.profile as { sophistication?: number }).sophistication)}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--muted)' }}>not yet diagnosed</span>
+                    )}{' '}
+                    <button
+                      onClick={() => {
+                        setProfileEditId(m.id);
+                        setProfileDraft(JSON.stringify(m.profile, null, 2));
+                      }}
+                      style={{ ...subtle, padding: '0.1rem 0.4rem', fontSize: 12 }}
+                    >
+                      profile JSON
+                    </button>
+                  </div>
+                  {profileEditId === m.id && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <textarea
+                        rows={14}
+                        value={profileDraft}
+                        onChange={(e) => setProfileDraft(e.target.value)}
+                        style={{ ...box, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
+                      />
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => {
+                            try {
+                              updateProfile.mutate({ projectId, marketId: m.id, profile: JSON.parse(profileDraft) });
+                            } catch {
+                              alert('Not valid JSON.');
+                            }
+                          }}
+                          disabled={updateProfile.isPending}
+                          style={btn}
+                        >
+                          Save profile
+                        </button>
+                        <button onClick={() => setProfileEditId(null)} style={subtle}>
+                          Close
+                        </button>
+                      </div>
+                      {updateProfile.isError && (
+                        <p style={{ color: 'salmon', fontSize: 12 }}>{updateProfile.error.message}</p>
+                      )}
                     </div>
                   )}
                 </>

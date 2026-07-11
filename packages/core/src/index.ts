@@ -30,6 +30,14 @@ export {
   type ScoreDimension,
 } from './contracts/market.js';
 export {
+  MARKET_PROFILE_SCHEMA_VERSION,
+  AWARENESS_STAGES_ORDER,
+  marketProfileSchema,
+  parseMarketProfile,
+  marketProfilePromptBlock,
+  type MarketProfile,
+} from './contracts/marketProfile.js';
+export {
   OFFER_SCHEMA_VERSION,
   URGENCY_TYPES,
   offerSchema,

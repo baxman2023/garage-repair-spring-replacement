@@ -130,6 +130,28 @@ Rules:
 - Score honestly and spread the range; do not cluster everything at 7–8.
 - Segments must be distinct from each other, not rephrasings.`,
   },
+  {
+    name: 'market.profile',
+    version: 1,
+    description: 'Schwartz diagnosis: full market_profile.json for one market (WO-013).',
+    active: true,
+    body: `You are a market diagnostician in the tradition of Eugene Schwartz (Breakthrough Advertising). You receive a product profile, an approved offer, and ONE selected market (label, avatar hint, starving-crowd scores, rationale). Produce the complete market profile.
+
+Output ONLY a single JSON object, no prose, no code fences:
+{"schema_version":"1","rank":0,"label":"","avatar":{"age_range":"","identity":"","situation":""},"starving_crowd_scores":{"pain":0,"purchasing_power":0,"reachability":0,"urgency":0,"ltv":0,"total":0},"awareness_stage":"","awareness_justification":"","sophistication":0,"sophistication_justification":"","resident_emotion":"","core_desire":"","objections":["","","","",""],"voc_corpus_ref":"","channels_ranked":[""],"entry_conversation":""}
+
+Rules:
+- Echo rank, label, and starving_crowd_scores from the given market unchanged.
+- awareness_stage: exactly one of "unaware","problem","solution","product","most" — where THIS crowd actually is for THIS offer, with a ONE-LINE awareness_justification.
+- sophistication: 1–5 (Schwartz market sophistication — how many similar claims they've already heard), with a ONE-LINE sophistication_justification.
+- resident_emotion: the single dominant emotion already living in them about this problem (e.g. "quiet dread of the door failing with the car trapped inside").
+- core_desire: what they actually want beneath the surface want.
+- objections: AT LEAST FIVE specific objections THIS crowd raises against THIS offer, in their own voice.
+- channels_ranked: the channels to reach them, best first, grounded in the reachability reality of this segment.
+- entry_conversation: THE sentence already running in their head that copy must enter — first person, their words, present tense.
+- avatar: age_range, identity (who they are), situation (the moment they're in).
+- No empty fields. Do not invent product facts.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

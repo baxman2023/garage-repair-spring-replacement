@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
-import { JOB_TYPES } from '@copyforge/core';
+import { JOB_TYPES, marketProfileSchema, parseMarketProfile } from '@copyforge/core';
 import {
   addManualMarket,
+  applyMarketProfile,
   enqueueGenerationJob,
   listMarkets,
   projects,
@@ -25,17 +26,88 @@ export const marketsRouter = router({
   list: workspaceProcedure.input(projectScoped).query(async ({ ctx, input }) => {
     await assertProject(ctx.db, input.projectId);
     const rows = await listMarkets(ctx.workspaceId, input.projectId);
-    return rows.map((r) => ({
-      id: r.id,
-      rank: r.rank,
-      label: r.label,
-      rationale: r.rationale,
-      scoreTotal: r.scoreTotal ? Number(r.scoreTotal) : null,
-      origin: ((r.profile as { origin?: string } | null)?.origin ?? 'engine') as 'engine' | 'user',
-      scores: (r.profile as { scores?: Record<string, number> } | null)?.scores ?? null,
-      avatarHint: (r.profile as { avatar_hint?: string } | null)?.avatar_hint ?? '',
-    }));
+    return rows.map((r) => {
+      const profile = (r.profile ?? {}) as Record<string, unknown>;
+      let diagnosed = false;
+      try {
+        parseMarketProfile(profile);
+        diagnosed = true;
+      } catch {
+        diagnosed = false;
+      }
+      return {
+        id: r.id,
+        rank: r.rank,
+        label: r.label,
+        rationale: r.rationale,
+        scoreTotal: r.scoreTotal ? Number(r.scoreTotal) : null,
+        origin: ((profile as { origin?: string }).origin ?? 'engine') as 'engine' | 'user',
+        scores: (profile as { scores?: Record<string, number> }).scores ?? null,
+        avatarHint: (profile as { avatar_hint?: string }).avatar_hint ?? '',
+        diagnosed,
+        profile,
+      };
+    });
   }),
+
+  /** Enqueue Schwartz diagnosis jobs for every market (generation-class → G1). */
+  profileAll: workspaceProcedure.input(projectScoped).mutation(async ({ ctx, input }) => {
+    await assertProject(ctx.db, input.projectId);
+    const rows = await listMarkets(ctx.workspaceId, input.projectId);
+    if (rows.length === 0) {
+      throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Run market selection first.' });
+    }
+    try {
+      const jobIds: string[] = [];
+      for (const m of rows) {
+        jobIds.push(
+          await enqueueGenerationJob({
+            workspaceId: ctx.workspaceId,
+            projectId: input.projectId,
+            type: JOB_TYPES.marketProfile,
+            payload: { projectId: input.projectId, marketId: m.id },
+          }),
+        );
+      }
+      return { jobIds };
+    } catch (err) {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message: err instanceof Error ? err.message : 'G1 hard stop.',
+      });
+    }
+  }),
+
+  /** Editor save: full market_profile.json (contract-validated). */
+  updateProfile: workspaceProcedure
+    .input(projectScoped.extend({ marketId: z.string().length(26), profile: z.unknown() }))
+    .mutation(async ({ ctx, input }) => {
+      let profile: z.infer<typeof marketProfileSchema>;
+      try {
+        profile = parseMarketProfile(input.profile);
+      } catch (err) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            err instanceof Error
+              ? `Profile does not match the market_profile contract: ${err.message}`
+              : 'Invalid profile.',
+        });
+      }
+      await applyMarketProfile({
+        workspaceId: ctx.workspaceId,
+        projectId: input.projectId,
+        marketId: input.marketId,
+        profile,
+      });
+      // Editor saves are user intent — mark the row user-origin so it survives re-runs.
+      await updateMarket({
+        workspaceId: ctx.workspaceId,
+        projectId: input.projectId,
+        marketId: input.marketId,
+      });
+      return { ok: true as const };
+    }),
 
   /** Run the engine. Generation-class: the G1 hard stop applies. */
   run: workspaceProcedure.input(projectScoped).mutation(async ({ ctx, input }) => {

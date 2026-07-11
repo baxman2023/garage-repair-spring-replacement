@@ -162,6 +162,44 @@ export async function updateMarket(params: {
 }
 
 /**
+ * Persist a full market_profile.json for a market (WO-013). Merges over the
+ * existing profile JSON, preserving the `origin` marker (user edits still
+ * survive re-runs) and mirrors the diagnosis into the dedicated columns.
+ */
+export async function applyMarketProfile(params: {
+  workspaceId: string;
+  projectId: string;
+  marketId: string;
+  profile: Record<string, unknown> & {
+    awareness_stage: 'unaware' | 'problem' | 'solution' | 'product' | 'most';
+    sophistication: number;
+    resident_emotion: string;
+  };
+}): Promise<void> {
+  const db = getDb();
+  await withTxRetry(() =>
+    db.transaction(async (tx) => {
+      await assertProjectTx(tx, params.workspaceId, params.projectId);
+      const rows = await tx.select().from(markets).where(eq(markets.id, params.marketId)).limit(1);
+      const row = rows[0];
+      if (!row || row.workspaceId !== params.workspaceId || row.projectId !== params.projectId) {
+        throw new Error('Market not found in this project.');
+      }
+      const existing = (row.profile ?? {}) as MarketProfileSeed;
+      await tx
+        .update(markets)
+        .set({
+          profile: { ...existing, ...params.profile, origin: existing.origin ?? 'engine' },
+          awarenessStage: params.profile.awareness_stage,
+          sophistication: params.profile.sophistication,
+          residentEmotion: params.profile.resident_emotion,
+        })
+        .where(eq(markets.id, row.id));
+    }),
+  );
+}
+
+/**
  * Add a manual market. Takes the lowest free rank; if all 5 are taken it
  * replaces the lowest-ranked ENGINE row, and refuses when all five are
  * user-origin (the user must edit/remove one instead).

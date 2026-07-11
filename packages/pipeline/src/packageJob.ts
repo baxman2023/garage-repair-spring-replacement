@@ -34,6 +34,12 @@ import {
 
 export const ASSET_PACKAGE_JOB = JOB_TYPES.assetPackage;
 
+/** Package variant + the texts the runtime swap needs (WO-041 map seeding). */
+export type CollectedUtmVariant = PackageUtmVariant & {
+  headline_text: string;
+  lead_text: string;
+};
+
 /**
  * Derive the utm variant map from ads whose blocks message-match this asset
  * (WO-027 tags): each tagged ad piece names the lead variant it feeds.
@@ -42,7 +48,7 @@ export async function collectUtmVariants(
   workspaceId: string,
   marketId: string,
   targetAssetId: string,
-): Promise<PackageUtmVariant[]> {
+): Promise<CollectedUtmVariant[]> {
   const adAssets = await tenantDb(workspaceId).findMany(
     assetsTable,
     and(
@@ -54,8 +60,10 @@ export async function collectUtmVariants(
   if (!target) return [];
   const versions = await listAssetVersions(workspaceId, targetAssetId);
 
-  /** headline/lead block ids for a given lead variant of the target asset. */
-  const variantBlocks = (lead: string): { headline: string; lead: string } | null => {
+  /** headline/lead blocks for a given lead variant of the target asset. */
+  const variantBlocks = (
+    lead: string,
+  ): { headline: AssetBlock; lead: AssetBlock } | null => {
     const version =
       versions.find((v) => {
         const meta = (v.meta ?? {}) as { leadType?: string; structure?: string };
@@ -66,10 +74,10 @@ export async function collectUtmVariants(
     const headline = blocks.find((b) => b.role === 'headline' || b.role === 'hook');
     const leadBlock = blocks.find((b) => b.role === 'lead') ?? blocks[1] ?? blocks[0];
     if (!headline || !leadBlock) return null;
-    return { headline: headline.id, lead: leadBlock.id };
+    return { headline, lead: leadBlock };
   };
 
-  const variants: PackageUtmVariant[] = [];
+  const variants: CollectedUtmVariant[] = [];
   for (const ad of adAssets) {
     const version = await getCurrentAssetVersion(workspaceId, ad.id);
     if (!version) continue;
@@ -97,9 +105,11 @@ export async function collectUtmVariants(
       variants.push({
         utm_content: `${ad.type}:${c.blockId}`,
         angle: c.angle,
-        headline_block: blocks.headline,
-        lead_block: blocks.lead,
+        headline_block: blocks.headline.id,
+        lead_block: blocks.lead.id,
         source: ad.id,
+        headline_text: blocks.headline.text,
+        lead_text: blocks.lead.text,
       });
     }
   }
@@ -136,6 +146,23 @@ export function createPackageHandler() {
     const quizSnippetRef = quizzes[0]?.slug ?? null;
 
     const utmVariants = await collectUtmVariants(job.workspaceId, marketId, assetId);
+
+    // Auto-seed the runtime variant maps (WO-041) from the same ad↔lead tags.
+    const { seedUtmVariantMaps } = await import('@copyforge/db');
+    await seedUtmVariantMaps({
+      workspaceId: job.workspaceId,
+      projectId,
+      assetId,
+      variants: utmVariants.map((v) => ({
+        utmContent: v.utm_content,
+        headlineBlock: v.headline_block,
+        headlineText: v.headline_text,
+        leadBlock: v.lead_block,
+        leadText: v.lead_text,
+        angle: v.angle,
+        sourceAdAssetId: v.source,
+      })),
+    });
 
     // Preserve renderings already produced for this asset (checksum excludes them).
     const previous = await latestPackage(job.workspaceId, assetId);

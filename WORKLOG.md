@@ -1860,3 +1860,49 @@ embeds backfill answers at completion (validated against the definition).
   Chromium for the acceptance test.
 
 **Open questions:** none blocking.
+
+### WO-041 — Message-match runtime
+
+**Acceptance (restated):** `utm_variant_maps` linking utm_content/campaign → headline+lead
+variant, auto-seeded from WO-027's ad↔lead tags; drop-in JS snippet + hosted middleware
+performing the swap without layout shift; congruence report (tagged ads with no mapped
+variant flagged); variant impressions logged to the ledger. Acceptance: swap under 50ms
+after first paint in a test page; unmapped UTM falls back to control cleanly.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **362 tests pass**
+(core +3 incl. two real-browser tests, pipeline packaging test extended). The acceptance
+runs in headless Chromium against a live local test server: the snippet swaps the tagged
+headline+lead **within 50ms of first paint** (measured via `performance` paint entries vs
+the snippet's swap mark), the visibility-hold style is removed (boxes keep their size —
+no layout shift), untouched copy stays untouched, and the impression POST lands on the
+middleware with `matched:true`. Fallback proven: an unmapped utm_content retains the
+control copy and reveals cleanly; a page with NO utm_content makes **zero** middleware
+calls. Maps auto-seed during packaging from the same ad↔lead tags that build the package
+variant list — carrying the variant TEXTS the runtime injects (`lookupUtmVariant`
+returns "Hook for story." etc.); re-packaging re-seeds idempotently. The congruence
+report maps every tagged ad piece against the seeded maps and flags tags whose target
+was never packaged. Impressions land in the ledger as replay-safe `page_view` events
+(`kind: mm_impression`).
+
+**Files touched:**
+- `packages/core/src/mmSnippet.ts` (+ browser tests): the inline drop-in snippet
+  (visibility-hold, hold budget fallback, sendBeacon impressions, `__mmSwapAt` timing
+  mark).
+- `packages/db/src/utmStore.ts`: `seedUtmVariantMaps` (replace-per-asset),
+  `lookupUtmVariant` + `utmMapWorkspace` (public runtime path),
+  `recordVariantImpression`, `congruenceReport`.
+- `packageJob.ts`: `collectUtmVariants` now carries variant texts; packaging auto-seeds
+  the maps.
+- Web: public middleware `GET /api/mm/[assetId]` (CORS + 60s cache) and
+  `POST /api/mm/[assetId]/impression`; `messageMatch` router (snippet + congruence).
+
+**Decisions:**
+- **The snippet holds visibility, not display** — hidden boxes keep their dimensions,
+  so the swap cannot shift layout; a 150ms hold budget guarantees control renders even
+  if the middleware is unreachable.
+- **Control traffic pays nothing**: without utm_content the snippet returns before
+  touching the DOM or the network.
+- **The map stores resolved TEXT**, not block references — the public middleware needs
+  one indexed read and zero joins to stay inside the 50ms budget.
+
+**Open questions:** none blocking.

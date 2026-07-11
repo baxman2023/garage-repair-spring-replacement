@@ -216,6 +216,56 @@ describe('package composer job — G7 (WO-035)', () => {
     expect(g7!.pass).toBe(true);
   });
 
+  it('packaging auto-seeds utm_variant_maps with variant texts; congruence flags unpackaged targets (WO-041)', async () => {
+    if (!dbUp) return;
+    const { workspaceId, projectId, marketId, vslId } = await setup();
+    // A second tagged ad whose TARGET never gets packaged → must be flagged.
+    const strayLetter = await createAsset({ workspaceId, projectId, marketId, type: 'sales_letter' });
+    await insertAssetVersion({
+      workspaceId,
+      assetId: strayLetter,
+      blocks: [
+        { id: 'hl', role: 'headline', text: 'Stray' },
+        { id: 'lead', role: 'lead', text: 'Stray lead' },
+        { id: 'cta', role: 'cta', text: 'x' },
+      ],
+      createdBy: 'system',
+      meta: { structure: 'pas' },
+    });
+    const strayAd = await createAsset({ workspaceId, projectId, marketId, type: 'native_ad' });
+    await insertAssetVersion({
+      workspaceId,
+      assetId: strayAd,
+      blocks: [
+        { id: 'native-1-headline', role: 'headline', text: 'Stray native', meta: { angle: 'proof', messageMatch: { assetId: strayLetter, lead: 'pas' } } },
+        { id: 'native-1-teaser', role: 'body', text: 't' },
+        { id: 'pad', role: 'body', text: 'p' },
+      ],
+      createdBy: 'system',
+    });
+
+    await createPackageHandler()(makeJob(workspaceId, { projectId, assetId: vslId, marketId }));
+
+    const { lookupUtmVariant, congruenceReport } = await import('@copyforge/db');
+    // Maps carry the variant TEXTS the runtime swap injects.
+    const story = await lookupUtmVariant(vslId, 'meta_ad:headline-1');
+    expect(story).toEqual({ headline: 'Hook for story.', lead: 'Lead for story.' });
+    const promise = await lookupUtmVariant(vslId, 'meta_ad:primary-1');
+    expect(promise!.headline).toBe('Hook for big_promise.');
+    // Unmapped utm_content → null (snippet falls back to control).
+    expect(await lookupUtmVariant(vslId, 'meta_ad:nonexistent')).toBeNull();
+
+    // Congruence: the VSL's three tags are mapped; the stray ad is flagged.
+    const report = await congruenceReport(workspaceId, projectId);
+    expect(report.mapped.length).toBe(3);
+    expect(report.flagged).toHaveLength(1);
+    expect(report.flagged[0]).toMatchObject({
+      utmContent: 'native_ad:native-1-headline',
+      sourceAdAssetId: strayAd,
+      targetAssetId: strayLetter,
+    });
+  });
+
   it('collectUtmVariants returns empty for an asset nothing message-matches', async () => {
     if (!dbUp) return;
     const { workspaceId, projectId, marketId } = await setup();

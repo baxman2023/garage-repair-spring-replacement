@@ -20,6 +20,7 @@ export {
   type PackageDesignBrief,
   type PackageUtmVariant,
 } from './contracts/pageBuildPackage.js';
+export { renderMessageMatchSnippet, type MmSnippetInputs } from './mmSnippet.js';
 export {
   renderQuizEmbedHtml,
   type QuizEmbedInputs,

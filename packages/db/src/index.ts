@@ -128,6 +128,15 @@ export {
 } from './prompts.js';
 export { recordEvent, type EventType } from './eventsStore.js';
 export {
+  seedUtmVariantMaps,
+  lookupUtmVariant,
+  utmMapWorkspace,
+  recordVariantImpression,
+  congruenceReport,
+  type UtmVariantSeed,
+  type UtmVariantMapRow,
+} from './utmStore.js';
+export {
   definitionOf,
   publicQuizView,
   startQuizSession,

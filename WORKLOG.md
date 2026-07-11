@@ -1219,3 +1219,46 @@ undocumented merge field, wrong cardinality, non-increasing offsets, backwards p
   across kinds.
 
 **Open questions:** none blocking.
+
+### WO-027 — Generator: ads + advertorial
+
+**Acceptance (restated):** Paid-traffic entry assets per market — Meta (5 primary texts +
+10 headlines + 5 descriptions, angle-tagged), YouTube in-stream script (hook ≤5s, 60–90s,
+spoken conventions), native headline/teaser sets (10), full advertorial presell (story-led,
+disguised-ad disclosure block); each ad tagged to the VSL/letter lead it message-matches
+(feeds WO-041). Acceptance: counts met; disclosure block present; angle tags persisted.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **252 tests pass**
+(pipeline +10). Verified: Meta counts 5/10/5 enforced by contract (zod `.length`), every
+piece carries `meta.angle` + `meta.messageMatch{assetId,lead}`; YouTube script hook-first
+with `timestampEnd ≤ 5.1s`, total stamped duration in [57, 94.5]s (60–90 ±5%), spoken
+conventions applied; native exactly 10 headline/teaser pairs, angles persisted in block
+and version meta; advertorial requires a `meta.section:"disclosure"` block whose text
+states it's an advertisement AND must be story-led (first content block role `story`).
+Message-match targets are enumerated from the market's persisted VSL lead variants
+(version `meta.leadType`) and letter structures (`meta.structure`); a tag not in that set
+throws; ads without any VSL/letter in the market refuse to generate. Rejections covered:
+wrong counts, unknown target, slow hook, out-of-band duration, missing disclosure,
+non-story lead.
+
+**Files touched:**
+- `packages/pipeline/src/generators/ads.ts` (+ `ads.test.ts`): `listLeadTargets`,
+  shared draft/persist helpers (claims + auto-council per asset), `generateMetaAds`,
+  `generateYoutubeAd`, `generateNativeAds`, `generateAdvertorial`,
+  `assertDisclosureBlock`, `assertStoryLed`.
+- Dispatcher cases `meta_ad`/`youtube_ad`/`native_ad`/`advertorial`; pipeline exports;
+  seeds `generate.meta_ads`, `generate.youtube_ad`, `generate.native_ads`,
+  `generate.advertorial` (all v1).
+
+**Decisions:**
+- **Message-match is validated against persisted reality**, not free text: the tag must
+  name an (assetId, lead) pair that exists in this market. WO-041's message-match variant
+  map consumes these tags directly.
+- **Ads hard-require an existing VSL/letter** — an ad with nothing to message-match is a
+  spec violation, and WO-028's orchestrator sequences ads after the core assets anyway.
+- **One asset per ad type per run** (a Meta ad *set* is one asset with 20 blocks) — sets
+  travel through council/export as units; angle + messageMatch live per block for WO-041.
+- YouTube duration checked on stamped duration with the same ±5% tolerance the 170-WPM
+  math uses elsewhere; hook budget 5s (skip button) with 0.1s rounding headroom.
+
+**Open questions:** none blocking.

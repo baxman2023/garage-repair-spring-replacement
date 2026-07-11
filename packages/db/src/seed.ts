@@ -376,6 +376,85 @@ HARD RULES:
 - Quote VOC verbatim where natural. Use the profile's mechanism names exactly. Invent no facts, proof, or scarcity; urgency only from the approved offer's mechanisms, dated via {{deadline_date}}.
 - Write at grade 5-8 readability. Short paragraphs (one to three sentences). No hashtags, no emojis in subjects.`,
   },
+  {
+    name: 'generate.meta_ads',
+    version: 1,
+    description: 'Meta ad set: 5 primary texts, 10 headlines, 5 descriptions, angle + message-match tagged (WO-027).',
+    active: true,
+    body: `You write Meta (Facebook/Instagram) direct-response ads that message-match the funnel page they feed.
+
+Output ONLY: {"primary_texts":[{"text":"","angle":"","message_match":{"asset_id":"","lead":""}} x5],"headlines":[... x10],"descriptions":[... x5]}
+
+- primary_texts (5): 60-200 words each. Hook in line one (it gets truncated at ~125 chars). Story or problem-call-out lead, mechanism tease, one CTA.
+- headlines (10): ≤ 8 words each. Specific, curiosity or benefit loaded, no clickbait lies.
+- descriptions (5): one line each, extends the headline it may appear under.
+
+HARD RULES:
+- ANGLE: tag every piece with its persuasion angle — one word from: fear, curiosity, proof, benefit, identity, urgency.
+- MESSAGE MATCH: every piece tags exactly one target from the MESSAGE-MATCH TARGETS list (asset_id + lead verbatim). The ad's promise/emotion must continue seamlessly on that lead — a "story" VSL lead gets story ads, a "big_promise" lead gets bold-outcome ads.
+- Awareness-stage appropriate (market profile). Quote VOC where natural. Invent no facts, proof, or scarcity. No "you" health/income guarantees that violate Meta policy: no "cure", no promised earnings.
+- Numbers as digits are fine here (written, not spoken). No emojis, no hashtags, no ALL-CAPS words.`,
+  },
+  {
+    name: 'generate.youtube_ad',
+    version: 1,
+    description: 'YouTube in-stream script: hook ≤5s, 60-90s, spoken conventions (WO-027).',
+    active: true,
+    body: `You write YouTube in-stream (skippable) ad scripts. The viewer's skip button appears at five seconds — the hook must land before it.
+
+Output ONLY: {"blocks":[{"id":"","role":"","text":"","meta":{}}],"angle":"","message_match":{"asset_id":"","lead":""}}
+Roles: hook (FIRST, ≤ fourteen words — under five seconds), lead, mechanism, proof, offer, cta.
+
+HARD RULES:
+- SPOKEN SCRIPT: numbers as words, NO stage directions or [brackets], no calendar years, short sentences.
+- LENGTH: sixty to ninety seconds at one hundred seventy words per minute (170-255 words total).
+- Hook: call out the viewer or the pain, or pattern-interrupt — the next five seconds must buy the next ten.
+- One CTA, spoken plainly, repeated once at most.
+- ANGLE: one word from fear, curiosity, proof, benefit, identity, urgency. MESSAGE MATCH: tag exactly one target from the MESSAGE-MATCH TARGETS list; the script's promise must continue on that lead.
+- Quote VOC where natural. Use the profile's mechanism names exactly. Invent nothing.`,
+  },
+  {
+    name: 'generate.native_ads',
+    version: 1,
+    description: 'Native headline/teaser set: 10 pairs, angle + message-match tagged (WO-027).',
+    active: true,
+    body: `You write native advertising (Taboola/Outbrain-style) headline + teaser pairs that read like editorial, not ads.
+
+Output ONLY: {"pairs":[{"headline":"","teaser":"","angle":"","message_match":{"asset_id":"","lead":""}} x10]}
+
+- headline: ≤ 12 words, editorial voice (curiosity gap, specific detail, "why/how/what" forms). Never salesy.
+- teaser: one to two sentences extending the headline's curiosity — open the loop, don't resolve it.
+
+HARD RULES:
+- ANGLE: one word from fear, curiosity, proof, benefit, identity, urgency. Spread angles across the ten pairs.
+- MESSAGE MATCH: each pair tags exactly one target from the MESSAGE-MATCH TARGETS list (asset_id + lead verbatim) — native pairs usually feed the advertorial/letter side.
+- Editorial tone: third person or neutral second person. No exclamation marks, no "buy now", no brand shouting.
+- Quote VOC where natural. Invent no facts. No fake news framing ("doctors hate", fabricated authority).`,
+  },
+  {
+    name: 'generate.advertorial',
+    version: 1,
+    description: 'Advertorial presell page: story-led, disclosure block required (WO-027).',
+    active: true,
+    body: `You write a full advertorial presell page: an editorial-styled story that presells the mechanism and sends the reader to the funnel page it message-matches.
+
+Output ONLY: {"blocks":[{"id":"","role":"","text":"","meta":{}}],"message_match":{"asset_id":"","lead":""}}
+Roles: headline, story, mechanism, proof, bullets, cta. One block MUST carry "meta":{"section":"disclosure"}.
+
+STRUCTURE (story-led — this order):
+1. headline: editorial curiosity headline (not a sales headline).
+2. story blocks FIRST: a named protagonist the avatar recognizes, in-scene, discovering the problem the hard way. Their words, their stakes.
+3. mechanism: the discovery — why the problem persists (problem_mechanism) and what actually works (solution_mechanism, by its exact name).
+4. proof: real proof assets woven as part of the story.
+5. bullets (optional): what the reader will learn/get on the next page.
+6. cta: soft editorial handoff ("see how it works", "watch the short video") — one destination.
+
+HARD RULES:
+- DISCLOSURE: include one block with meta.section "disclosure" that plainly states the page is a paid advertisement / sponsored content and names the advertiser. Honest, visible, no weasel words. Place it first or last.
+- MESSAGE MATCH: tag the one target from the MESSAGE-MATCH TARGETS list the page presells; the story's promise must continue seamlessly there.
+- Length: within the target range given in the dynamic message. Grade 5-8 readability. Written copy — digits are fine.
+- Invent NOTHING: no fake protagonists presented as real people (use "a homeowner we'll call Dan" framing), no fake studies, no fabricated quotes. Quote VOC where natural.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

@@ -7,6 +7,12 @@ import { generateVsl } from './generators/vsl.js';
 import { generateShortForm } from './generators/shortForm.js';
 import { generateWebinar } from './generators/webinar.js';
 import { generateEmailSequences } from './generators/emailSequences.js';
+import {
+  generateAdvertorial,
+  generateMetaAds,
+  generateNativeAds,
+  generateYoutubeAd,
+} from './generators/ads.js';
 import type { SequenceKind } from '@copyforge/core';
 
 /**
@@ -67,6 +73,18 @@ export function createGenerateHandler(clientOptions: ClientOptions = {}) {
           context,
           sequences: Array.isArray(options.sequences) ? (options.sequences as SequenceKind[]) : undefined,
         });
+        return;
+      case 'meta_ad':
+        await generateMetaAds({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
+        return;
+      case 'youtube_ad':
+        await generateYoutubeAd({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
+        return;
+      case 'native_ad':
+        await generateNativeAds({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
+        return;
+      case 'advertorial':
+        await generateAdvertorial({ ai, workspaceId: job.workspaceId, projectId, jobId: job.id, context });
         return;
       default:
         throw new Error(`No generator registered for asset type "${assetType}" yet.`);

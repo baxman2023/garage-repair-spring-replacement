@@ -35,3 +35,18 @@ export {
   type WebinarSection,
 } from './generators/webinar.js';
 export { generateEmailSequences } from './generators/emailSequences.js';
+export {
+  generateMetaAds,
+  generateYoutubeAd,
+  generateNativeAds,
+  generateAdvertorial,
+  listLeadTargets,
+  assertDisclosureBlock,
+  assertStoryLed,
+  META_AD_COUNTS,
+  NATIVE_PAIR_COUNT,
+  MAX_YT_HOOK_SECONDS,
+  YT_MIN_SECONDS,
+  YT_MAX_SECONDS,
+  type LeadTarget,
+} from './generators/ads.js';

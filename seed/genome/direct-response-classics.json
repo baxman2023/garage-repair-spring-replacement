@@ -1,0 +1,114 @@
+{
+  "niche": "direct-response",
+  "channel": "print",
+  "swipes": [
+    {
+      "key": "wsj-two-young-men",
+      "source": "The Wall Street Journal 'Two Young Men' letter — control for ~28 years. Opens: 'On a beautiful late spring afternoon, twenty-five years ago, two young men graduated from the same college. They were very much alike, these two young men…' The difference between them: one subscribed to The Journal.",
+      "awareness": "problem",
+      "components": [
+        {
+          "type": "lead",
+          "content": {
+            "summary": "Parallel-lives story lead: two similar people diverge, and the product is positioned as the single variable that explains the gap.",
+            "evidence": "two young men graduated from the same college. They were very much alike…",
+            "pattern": "parallel-lives story"
+          },
+          "confidence": 0.98,
+          "tags": ["story-lead", "print", "classic"]
+        },
+        {
+          "type": "close",
+          "content": {
+            "summary": "Low-friction trial close framing the decision as trivially reversible next to the life outcome at stake.",
+            "evidence": "Subscribe... and see what it can do for you.",
+            "pattern": "risk-minimized trial close"
+          },
+          "confidence": 0.9,
+          "tags": ["close", "classic"]
+        }
+      ]
+    },
+    {
+      "key": "caples-they-laughed",
+      "source": "John Caples: 'They Laughed When I Sat Down At the Piano — But When I Started to Play!' Underdog-vindication scene; curiosity headline that forces the reader into the story to resolve the tension.",
+      "awareness": "unaware",
+      "components": [
+        {
+          "type": "headline_pattern",
+          "content": {
+            "summary": "Underdog-vindication headline: social ridicule set up, then reversed at the moment of performance — reader must read on to see the payoff.",
+            "evidence": "They Laughed When I Sat Down At the Piano — But When I Started to Play!",
+            "pattern": "they-laughed reversal"
+          },
+          "confidence": 0.98,
+          "tags": ["headline", "curiosity", "classic"]
+        },
+        {
+          "type": "lead",
+          "content": {
+            "summary": "In-scene story lead beginning at the social moment of highest tension, not with the product.",
+            "evidence": "Arthur had just played 'The Rosary.' The room rang with applause…",
+            "pattern": "in-media-res scene"
+          },
+          "confidence": 0.92,
+          "tags": ["story-lead", "classic"]
+        }
+      ]
+    },
+    {
+      "key": "schwartz-burn-disease-out",
+      "source": "Gene Schwartz-style mechanism naming: rather than 'this supplement helps your joints', name the enemy process ('the invisible calcium spurs') and the counter-mechanism ('the enzyme dissolve'), making the product the delivery vehicle for a named mechanism.",
+      "awareness": "solution",
+      "components": [
+        {
+          "type": "mechanism_name",
+          "content": {
+            "summary": "Name the problem-mechanism as a concrete villain process, then name the solution-mechanism that neutralizes it; the product becomes the only carrier of the named mechanism.",
+            "evidence": "the invisible calcium spurs… the enzyme dissolve",
+            "pattern": "villain-process + counter-mechanism naming"
+          },
+          "confidence": 0.95,
+          "tags": ["mechanism", "naming"]
+        },
+        {
+          "type": "bullet_style",
+          "content": {
+            "summary": "Specific-number + forbidden-knowledge fascination bullets ('The 4-second stretch that…', 'What your dentist never tells you about…').",
+            "evidence": "What never to eat on an airplane…",
+            "pattern": "fascination bullet"
+          },
+          "confidence": 0.93,
+          "tags": ["bullets", "fascination"]
+        }
+      ]
+    },
+    {
+      "key": "kennedy-price-stack",
+      "source": "Dan Kennedy-style price reveal: full value stack itemized with assigned values summing far above price; price then revealed as a fraction of the stack, followed immediately by risk reversal so the ask lands cushioned.",
+      "awareness": "product",
+      "components": [
+        {
+          "type": "price_reveal",
+          "content": {
+            "summary": "Stack-then-price choreography: itemize components with dollar values, sum them, reveal the price as a fraction of the total, and cushion immediately with the guarantee.",
+            "evidence": "Total real-world value: $2,341. Your investment today: $197.",
+            "pattern": "stack-then-price"
+          },
+          "confidence": 0.96,
+          "tags": ["price", "stack"]
+        },
+        {
+          "type": "proof_stack",
+          "content": {
+            "summary": "Escalating proof ladder: specific customer result → aggregate numbers → authority/credential → demonstration, each answering the skepticism the previous one raises.",
+            "evidence": "Here's what happened when 312 members ran the same play…",
+            "pattern": "escalating proof ladder"
+          },
+          "confidence": 0.9,
+          "tags": ["proof", "sequence"]
+        }
+      ]
+    }
+  ]
+}

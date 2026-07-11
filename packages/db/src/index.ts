@@ -30,6 +30,7 @@ export {
   type MarketRow,
   type EngineCandidate,
 } from './markets.js';
+export { seedGenomeCorpus } from './seedGenome.js';
 export {
   addSwipe,
   getSwipe,
@@ -37,6 +38,13 @@ export {
   updateSwipeSource,
   insertGenomeComponents,
   queryGenomeComponents,
+  retrieveGenome,
+  createGenomePack,
+  listGenomePacks,
+  resolveGenomePack,
+  type GenomePackRow,
+  type GenomePackDefinition,
+  type GenomeRetrievalQuery,
   type SwipeRow,
   type GenomeComponentRow,
   type ComponentQuery,

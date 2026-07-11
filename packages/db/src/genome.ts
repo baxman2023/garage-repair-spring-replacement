@@ -1,7 +1,7 @@
 import { and, eq, isNull, or, type SQL } from 'drizzle-orm';
-import { newId } from '@copyforge/core';
+import { newId, rankComponents } from '@copyforge/core';
 import { getDb } from './client.js';
-import { genomeComponents, swipes } from './schema/index.js';
+import { genomeComponents, genomePacks, swipes } from './schema/index.js';
 
 /**
  * Genome store (WO-017/018). Two layers share these tables:
@@ -131,4 +131,100 @@ export async function queryGenomeComponents(q: ComponentQuery): Promise<GenomeCo
   return rows
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, q.limit ?? 100);
+}
+
+// --- Retrieval (WO-018) ------------------------------------------------------
+
+export interface GenomeRetrievalQuery extends ComponentQuery {
+  /** Injectable clock so retrieval is deterministic in tests. */
+  now?: Date;
+}
+
+/**
+ * Recency-weighted retrieval (WO-018): filters by type/niche/awareness/channel,
+ * ranks by confidence × recency decay with a stable id tiebreak. Deterministic
+ * given the same rows and `now`.
+ */
+export async function retrieveGenome(
+  q: GenomeRetrievalQuery,
+): Promise<Array<GenomeComponentRow & { weight: number }>> {
+  const rows = await queryGenomeComponents({ ...q, limit: 1000 });
+  const ranked = rankComponents(
+    rows.map((r) => ({
+      id: r.id,
+      type: r.type,
+      niche: r.niche,
+      content: (r.content ?? {}) as { summary?: string; evidence?: string; pattern?: string },
+      confidence: r.confidence ? Number(r.confidence) : 0.5,
+      seenAt: r.createdAt,
+      row: r,
+    })),
+    q.now ?? new Date(),
+  );
+  return ranked.slice(0, q.limit ?? 40).map((r) => ({ ...(r as unknown as { row: GenomeComponentRow }).row, weight: r.weight }));
+}
+
+// --- Genome packs (curated retrieval sets per niche) -------------------------
+
+export type GenomePackRow = typeof genomePacks.$inferSelect;
+
+export interface GenomePackDefinition {
+  /** Explicit component ids (curated). */
+  componentIds?: string[];
+  /** Or filter-based membership. */
+  filters?: { type?: string; channel?: string; awareness?: string };
+  [key: string]: unknown;
+}
+
+export async function createGenomePack(params: {
+  workspaceId: string | null;
+  niche: string;
+  name: string;
+  definition: GenomePackDefinition;
+}): Promise<string> {
+  const id = newId();
+  await getDb().insert(genomePacks).values({
+    id,
+    workspaceId: params.workspaceId,
+    niche: params.niche,
+    name: params.name,
+    definition: params.definition,
+  });
+  return id;
+}
+
+export async function listGenomePacks(
+  workspaceId: string,
+  niche?: string,
+): Promise<GenomePackRow[]> {
+  const scope = or(isNull(genomePacks.workspaceId), eq(genomePacks.workspaceId, workspaceId)) as SQL;
+  const where = niche ? (and(scope, eq(genomePacks.niche, niche)) as SQL) : scope;
+  return getDb().select().from(genomePacks).where(where);
+}
+
+/** Resolve a pack to its components (curated ids first, else filters). */
+export async function resolveGenomePack(
+  workspaceId: string,
+  packId: string,
+  now?: Date,
+): Promise<Array<GenomeComponentRow & { weight: number }>> {
+  const rows = await getDb().select().from(genomePacks).where(eq(genomePacks.id, packId)).limit(1);
+  const pack = rows[0];
+  if (!pack || (pack.workspaceId !== null && pack.workspaceId !== workspaceId)) {
+    throw new Error('Genome pack not found.');
+  }
+  const def = (pack.definition ?? {}) as GenomePackDefinition;
+  if (def.componentIds?.length) {
+    const all = await retrieveGenome({ workspaceId, niche: pack.niche, now, limit: 1000 });
+    const wanted = new Set(def.componentIds);
+    return all.filter((c) => wanted.has(c.id));
+  }
+  return retrieveGenome({
+    workspaceId,
+    niche: pack.niche,
+    type: def.filters?.type as GenomeComponentRow['type'] | undefined,
+    channel: def.filters?.channel,
+    awareness: def.filters?.awareness as GenomeComponentRow['awareness'] | undefined,
+    now,
+  });
 }

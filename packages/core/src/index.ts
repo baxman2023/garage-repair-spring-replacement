@@ -4,6 +4,16 @@ export { lineDiff, type DiffOp, type DiffOpType } from './diff.js';
 export { extractReadableText, type ReadableExtract } from './readability.js';
 export { JOB_TYPES, type JobType } from './jobs.js';
 export { canonicalStringify, snapshotHash } from './snapshot.js';
+export {
+  componentWeight,
+  rankComponents,
+  estimateTokens,
+  genomePromptBlock,
+  GENOME_RECENCY_HALF_LIFE_DAYS,
+  GENOME_BLOCK_TOKEN_BUDGET,
+  type RetrievableComponent,
+  type GenomeBlockResult,
+} from './genomeBlock.js';
 export { extractJsonObject } from './jsonExtract.js';
 export {
   computeFunnelMath,

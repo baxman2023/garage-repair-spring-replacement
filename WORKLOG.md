@@ -841,3 +841,39 @@ another workspace's swipe).
 - **Swipe niche/channel take precedence over the model's inference** when both exist.
 
 **Open questions:** none blocking.
+
+### WO-018 — Genome retrieval + seed corpus
+
+**Acceptance (restated):** `genome_packs` curated per niche; retrieval fn (type/niche/
+awareness/channel filters, recency-weighted); rendered as a §1.2 cached block; seed loader
+for `/seed/genome`. Retrieval deterministic given seed; cache block within token budget
+with graceful truncation by weight.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **172 tests pass**
+(core +4, db +3). Verified: seed loader is idempotent (2nd run +0/+0); two retrievals over
+the same seed return identical ordering; weight = confidence × 2^(−age/half-life) with an
+id-asc tiebreak (input order never matters); the cache block adds best-weight-first and
+truncates the lowest-weight components at the budget (token estimate enforced, same inputs
+→ byte-identical block); layer isolation holds (another workspace's private components are
+invisible); packs resolve by curated ids or filters.
+
+**Files touched:**
+- `packages/core/src/genomeBlock.ts` (+ test): `componentWeight` (90-day half-life config),
+  `rankComponents`, `estimateTokens` (chars/4), `genomePromptBlock` (4000-token default
+  budget, graceful truncation, reports included/truncated ids).
+- `packages/db/src/genome.ts`: `retrieveGenome` (injectable `now` for determinism),
+  `createGenomePack`/`listGenomePacks`/`resolveGenomePack`; `seedGenome.ts` loader
+  (`pnpm db:seed-genome`, stable ids from niche+key, shared layer) + `genome.test.ts`.
+- `/seed/genome/direct-response-classics.json` — 4 owner-corpus swipes / 8 components
+  (WSJ two-young-men, Caples they-laughed, Schwartz mechanism naming, Kennedy stack-then-
+  price) as the real starter corpus.
+
+**Decisions:**
+- **Determinism is explicit:** retrieval and rendering take `now` as a parameter; ties
+  break on id. Tests pin `now` and assert byte-identical output.
+- **Budget truncation is by weight, not order-of-arrival** — the block always keeps the
+  strongest DNA and reports what it dropped (no silent truncation, §10 risk 6 spirit).
+- **Pack definitions support both curated ids and filter-based membership** (both §3's
+  "curated retrieval sets" reading and practical dynamic packs).
+
+**Open questions:** none blocking.

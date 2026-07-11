@@ -31,6 +31,7 @@ import { autopsyRouter } from './autopsy';
 import { licensingRouter } from './licensing';
 import { billingRouter } from './billing';
 import { adminRouter } from './admin';
+import { usageRouter } from './usage';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -72,6 +73,7 @@ export const appRouter = router({
   licensing: licensingRouter,
   billing: billingRouter,
   admin: adminRouter,
+  usage: usageRouter,
 });
 
 export type AppRouter = typeof appRouter;

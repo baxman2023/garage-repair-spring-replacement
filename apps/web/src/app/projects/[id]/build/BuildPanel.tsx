@@ -38,6 +38,11 @@ export function BuildPanel({ projectId }: { projectId: string }) {
   const doneCount = steps.filter((s) => s.status === 'done').length;
   const failed = steps.filter((s) => s.status === 'failed');
   const running = data?.build.status === 'running';
+  // Pre-fan-out cost estimate (WO-053): the full build is 5 markets × 8 assets.
+  const estimate = trpc.usage.buildEstimate.useQuery(
+    { marketCount: 5, assetTypeCount: 8 },
+    { enabled: !running },
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -49,6 +54,12 @@ export function BuildPanel({ projectId }: { projectId: string }) {
         >
           {start.isPending ? 'Starting…' : 'Build All (5 markets × full funnel)'}
         </button>
+        {!running && estimate.data && (
+          <span style={{ color: 'var(--muted)', fontSize: 13 }} title={estimate.data.note}>
+            est. ~${estimate.data.totalCostUsd.toFixed(2)} for {estimate.data.plannedAssets} assets on your key (
+            {estimate.data.basis === 'defaults' ? 'default averages' : 'your history'})
+          </span>
+        )}
         {data && running && (
           <button onClick={() => cancel.mutate({ projectId, buildId: data.build.id })} style={subtle}>
             Cancel build

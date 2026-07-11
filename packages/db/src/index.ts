@@ -162,6 +162,15 @@ export {
   type FlagRow,
 } from './flagsStore.js';
 export {
+  workspaceUsage,
+  projectUsage,
+  monthlyUsage,
+  buildCostEstimate,
+  DEFAULT_PER_ASSET_ESTIMATE,
+  type UsageTotals,
+  type BuildEstimate,
+} from './usageStore.js';
+export {
   adminSearchUsers,
   adminSearchWorkspaces,
   adminSearchLicenses,

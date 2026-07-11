@@ -6,8 +6,11 @@ import { newId } from '@copyforge/core';
 
 process.env.EXPORT_DIR = join(tmpdir(), `copyforge-exports-cli-${process.pid}`);
 import { storeWorkspaceKey, type Transport } from '@copyforge/ai';
+import { and, isNotNull, eq as eqOp } from 'drizzle-orm';
 import {
   applyEngineCandidates,
+  buildCostEstimate,
+  usageLedger,
   applyMarketProfile,
   buildStrategySnapshot,
   closePool,
@@ -220,6 +223,36 @@ describe('produce --phase build (WO-034)', () => {
     expect(asset.gates.G3).toBe('pass');
   }, 60_000);
 
+  it('WO-053 ACCEPTANCE: pre-build estimate within ±30% of the actual fixture build', async () => {
+    if (!dbUp) return;
+    const { workspaceId, projectId } = await fixtureProject();
+    const { transport } = cascadeTransport();
+
+    // Build #1 seeds the workspace's observed per-asset averages.
+    const first = await runBuildPhase(
+      { projectId, markets: [1], assets: ['upsell', 'order_bump'] },
+      { clientOptions: { transport }, log: () => {} },
+    );
+    expect(first.ok).toBe(true);
+
+    // The estimate is computed BEFORE the second fan-out runs.
+    const estimate = await buildCostEstimate(workspaceId, { marketCount: 1, assetTypeCount: 2 });
+    expect(estimate.basis).toBe('workspace-history');
+    expect(estimate.plannedAssets).toBe(2);
+
+    const costBefore = await stageCost(workspaceId);
+    const second = await runBuildPhase(
+      { projectId, markets: [2], assets: ['upsell', 'order_bump'] },
+      { clientOptions: { transport: cascadeTransport().transport }, log: () => {} },
+    );
+    expect(second.ok).toBe(true);
+    const actual = (await stageCost(workspaceId)) - costBefore;
+
+    expect(actual).toBeGreaterThan(0);
+    expect(estimate.totalCostUsd).toBeGreaterThanOrEqual(actual * 0.7);
+    expect(estimate.totalCostUsd).toBeLessThanOrEqual(actual * 1.3);
+  }, 60_000);
+
   it('refuses to build without G2', async () => {
     if (!dbUp) return;
     const workspaceId = newId();
@@ -230,3 +263,11 @@ describe('produce --phase build (WO-034)', () => {
     expect(summary.error).toMatch(/G2/);
   });
 });
+
+async function stageCost(workspaceId: string): Promise<number> {
+  const rows = await getDb()
+    .select()
+    .from(usageLedger)
+    .where(and(eqOp(usageLedger.workspaceId, workspaceId), isNotNull(usageLedger.stage)));
+  return rows.reduce((s, r) => s + Number(r.costEstUsd), 0);
+}

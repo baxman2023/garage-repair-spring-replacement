@@ -2447,3 +2447,41 @@ flipping live against the DB.
   signups never even send an email — and responses stay constant-shape.
 
 **Open questions:** none blocking.
+
+### WO-053 — Usage & cost dashboard (user-facing)
+
+**Acceptance (restated):** Per-workspace and per-project token/cost views from
+`usage_ledger`; cache-hit-rate display; per-build cost estimate BEFORE running the
+fan-out (config averages); monthly summary. Acceptance: pre-build estimate within
+±30% of actual on a fixture build; dashboard sums reconcile with the ledger.
+
+**Done.** All views are straight aggregations over `usage_ledger` — the dashboard
+reconciles with the ledger by construction, and the test proves it against a
+hand-seeded ledger with known exact sums (workspace total, per-project split whose
+costs sum to the total including unattributed rows, per-stage project breakdown,
+single-month summary equal to the total). Cache hit rate = cacheRead / (input +
+cacheRead) on every row set. The pre-build estimate is honest about its basis:
+with no history it uses documented defaults ($0.90 / 12k output tokens per asset,
+`basis:'defaults'`, note says so); once the workspace has built anything, it
+switches to the OBSERVED average (stage-attributed ledger cost ÷ assets built,
+`basis:'workspace-history'`). Acceptance: in the CLI fixture, build #1 seeds the
+averages, the estimate is computed BEFORE build #2 fans out, and it lands within
+±30% of build #2's actual stage-attributed cost delta (identical mock usage makes
+it near-exact; the assertion is the honest ratio band).
+
+**Files touched:**
+- `packages/db/src/usageStore.ts` (+ test): `workspaceUsage`, `projectUsage`,
+  `monthlyUsage`, `buildCostEstimate`, `DEFAULT_PER_ASSET_ESTIMATE`.
+- Web: `usage` router (workspace/project/monthly/buildEstimate),
+  `/settings/usage` page (totals, per-project, cache-hit column, monthly table);
+  BuildPanel now shows "est. ~$X for N assets on your key (basis)" next to the
+  Build All button before any fan-out launches.
+- CLI: acceptance test appended to `build.test.ts` (reuses the WO-034 fixture +
+  cascade transport).
+
+**Decisions:**
+- The estimate's unit is cost-per-built-asset rather than per-stage arithmetic:
+  it self-corrects from real history, needs no per-stage bookkeeping, and its
+  basis is displayed to the user instead of implied.
+
+**Open questions:** none blocking.

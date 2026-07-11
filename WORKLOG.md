@@ -2241,3 +2241,46 @@ Acceptance verified:
   funnel without a new taxonomy.
 
 **Open questions:** none blocking.
+
+### WO-049 — produce CLI v3
+
+**Acceptance (restated):** `produce --project <id> --phase challenge
+[--target vsl@market2]` reads ledger weak points, generates a challenger set through
+the full gates, outputs a summary. Acceptance: runs in CI with mocked AI + fixture
+ledger; challengers land queued.
+
+**Done.** The challenge phase reads the ledger exactly as WO-044 defined weakness:
+every control's arm metrics (page views → sales) from the events table, ranked by
+observed CVR ascending. Untargeted, it challenges the `--limit` weakest controls
+that HAVE traffic (controls without ledger evidence are listed but skipped, with the
+reason in the summary); `--target upsell@market2` overrides the ranking and
+challenges the named asset-type/market slot regardless of its numbers. Each selected
+control gets a `challenger.generate` job (the WO-044 handler — brief built from
+Council escalation notes, focus annotations, and the ledger CVR line), and the CLI
+drains the workspace queue inline through the full ladder: challenger draft → G3
+council → G4 focus group → G5 de-slop → G6 compliance → G7 package. The JSON
+summary carries the weak-point table (control, market rank, visitors, conversions,
+CVR, selected+reason) and this run's challengers with per-gate outcomes; exit is
+non-zero if any gate run failed, any challenger asset blocked, or nothing landed.
+
+Acceptance verified in CI conditions (mocked AI, fixture ledger): two controls
+seeded at 1% and 20% CVR — the 1% control is selected, its challenger passes
+G3–G7 (six lens calls counted on the mock transport), and the challenger row is
+asserted IN THE DATABASE with lifecycle status `queued` on the weak control.
+Promotion remains a human decision behind WO-044's volume/uplift refusals.
+
+**Files touched:**
+- `apps/cli/src/challenge.ts` (+ test): `parseTarget`, `runChallengePhase`
+  (weak-point read → enqueue → inline drain → summary; stable schema).
+- `apps/cli/src/index.ts`: `--phase challenge`, `--target`, `--limit`, help text;
+  unknown phases now name the three available phases.
+
+**Decisions:**
+- Weakness = observed CVR only (visitors > 0). Controls with zero traffic are
+  surfaced as "no traffic evidence yet" rather than silently challenged — the
+  brief would be evidence-free and the heuristic (WO-044) could never promote the
+  result anyway.
+- `--target` bypasses the traffic requirement deliberately: an operator naming a
+  slot IS the evidence.
+
+**Open questions:** none blocking.

@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { env, FUNNEL_ASSET_SEQUENCE, type FunnelAssetType } from '@copyforge/core';
 import { runStrategyPhase } from './strategy.js';
 import { runBuildPhase } from './build.js';
+import { runChallengePhase } from './challenge.js';
 
 // Load the repo-root .env so headless runs see DATABASE_URL etc.
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
@@ -14,8 +15,7 @@ config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env')
  *   produce --project <id> --phase strategy [--auto-approve] [--dump-file f]
  *           [--price 1000] [--margin 0.8] [--refund 0.05] [--cpc meta=2,search=3.5]
  *   produce --project <id> --phase build [--markets 1,2] [--assets vsl,email_sequence]
- *
- * Later phases: challenge (WO-049).
+ *   produce --project <id> --phase challenge [--target vsl@market2] [--limit 3]
  */
 
 const VERSION = '0.1.0';
@@ -47,6 +47,7 @@ function printHelp(): void {
 Usage:
   produce --project <id> --phase strategy [options]
   produce --project <id> --phase build [--markets 1,2] [--assets vsl,email_sequence]
+  produce --project <id> --phase challenge [--target vsl@market2] [--limit 3]
 
 Strategy options:
   --auto-approve      Auto-approve gates G0 (best passing variant) and G2
@@ -59,6 +60,10 @@ Strategy options:
 Build options:
   --markets 1,2       Market ranks to build (default: all approved markets)
   --assets a,b        Asset types (default: full funnel: ${FUNNEL_ASSET_SEQUENCE.join(',')})
+
+Challenge options:
+  --target t@marketN  Challenge one control (asset type @ market rank), e.g. vsl@market2
+  --limit <n>         Untargeted: challenge the n weakest controls by CVR (default 3)
 
   --help, --version
 `);
@@ -129,8 +134,18 @@ async function main(): Promise<number> {
     return summary.ok ? 0 : 1;
   }
 
+  if (phase === 'challenge') {
+    const summary = await runChallengePhase({
+      projectId,
+      target: typeof flags.get('target') === 'string' ? String(flags.get('target')) : undefined,
+      ...(flags.has('limit') ? { limit: Number(flags.get('limit')) } : {}),
+    });
+    console.log(JSON.stringify(summary, null, 2));
+    return summary.ok ? 0 : 1;
+  }
+
   if (typeof phase === 'string') {
-    console.error(`[produce] phase "${phase}" is not available yet (challenge → WO-049).`);
+    console.error(`[produce] unknown phase "${phase}" — available: strategy, build, challenge.`);
     return 2;
   }
 

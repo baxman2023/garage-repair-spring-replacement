@@ -2091,3 +2091,41 @@ run-now buttons on the new `/projects/[id]/predictions` page.
   counts don't exist in the ledger, and the optin list is the honest denominator we have.
 
 **Open questions:** none blocking.
+
+### WO-046 — Ledger dashboards
+
+**Acceptance (restated):** Dashboards render per-project funnel by market_id
+(traffic → quiz → optin → VSL retention curve → sale), control history timeline,
+challenger queue with status, Brier/calibration trend, CSV export; dashboards render
+from the fixture event stream and the retention curve matches raw quartile events.
+
+**Done.** All aggregation is plain deterministic counting over the `events` table —
+no sampling, no estimation. `projectFunnel` groups every event type by `market_id`
+(null → "unattributed") and totals across markets; the retention curve inside each
+funnel row counts vsl_quartile events at exactly 25/50/75/95, so by construction it
+IS the raw event counts — the acceptance test seeds 60/45/30/12 quartile events and
+asserts the curve equals `{starts:100, q25:60, q50:45, q75:30, q95:12}` verbatim.
+`assetRetentionCurve` does the same per asset (cross-asset bleed tested).
+`brierTrend` orders resolved forecasts by resolution time (ULID tiebreak) with a
+running mean. `funnelCsv` emits a fixed column order with per-market rows plus a
+TOTAL row; the test asserts the exact header and exact data lines.
+
+**Files touched:**
+- `packages/db/src/dashboards.ts` (+ test): `projectFunnel`, `assetRetentionCurve`,
+  `brierTrend`, `funnelCsv`; exported from the package index.
+- Web `dashboards` router (funnel with market labels, brierTrend, exportCsv) mounted
+  in `_app.ts`; `/projects/[id]/dashboard` page + panel — funnel table with retention
+  percentages, control timeline + challenger queue (composes the existing
+  `controls.list` lineage/metrics), Brier trend table, Download CSV button
+  (client-side blob from the deterministic server CSV).
+
+**Decisions:**
+- Control timeline and challenger queue REUSE `controls.list` (which already returns
+  audit-derived lineage and arm metrics) rather than duplicating those queries in the
+  dashboards router — one source of truth for control history.
+- CSV labels markets as `<rank>. <label>`; unmapped events export as `unattributed`
+  rather than being dropped, so exported totals always reconcile with the ledger.
+
+**Open questions:** none blocking. Noted: one transient full-suite flake in the CLI
+end-to-end build test (passed on isolation and on immediate full re-run; suspected
+load-related timing in the fan-out fixture — watch on future full runs).

@@ -150,6 +150,14 @@ export {
   type ChallengerRow,
 } from './controlsStore.js';
 export {
+  projectFunnel,
+  assetRetentionCurve,
+  brierTrend,
+  funnelCsv,
+  type RetentionCurve,
+  type MarketFunnel,
+} from './dashboards.js';
+export {
   ensureIngestKey,
   rotateIngestKey,
   resolveIngestKey,

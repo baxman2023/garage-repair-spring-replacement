@@ -326,7 +326,7 @@ dispatches to handlers, fails on throw / missing handler, and stops gracefully.
 - `apps/worker/src/worker.ts` (runtime loop, handler registry, reaper, graceful stop),
   `index.ts` (wire loop + signal handlers), `worker.test.ts`, vitest config/setup, deps.
 
-**Decisions:**
+**Decisions (WO-007):**
 - **MariaDB `SKIP LOCKED` semantics.** MariaDB applies `LIMIT` *before* `SKIP LOCKED`
   removes locked rows, so `LIMIT 1 … FOR UPDATE SKIP LOCKED` returns empty (not the next
   row) when its single candidate is locked, and a batch `FOR UPDATE` locks the whole batch.
@@ -348,3 +348,74 @@ dispatches to handlers, fails on throw / missing handler, and stops gracefully.
   message.
 
 **Open questions:** none blocking.
+
+### WO-008 — Prompt registry + pinning
+
+**Acceptance (restated):** `prompt_versions` CRUD (admin-only), a `getPrompt(name)` loader
+for the active version, `asset_versions.prompt_version_id` recorded at generation, regen
+honoring the pinned version unless "upgrade to latest", and a version diff view. Bumping a
+prompt must not change regeneration of an existing asset unless explicitly upgraded.
+
+**Status:** ✅ Complete. `pnpm typecheck/build/lint` green, scans clean, **78 tests pass**
+(core +3 diff, db +1 prompts). The pinning test proves the acceptance directly: an asset
+pinned to v1 resolves v1's body even after v2 becomes active; `upgradeToLatest` (or no pin)
+resolves the active version; re-activating v1 flips the pointer with history intact.
+
+**Files touched:**
+- `packages/core/src/diff.ts` (LCS `lineDiff`) + `diff.test.ts`, vitest config, exports.
+- `packages/db/src/prompts.ts` (getPrompt/getPromptById/list/create/activate/
+  `resolvePromptForGeneration`) + `prompts.test.ts`; exported from `index.ts`.
+- `apps/web/src/server/trpc.ts` (`adminProcedure`), `routers/prompts.ts` (+ mounted),
+  `app/admin/prompts/{page,PromptsAdmin}.tsx`.
+
+**Decisions:**
+- **Prompts are immutable + versioned:** "editing" creates the next version; `createPromptVersion`
+  auto-increments and (by default) activates it, deactivating siblings in one transaction.
+- **Pinning is the load-bearing guarantee (§10 risk 5):** `asset_versions.prompt_version_id`
+  (already in the schema) records the version used; `resolvePromptForGeneration(name, {pinnedId,
+  upgradeToLatest})` returns the pinned version unless upgrade is requested or no pin exists.
+  Generators (WO-021+) call this and stamp the id.
+- **CRUD is `adminProcedure`-gated** (platform admin via `users.is_platform_admin`), distinct
+  from workspace owner/member roles — the seed of the WO-052 admin panel.
+- **Diff** is a pure core LCS line diff, rendered in the admin UI (add/remove/equal).
+
+**Open questions:** none blocking.
+
+---
+
+## PHASE 0 REPORT — Foundation (WO-001 … WO-008) ✅ COMPLETE
+
+**State:** All eight foundation WOs implemented, verified, committed, and pushed to
+`claude/copyforge-saas-build-3z1g9t`. Green across the board:
+`pnpm typecheck`, `pnpm build`, `pnpm lint`, **78 tests** (core 3, db 39, ai 23, web 10,
+worker 3), plus two CI guard scans (tenancy, ai-boundary) — each verified to fail closed on a
+planted violation. Migrations `0000`–`0002` apply cleanly to a fresh MariaDB; seed is
+idempotent.
+
+**What exists now:**
+- Monorepo (Next 15 / tRPC / Drizzle / MariaDB / PM2), zod env, dual-format packages.
+- Full §3 schema (43 tables + auth) with the tenancy guard (`tenantDb`) + CI enforcement.
+- Passwordless auth, workspaces, invites, sessions.
+- Encrypted BYO key vault + redaction; the AI client (routing, 429/529 fallback, cache
+  blocks, usage metering) with the mocked-AI harness; fair job queue + worker loop; prompt
+  registry + pinning.
+
+**Risks / notes:**
+1. **Environment:** MariaDB is bootstrapped in-container via apt (no managed DB; Docker
+   registry blocked by the proxy). It's re-provisioned per session and won't persist across
+   container reclaim — fine for CI-style verification, but not a durable datastore.
+2. **Live Anthropic path unexercised:** no real key/egress here, so the real transport +
+   test-key ping are covered structurally + via mocks only. First real call happens once a
+   workspace key is present (Phase 1+).
+3. **`PRICING` values are directional estimates** (documented as such); correctable in admin
+   (WO-052).
+4. **JSON-column fix** (custom parse-on-read `json` type) was a necessary correction to a
+   drizzle+MariaDB gap — locked with a regression test; worth remembering it underpins every
+   JSON contract.
+
+**Deviations proposed:** none. Everything tracked the spec; the schema/design calls
+(nullable `workspace_id` on shared layers, tenant-scoped event dedupe, `is_platform_admin`,
+`FOR UPDATE SKIP LOCKED` + polling given MariaDB's LIMIT/SKIP-LOCKED semantics) are recorded
+above with rationale.
+
+**Awaiting your go before starting Phase 1 (Intake & Strategy, WO-009 … WO-016).**

@@ -3,6 +3,7 @@ import { publicProcedure, router } from '../trpc';
 import { authRouter } from './auth';
 import { workspaceRouter } from './workspace';
 import { apiKeyRouter } from './apiKey';
+import { promptsRouter } from './prompts';
 
 /**
  * Root tRPC router. Feature routers mount here as later work orders add them.
@@ -16,6 +17,7 @@ export const appRouter = router({
   auth: authRouter,
   workspace: workspaceRouter,
   apiKey: apiKeyRouter,
+  prompts: promptsRouter,
 });
 
 export type AppRouter = typeof appRouter;

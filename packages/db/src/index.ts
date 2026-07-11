@@ -12,5 +12,17 @@ export {
   type ClaimedJob,
   type JobError,
 } from './queue.js';
+export {
+  getPrompt,
+  getPromptById,
+  listPromptVersions,
+  listPromptNames,
+  createPromptVersion,
+  activatePromptVersion,
+  resolvePromptForGeneration,
+  type PromptVersion,
+  type CreatePromptVersionInput,
+  type ResolvePromptOptions,
+} from './prompts.js';
 export * as schema from './schema/index.js';
 export * from './schema/index.js';

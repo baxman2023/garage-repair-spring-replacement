@@ -69,3 +69,11 @@ export const ownerProcedure = workspaceProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+/** Requires a platform administrator (separate from workspace roles). */
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!ctx.auth.user.isPlatformAdmin) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Platform administrators only.' });
+  }
+  return next({ ctx });
+});

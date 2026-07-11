@@ -141,10 +141,13 @@ fi
 # page shadows the app. Move the defaults aside once (kept in a backup dir),
 # leaving only our routing files + .well-known (Let's Encrypt).
 WEBROOT="$APP_BASE/public_html"
-BACKUP="$APP_BASE/public_html_default_backup"
-mkdir -p "$BACKUP"
+# The master user can only write INSIDE public_html on Cloudways — the backup
+# lives there as a dot-directory (shadowed by the proxy rewrite anyway).
+BACKUP="$WEBROOT/.copyforge-default-backup"
+mkdir -p "$BACKUP" || true
 find "$WEBROOT" -mindepth 1 -maxdepth 1 \
   ! -name '.well-known' ! -name '.htaccess' ! -name 'index.php' \
+  ! -name '.copyforge-default-backup' \
   -exec mv -t "$BACKUP" {} + 2>/dev/null || true
 
 public_ok() {

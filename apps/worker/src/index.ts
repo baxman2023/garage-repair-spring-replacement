@@ -15,7 +15,9 @@ import {
   createCouncilJobHandler,
   createFocusGroupHandler,
   createFocusFixHandler,
+  createDeslopHandler,
   createVocMineHandler,
+  ASSET_DESLOP_JOB,
   ASSET_FOCUS_GROUP_JOB,
   ASSET_FOCUS_FIX_JOB,
   BUILD_STEP_JOB,
@@ -53,6 +55,7 @@ const handlers: HandlerRegistry = {
   [ASSET_COUNCIL_JOB]: createCouncilJobHandler(),
   [ASSET_FOCUS_GROUP_JOB]: createFocusGroupHandler(),
   [ASSET_FOCUS_FIX_JOB]: createFocusFixHandler(),
+  [ASSET_DESLOP_JOB]: createDeslopHandler(),
 };
 
 let shuttingDown = false;

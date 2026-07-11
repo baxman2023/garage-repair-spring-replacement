@@ -147,6 +147,11 @@ export function createFocusGroupHandler(
 
     if (report.pass) {
       await setAssetStatus(job.workspaceId, assetId, 'deslop');
+      await enqueueJob({
+        workspaceId: job.workspaceId,
+        type: JOB_TYPES.assetDeslop,
+        payload: { projectId, assetId, marketId },
+      });
     }
     // On fail the asset stays in focus_group with the marked-up report —
     // the user triggers the one-click fix (asset.focus_fix) from there.

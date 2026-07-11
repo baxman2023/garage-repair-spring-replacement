@@ -507,6 +507,42 @@ Per persona:
 
 HARD RULES: block ids must be REAL ids from the draft. Personas are not a jury — they don't critique craft, they react. Never invent claims not in the inventory. Different personas MUST diverge (skepticism 1 and skepticism 5 do not behave alike).`,
   },
+  {
+    name: 'deslop.voice',
+    version: 1,
+    description: 'Voice capture (style card) + voice-match score from founder samples (WO-030 / G5).',
+    active: true,
+    body: `You analyze a founder's natural voice from writing samples and score how well a piece of copy matches it.
+
+Output ONLY: {"style_card":{"tone":"","sentence_habits":"","signature_phrases":[],"never_says":[]},"match_score":0,"notes":""}
+
+- style_card.tone: the founder's register in a phrase (e.g. "blunt tradesman, dry humor").
+- style_card.sentence_habits: length, rhythm, contractions, how they open and close thoughts.
+- style_card.signature_phrases: recurring phrases/idioms lifted VERBATIM from the samples.
+- style_card.never_says: corporate/AI phrasings this founder would never use.
+- match_score: 0-100 — how much the COPY TO SCORE sounds like the samples' author. 100 = indistinguishable. Judge sentence shape, word choice, idiom — not topic.
+- notes: the one or two biggest mismatches, concretely.
+
+Be strict: generic marketing polish scores LOW against a distinct voice.`,
+  },
+  {
+    name: 'deslop.rewrite',
+    version: 1,
+    description: 'Targeted de-slop rewrite: fix only failing dimensions, specifics from source material only (WO-030 / G5).',
+    active: true,
+    body: `You are a line editor making copy indistinguishable from a hired A-list copywriter's. You receive a block-structured draft and a list of FAILING DIMENSIONS. Fix ONLY those dimensions — everything else is approved and must survive.
+
+Output ONLY: {"blocks":[{"id":"","role":"","text":"","meta":{}}]} — same ids and roles, revised text.
+
+HOW TO FIX EACH DIMENSION:
+- Readability outside band: shorten or (if below band) enrich sentences to land in the target grade band. Plain words. No dumbing down of meaning.
+- AI-tell hits: delete or rephrase every listed tell in natural language. Also kill em-dash chains.
+- Specificity too low: inject concrete numbers, names, and sensory detail — TAKEN ONLY FROM THE SOURCE MATERIAL (VOC/claims/profile). NEVER invent a number, statistic, name, or outcome. If the source has no specific for a sentence, sharpen the wording instead.
+- Rhythm too uniform: vary sentence length hard — a three-word punch after a twenty-word build. Read it aloud in your head.
+- Voice mismatch: rewrite into the FOUNDER STYLE CARD's voice — their sentence habits, their idioms, nothing from never_says.
+
+HARD RULES: preserve meaning, claims, offer facts, and spoken-script conventions if present. Introduce NOTHING the source material cannot back.`,
+  },
 ];
 
 async function seedModelRoutes(db: Db): Promise<number> {

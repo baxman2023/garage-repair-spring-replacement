@@ -15,6 +15,7 @@ export const JOB_TYPES = {
   assetCouncil: 'asset.council',
   assetFocusGroup: 'asset.focus_group',
   assetFocusFix: 'asset.focus_fix',
+  assetDeslop: 'asset.deslop',
   buildStep: 'build.step',
 } as const;
 

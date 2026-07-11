@@ -12,6 +12,21 @@ export {
   type BuildPlanStep,
 } from './buildPlan.js';
 export {
+  DEFAULT_DESLOP_CONFIG,
+  SPOKEN_ASSET_TYPES,
+  fleschKincaidGrade,
+  specificityDensity,
+  sentenceRhythm,
+  extractNumberTokens,
+  findInventedNumbers,
+  measureDeslop,
+  evaluateDeslop,
+  type DeslopConfig,
+  type DeslopMetrics,
+  type DeslopVerdict,
+  type RhythmStats,
+} from './deslop.js';
+export {
   DEFAULT_FOCUS_GROUP_CONFIG,
   samplePersonas,
   personaResultSchema,

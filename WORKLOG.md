@@ -1363,3 +1363,50 @@ annotations, produces one revision version (`meta.focusFix`), and re-enters Coun
 - Batch result cardinality is enforced (a batch must return exactly its personas).
 
 **Open questions:** none blocking.
+
+### WO-030 — De-Slop Gate (G5)
+
+**Acceptance (restated):** Voice capture from founder samples (style card); readability
+measure + targeted rewrite loop to the §5 grade band (FK 5–7 spoken / 5–8 written);
+specificity injector sourcing numbers/names from profile/VOC only — never invented;
+sentence-rhythm variance pass; AI-tell scrubber (config list); voice-match score.
+Acceptance: fixture sloppy draft exits within grade band with zero tell hits; the
+injector cannot introduce claims absent from claims/profile (tested).
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **286 tests pass**
+(core +9, pipeline +4). Verified with a calibrated fixture pair: the sloppy draft
+measures grade 16.2 / zero specifics / 0.24 rhythm variance / five AI-tells, and after
+one targeted rewrite exits at grade 7.2 (inside 5–8), zero tells, specificity 13.8/100,
+variance 0.73 — asserted from the persisted G5 report, not the mock. Injector guard:
+a rewrite adding "Ninety-seven percent" (absent from profile/VOC/claims) throws
+`injector violation` and the rewrite version is NOT persisted. Voice: with founder
+samples, each measure cycle scores the text against the samples (style card captured in
+the report); score 40 fails the 70 threshold, post-rewrite 88 passes; without samples no
+voice call is made and the dimension doesn't gate. Exhausted loops (config-driven cap)
+record a failing G5 and block the asset. Pass transitions `deslop → compliance`;
+G4 pass now auto-enqueues `asset.deslop`.
+
+**Files touched:**
+- `packages/core/src/deslop.ts` (+ test): `fleschKincaidGrade` (deterministic syllable
+  heuristic), `specificityDensity` (digits + spelled numbers + units + mid-sentence
+  proper nouns per 100 words), `sentenceRhythm` (coefficient of variation),
+  `extractNumberTokens`/`findInventedNumbers` (digit↔spoken-form mapping;
+  word-bounded sub-phrase containment only — "seven" in the corpus does NOT
+  legitimize "ninety seven"), `measureDeslop`/`evaluateDeslop`, `SPOKEN_ASSET_TYPES`,
+  config with grade bands / density / rhythm / voice thresholds / loop cap.
+- `packages/pipeline/src/deslop.ts` (+ test): `asset.deslop` handler — measure →
+  targeted rewrite loop (failing dimensions only, style card + source material in the
+  brief) → guard → re-measure; G5 gate report with per-loop trail; status transitions.
+- Worker registration; seeds `deslop.voice` v1 + `deslop.rewrite` v1 (scrub route
+  already existed); G4 → G5 chaining in the focus-group handler.
+
+**Decisions:**
+- **The measures are code; only voice judgment and rewriting are model work.** Grade,
+  tells, density, and rhythm are deterministic — a gate that can't drift with a model.
+- **The §5 grade band is enforced as a band** (a floor and a ceiling): grade-2 baby talk
+  fails "written 5–8" just as grade-12 sludge does. The bands are config.
+- **Invented-number guard runs BEFORE persistence** — a violating rewrite never becomes
+  a version; the job fails loudly rather than laundering an invented statistic.
+- Voice-match re-scores every loop (the rewrite is supposed to move it).
+
+**Open questions:** none blocking.

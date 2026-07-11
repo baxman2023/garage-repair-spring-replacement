@@ -128,6 +128,16 @@ export {
 } from './prompts.js';
 export { recordEvent, type EventType } from './eventsStore.js';
 export {
+  getCalibration,
+  recordPredictionAtApproval,
+  recordQuizPrediction,
+  metricActual,
+  resolvePredictions,
+  runCalibration,
+  listPredictionsForProject,
+  type PredictionRow,
+} from './predictionsStore.js';
+export {
   designateControlIfFirst,
   createChallenger,
   setChallengerLive,

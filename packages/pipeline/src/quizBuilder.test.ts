@@ -160,6 +160,11 @@ describe('quiz builder (WO-039)', () => {
     const sim = simulateRouting(def, 1000);
     expect(sim.pass).toBe(true);
     expect((row!.scoring as { decline: { headline: string } }).decline.headline).toContain('not the right fit');
+
+    // The quiz optin forecast records with the definition (WO-045).
+    const { predictions } = await import('@copyforge/db');
+    const forecast = await tenantDb(workspaceId).findMany(predictions, undefined);
+    expect(forecast.some((p) => p.assetId === row!.id && p.metric === 'quiz_optin_rate')).toBe(true);
   });
 
   it('rejects incoherent routing (simulation gate) before persisting', async () => {

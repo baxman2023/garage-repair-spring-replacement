@@ -154,7 +154,7 @@ export function createQuizGenerateHandler(clientOptions: ClientOptions = {}) {
       throw new Error(`Quiz routing simulation failed (need ≥70% per bucket): ${worst}; dq ${sim.disqualified.tagged}/${sim.disqualified.intended}.`);
     }
 
-    await saveQuizDefinition({
+    const quizId = await saveQuizDefinition({
       workspaceId: job.workspaceId,
       projectId,
       slug,
@@ -162,5 +162,9 @@ export function createQuizGenerateHandler(clientOptions: ClientOptions = {}) {
       scoring: def.scoring,
       bands: def.bands,
     });
+
+    // Forecast the quiz optin rate (WO-045) from the calibrated prior.
+    const { recordQuizPrediction } = await import('@copyforge/db');
+    await recordQuizPrediction({ workspaceId: job.workspaceId, quizDefinitionId: quizId });
   };
 }

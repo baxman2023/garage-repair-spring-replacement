@@ -229,4 +229,8 @@ export async function approveAsset(params: {
     assetId: params.assetId,
     actorUserId: params.actorUserId,
   });
+  // Forecast at approval (WO-045): the asset's headline metric from the
+  // workspace's calibrated prior.
+  const { recordPredictionAtApproval } = await import('./predictionsStore.js');
+  await recordPredictionAtApproval({ workspaceId: params.workspaceId, assetId: params.assetId });
 }

@@ -2040,3 +2040,54 @@ a parent-linked asset with `createdBy: 'challenger'` that re-enters the gates at
   aimed, not random.
 
 **Open questions:** none blocking.
+
+### WO-045 — Predictions & Brier scoring
+
+**Acceptance (restated):** At approval, record predictions (quiz optin rate, VSL 50%
+retention, letter CVR, email open) with probability bands; resolver job matches actuals
+from the ledger at volume thresholds; Brier score per prediction; calibration job
+adjusts calibration_state (Council lens weights ±20% cap, prediction priors) — §6
+floors never lowered; calibration report. Acceptance: Brier math unit-tested;
+calibration provably bounded; predictions display alongside actuals per asset.
+
+**Status:** ✅ Complete. Typecheck/build/lint green, scans clean, **391 tests pass**
+(core +5, db +3, pipeline quiz assertion). Verified: `approveAsset` records the asset's
+headline-metric forecast (VSL→50% retention, letter→CVR, email sequence→open rate) from
+the workspace's CALIBRATED prior with its band, exactly once; quiz definitions forecast
+optin rate at generation. The resolver refuses below the per-metric volume floor
+(40 starts → unresolved) and above it computes the actual from the ledger (100 starts /
+60 q50 reaches → 0.60), stamps the Brier score ((0.35−0.60)² verified to 5 places), and
+the project listing pairs predicted/band/actual/brier per asset. Calibration is
+PROVABLY bounded: 10× actuals clamp the prior factor at exactly 1.2, zero actuals at
+0.8, a corrupted state factor of 99 still applies as 1.2 at read time, ten successive
+self-fed calibration rounds never push a lens weight past the ±20% council band
+(saturates at exactly 1.2), the adjustments object structurally contains NO floor field,
+and the council's own floor constant stays 70. The next approval after calibration
+forecasts 0.35 × 1.2 — the loop closes. Resolver + calibration ship as deterministic
+jobs (`predictions.resolve`, `calibration.run`) for WO-048's nightly schedule, plus
+run-now buttons on the new `/projects/[id]/predictions` page.
+
+**Files touched:**
+- `packages/core/src/brier.ts` (+ test): `BASE_PRIORS` (config), `metricForAssetType`,
+  `brierScore`, `calibratedPrior` (read-time clamp), `computeCalibration`
+  (half-step toward observed mean, factor clamp, ±0.05/run lens nudges through the
+  existing `clampWeights`, ≥4-sample gate, report with the bounds statement).
+- `packages/db/src/predictionsStore.ts` (+ test): record-at-approval hooks
+  (approveAsset + quiz generation), `metricActual` per metric (email open documented
+  as an opens-per-optin approximation — send counts are not ingested),
+  `resolvePredictions`, `runCalibration` (lens samples from council reviews of
+  resolved assets; state upsert with the report), `listPredictionsForProject`.
+- `packages/pipeline/src/predictionsJobs.ts`: the two job handlers; worker registration.
+- Web `predictions` router + page (forecast vs actual table, band hit coloring,
+  resolve/calibrate-now, report display).
+
+**Decisions:**
+- **Bounds are enforced at WRITE and READ**: `computeCalibration` clamps what it
+  stores, and `calibratedPrior` re-clamps whatever it reads — even a hand-corrupted
+  state cannot push a prior past ±20%.
+- **Floors are structurally out of reach** — calibration output has no floor field and
+  the council config assembly never consults calibration for it.
+- Email open rate resolves as opens/optins (approximation, documented in code): send
+  counts don't exist in the ledger, and the optin list is the honest denominator we have.
+
+**Open questions:** none blocking.

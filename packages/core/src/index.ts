@@ -24,6 +24,21 @@ export { renderMessageMatchSnippet, type MmSnippetInputs } from './mmSnippet.js'
 export { nextStepsForAsset, type NextStepsInputs } from './nextSteps.js';
 export { parseEmailMetricsCsv, type EmailMetricRow, type EmailCsvParseResult } from './emailCsv.js';
 export {
+  BASE_PRIORS,
+  PRIOR_FACTOR_MIN,
+  PRIOR_FACTOR_MAX,
+  metricForAssetType,
+  brierScore,
+  calibratedPrior,
+  computeCalibration,
+  type PredictionMetric,
+  type MetricPrior,
+  type CalibrationAdjustments,
+  type CalibrationReport,
+  type ResolvedPrediction,
+  type LensOutcomeSample,
+} from './brier.js';
+export {
   DEFAULT_PROMOTION_CONFIG,
   evaluatePromotion,
   type PromotionConfig,

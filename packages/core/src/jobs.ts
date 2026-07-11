@@ -21,6 +21,8 @@ export const JOB_TYPES = {
   quizGenerate: 'quiz.generate',
   webhookDeliver: 'webhook.deliver',
   challengerGenerate: 'challenger.generate',
+  predictionsResolve: 'predictions.resolve',
+  calibrationRun: 'calibration.run',
   buildStep: 'build.step',
 } as const;
 

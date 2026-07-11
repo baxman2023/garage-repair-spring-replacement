@@ -22,8 +22,12 @@ import {
   createVocMineHandler,
   createWebhookHandler,
   createChallengerGenerateHandler,
+  createPredictionsResolveHandler,
+  createCalibrationRunHandler,
   ASSET_COMPLIANCE_JOB,
+  CALIBRATION_RUN_JOB,
   CHALLENGER_GENERATE_JOB,
+  PREDICTIONS_RESOLVE_JOB,
   ASSET_PACKAGE_JOB,
   QUIZ_GENERATE_JOB,
   WEBHOOK_DELIVER_JOB,
@@ -71,6 +75,8 @@ const handlers: HandlerRegistry = {
   [QUIZ_GENERATE_JOB]: createQuizGenerateHandler(),
   [WEBHOOK_DELIVER_JOB]: createWebhookHandler(),
   [CHALLENGER_GENERATE_JOB]: createChallengerGenerateHandler(),
+  [PREDICTIONS_RESOLVE_JOB]: createPredictionsResolveHandler(),
+  [CALIBRATION_RUN_JOB]: createCalibrationRunHandler(),
 };
 
 let shuttingDown = false;

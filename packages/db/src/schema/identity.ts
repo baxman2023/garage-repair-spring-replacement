@@ -21,6 +21,8 @@ export const users = mysqlTable(
     id: idColumn(),
     email: varchar('email', { length: 320 }).notNull(),
     name: varchar('name', { length: 255 }),
+    // scrypt hash for password login (nullable: magic-link-era accounts).
+    passwordHash: varchar('password_hash', { length: 255 }),
     // Platform-owner flag drives the separate admin auth guard (WO-052).
     isPlatformAdmin: boolean('is_platform_admin').notNull().default(false),
     ...timestamps(),

@@ -11,6 +11,7 @@ import {
   type WorkspaceRole,
 } from '@copyforge/db';
 import { sendMail } from './email';
+import { hashPassword, verifyPassword } from './password';
 import {
   INVITE_TTL_MS,
   MAGIC_LINK_TTL_MS,
@@ -300,4 +301,88 @@ export async function acceptInvite(
     });
   }
   return { ok: true, workspaceId: invite.workspaceId };
+}
+
+
+// --- Password authentication --------------------------------------------------------
+
+/**
+ * Create an account with email + password (servers without SMTP cannot send
+ * magic links). Honors the `signups_enabled` kill switch. Returns a session
+ * like the magic-link path so callers mint the same cookie.
+ */
+export async function registerWithPassword(
+  rawEmail: string,
+  password: string,
+  name?: string,
+): Promise<VerifyResult | { error: string }> {
+  const db = getDb();
+  const email = normalizeEmail(rawEmail);
+
+  const { flagEnabled } = await import('@copyforge/db');
+  if (!(await flagEnabled('signups_enabled', true))) {
+    return { error: 'Signups are currently disabled.' };
+  }
+
+  const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (existing[0]) {
+    return { error: 'An account with this email already exists — log in instead.' };
+  }
+
+  let passwordHash: string;
+  try {
+    passwordHash = hashPassword(password);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Invalid password.' };
+  }
+
+  const id = newId();
+  await db.insert(users).values({ id, email, name: name?.trim() || null, passwordHash });
+  const created = (await db.select().from(users).where(eq(users.id, id)).limit(1))[0]!;
+  const workspaceId = await ensureWorkspaceForUser(created);
+  const rawSessionToken = await createSession(created.id, workspaceId);
+  return { rawSessionToken, user: created, workspaceId };
+}
+
+/** Email + password login. One generic error — no account enumeration. */
+export async function loginWithPassword(
+  rawEmail: string,
+  password: string,
+): Promise<VerifyResult | { error: string }> {
+  const db = getDb();
+  const email = normalizeEmail(rawEmail);
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const user = rows[0];
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    return { error: 'Invalid email or password.' };
+  }
+  const workspaceId = await ensureWorkspaceForUser(user);
+  const rawSessionToken = await createSession(user.id, workspaceId);
+  return { rawSessionToken, user, workspaceId };
+}
+
+/**
+ * Change (or first-set) the password. Accounts created in the magic-link era
+ * have no hash yet — they may set one without a current password.
+ */
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ ok: true } | { error: string }> {
+  const db = getDb();
+  const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const user = rows[0];
+  if (!user) return { error: 'Account not found.' };
+  if (user.passwordHash && !verifyPassword(currentPassword, user.passwordHash)) {
+    return { error: 'Current password is incorrect.' };
+  }
+  let passwordHash: string;
+  try {
+    passwordHash = hashPassword(newPassword);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Invalid password.' };
+  }
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+  return { ok: true };
 }

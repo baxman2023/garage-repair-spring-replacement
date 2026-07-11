@@ -2661,3 +2661,40 @@ Also hardened the WO-056 enqueue-cap test against the global fair scheduler
 scans, 447 tests; the browser journey re-run ends with zero issues and zero
 console errors. (The known intermittent CLI full-suite flake appeared once and
 passed on isolation + full re-run, consistent with the WO-046 note.)
+
+### Password login — replace magic links (production has no SMTP)
+
+The live Cloudways server cannot send email, so magic-link sign-in was a dead
+end in production. Replaced it with classic email + password auth; the
+magic-link machinery stays in place (nothing depends on its absence, existing
+tests exercise it) but the UI no longer offers it.
+
+- **Schema:** `users.password_hash` varchar(255), nullable — magic-link-era
+  accounts simply have none yet. Migration `0010_lowly_ultron.sql`.
+- **Hashing** (`apps/web/src/server/auth/password.ts`): scrypt via node:crypto
+  (no new dependency), format `scrypt$N$r$p$salt$key` so parameters can be
+  raised later without invalidating stored hashes; timingSafeEqual compare.
+  Fail-closed guard: `Buffer.from(_, 'hex')` silently truncates invalid hex,
+  which would have turned a corrupted hash into a zero-length comparison that
+  verifies ANY password — the unit test caught it, verify now requires a
+  full-length key and non-empty salt.
+- **Service** (`auth/service.ts`): `registerWithPassword` (honors the
+  `signups_enabled` kill switch, refuses duplicate emails, mints the same
+  session as the magic-link path), `loginWithPassword` (single generic error —
+  no account enumeration), `changePassword` (first-set without a current
+  password for magic-link-era accounts).
+- **HTTP:** `POST /api/auth/{register,login}` set the `cf_session` cookie;
+  both behind a per-IP sliding-window limit (20/min) against online guessing.
+- **UI:** `/login` is now an email+password form with a login ⇄ create-account
+  toggle; `/settings/account` adds change-password (linked from home);
+  `auth.changePassword` tRPC mutation.
+- **Tests:** password unit tests (round-trip, salting, min length, malformed
+  stored values) + DB-backed service tests (register/login/duplicate/bad
+  credentials, change-password flows, legacy first-set). Suite: 464 tests.
+- **Smoke-tested over HTTP** against a production `next start`: register sets
+  the cookie and the cookie renders the signed-in home; duplicate/short/wrong
+  inputs return the right errors; 429 kicks in past the limiter allowance.
+
+Test-infra note: the sandbox's resurrected local PM2 worker was silently
+claiming (and failing) queue-test jobs, skewing the fair-scheduler and
+atomic-claim tests — stopped it; the tests themselves were sound.

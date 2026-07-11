@@ -1,6 +1,8 @@
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { publicProcedure, router } from '../trpc';
-import { requestMagicLink } from '../auth/service';
+import { protectedProcedure, publicProcedure, router } from '../trpc';
+import { changePassword, requestMagicLink } from '../auth/service';
+import { MIN_PASSWORD_LENGTH } from '../auth/password';
 
 export const authRouter = router({
   /** Send a magic-link email. Always returns ok (no account enumeration). */
@@ -8,6 +10,28 @@ export const authRouter = router({
     .input(z.object({ email: z.string().email(), next: z.string().optional() }))
     .mutation(async ({ input }) => {
       await requestMagicLink(input.email, input.next);
+      return { ok: true as const };
+    }),
+
+  /** Change (or first-set) the signed-in user's password. */
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string(),
+        newPassword: z.string().min(MIN_PASSWORD_LENGTH, {
+          message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const result = await changePassword(
+        ctx.auth.user.id,
+        input.currentPassword,
+        input.newPassword,
+      );
+      if ('error' in result) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: result.error });
+      }
       return { ok: true as const };
     }),
 

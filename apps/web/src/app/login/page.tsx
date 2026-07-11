@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { LoginForm } from './LoginForm';
 
 const ERRORS: Record<string, string> = {
-  missing: 'That sign-in link was missing its token. Request a new one.',
-  invalid: 'That sign-in link is invalid, expired, or already used. Request a new one.',
+  missing: 'That sign-in link was missing its token. Sign in with your email and password instead.',
+  invalid: 'That sign-in link is invalid, expired, or already used. Sign in with your email and password instead.',
 };
 
 export default async function LoginPage({

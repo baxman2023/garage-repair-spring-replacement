@@ -51,7 +51,8 @@ export default async function HomePage() {
         Signed in as <code>{session.user.email}</code> ({membership?.role ?? 'member'}) ·{' '}
         <Link href="/projects">Projects</Link> ·{' '}
         <Link href="/genome">Genome</Link> ·{' '}
-        <Link href="/settings/api-key">API key settings</Link>
+        <Link href="/settings/api-key">API key settings</Link> ·{' '}
+        <Link href="/settings/account">Account</Link>
       </p>
 
       <h2>Members</h2>

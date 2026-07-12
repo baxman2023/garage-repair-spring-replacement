@@ -79,6 +79,13 @@ jobs:
       - name: Verify public URL
         run: |
           sleep 5
-          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.app_url }}/api/health"
-          echo
+          # Cache-busted, like the server-side probe: an edge cache once
+          # poisoned the plain /api/health URL (stale 415) and made this step
+          # fail even though the deployment had fully succeeded.
+          BODY="$(curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.app_url }}/api/health?cb=$(date +%s%N)")"
+          echo "$BODY"
+          echo "$BODY" | grep -q '"app":"CopyForge"' || { echo "public URL is not serving CopyForge"; exit 1; }
+          PLAIN="$(curl -sS -m 20 "${{ inputs.app_url }}/api/health" || true)"
+          echo "$PLAIN" | grep -q '"app":"CopyForge"' \
+            || echo "note: plain URL still serves a stale cached response — harmless, expires with the cache TTL"
           echo "Deployed: ${{ inputs.app_url }}"

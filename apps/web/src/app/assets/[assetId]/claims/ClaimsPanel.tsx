@@ -3,24 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-} as const;
-const btn = {
-  padding: '0.35rem 0.7rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: 13,
-} as const;
-const subtle = { ...btn, background: 'transparent', color: 'var(--muted)', border: '1px solid #333' } as const;
-
 export function ClaimsPanel({ assetId }: { assetId: string }) {
   const utils = trpc.useUtils();
   const list = trpc.claims.list.useQuery({ assetId }, { refetchInterval: 6000 });
@@ -30,45 +12,45 @@ export function ClaimsPanel({ assetId }: { assetId: string }) {
   const [proofByClaim, setProofByClaim] = useState<Record<string, string>>({});
 
   const data = list.data;
-  if (!data) return list.isLoading ? null : <p style={{ color: 'var(--muted)' }}>No data.</p>;
+  if (!data) return list.isLoading ? null : <p className="muted">No data.</p>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <section style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-        <div style={box}>
+    <div className="stack">
+      <section className="row-lg">
+        <div className="card">
           total <strong>{data.report.total}</strong>
         </div>
-        <div style={box}>
-          proven <strong style={{ color: 'var(--ok)' }}>{data.report.proven}</strong>
+        <div className="card">
+          proven <strong className="ok">{data.report.proven}</strong>
         </div>
-        <div style={box}>
+        <div className="card">
           flagged{' '}
-          <strong style={{ color: data.report.flagged > 0 ? 'salmon' : 'var(--ok)' }}>
+          <strong className={data.report.flagged > 0 ? 'danger' : 'ok'}>
             {data.report.flagged}
           </strong>
         </div>
       </section>
 
-      {data.claims.length === 0 && <p style={{ color: 'var(--muted)' }}>No claims extracted yet.</p>}
+      {data.claims.length === 0 && <p className="muted">No claims extracted yet.</p>}
 
       {data.claims.map((c) => (
-        <div key={c.id} style={{ ...box, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div key={c.id} className="card stack-sm">
           <div>
-            <span style={{ color: c.status === 'proven' ? 'var(--ok)' : 'salmon', fontWeight: 600 }}>
+            <span className={c.status === 'proven' ? 'badge badge-ok' : 'badge badge-danger'}>
               {c.status === 'proven' ? '● proven' : '⚑ flagged'}
             </span>{' '}
             {c.text}
           </div>
           {c.proofRef && (
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>proof: {c.proofRef}</div>
+            <div className="muted small">proof: {c.proofRef}</div>
           )}
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="row">
             {c.status === 'flagged' ? (
               <>
                 <select
                   value={proofByClaim[c.id] ?? ''}
                   onChange={(e) => setProofByClaim((s) => ({ ...s, [c.id]: e.target.value }))}
-                  style={{ ...subtle, cursor: 'pointer' }}
+                  className="select"
                 >
                   <option value="">attach proof asset…</option>
                   {data.proofAssets.map((p, i) => (
@@ -81,20 +63,25 @@ export function ClaimsPanel({ assetId }: { assetId: string }) {
                   placeholder="or type a proof ref"
                   value={proofByClaim[c.id] ?? ''}
                   onChange={(e) => setProofByClaim((s) => ({ ...s, [c.id]: e.target.value }))}
-                  style={{ ...subtle, cursor: 'text', minWidth: 220 }}
+                  className="input"
+                  style={{ minWidth: 220 }}
                 />
                 <button
                   onClick={() =>
                     attach.mutate({ assetId, claimId: c.id, proofRef: proofByClaim[c.id] ?? '' })
                   }
                   disabled={attach.isPending || !(proofByClaim[c.id] ?? '').trim()}
-                  style={btn}
+                  className="btn btn-primary btn-sm"
                 >
                   Attach → proven
                 </button>
               </>
             ) : (
-              <button onClick={() => flag.mutate({ assetId, claimId: c.id })} disabled={flag.isPending} style={subtle}>
+              <button
+                onClick={() => flag.mutate({ assetId, claimId: c.id })}
+                disabled={flag.isPending}
+                className="btn btn-sm"
+              >
                 Detach proof (re-flag)
               </button>
             )}
@@ -102,7 +89,7 @@ export function ClaimsPanel({ assetId }: { assetId: string }) {
         </div>
       ))}
       {(attach.isError || flag.isError) && (
-        <p style={{ color: 'salmon' }}>{attach.error?.message ?? flag.error?.message}</p>
+        <p className="alert alert-danger">{attach.error?.message ?? flag.error?.message}</p>
       )}
     </div>
   );

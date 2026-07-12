@@ -13,9 +13,11 @@ export default async function CouncilReportPage({
   if (!session) redirect(`/login?next=/assets/${assetId}/council`);
 
   return (
-    <main style={{ maxWidth: 1000 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/projects">← Projects</Link>
+        <Link href="/projects" className="backlink">
+          ← Projects
+        </Link>
       </p>
       <h1>Council report — G3</h1>
       <CouncilReport assetId={assetId} />

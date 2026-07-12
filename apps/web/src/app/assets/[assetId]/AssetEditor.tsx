@@ -5,24 +5,6 @@ import Link from 'next/link';
 import { trpc } from '@/trpc/react';
 import type { AssetBlock } from '@copyforge/core';
 
-const box = {
-  padding: '0.6rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-const btn = {
-  padding: '0.45rem 0.8rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-} as const;
-const subtle = { ...btn, background: 'transparent', color: 'var(--muted)', border: '1px solid #333' } as const;
-
 export function AssetEditor({ assetId }: { assetId: string }) {
   const utils = trpc.useUtils();
   const asset = trpc.assets.get.useQuery({ assetId }, { refetchInterval: 5000 });
@@ -53,24 +35,24 @@ export function AssetEditor({ assetId }: { assetId: string }) {
     setDirty(true);
   }
 
-  if (asset.isPending) return <p style={{ color: 'var(--muted)' }}>Loading…</p>;
-  if (asset.isError) return <p style={{ color: 'salmon' }}>{asset.error.message}</p>;
+  if (asset.isPending) return <p className="muted">Loading…</p>;
+  if (asset.isError) return <p className="alert alert-danger">{asset.error.message}</p>;
   const data = asset.data;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className="stack">
       <p style={{ margin: 0 }}>
         <strong>{data.type}</strong> — status <code>{data.status}</code> — v
         {data.current?.version ?? 0} ·{' '}
         <Link href={`/assets/${assetId}/council`}>Council report →</Link>
       </p>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      <section className="stack-sm">
         {blocks.map((b, i) => (
-          <div key={b.id} style={{ ...box, display: 'flex', gap: '0.6rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: 90 }}>
-              <strong style={{ fontSize: 12, color: 'var(--accent)' }}>{b.role}</strong>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{b.id}</span>
+          <div key={b.id} className="card" style={{ display: 'flex', gap: '0.6rem' }}>
+            <div className="stack-sm" style={{ gap: '0.25rem', minWidth: 90 }}>
+              <strong className="xsmall" style={{ color: 'var(--accent)' }}>{b.role}</strong>
+              <span className="muted" style={{ fontSize: 11 }}>{b.id}</span>
               <button
                 onClick={() =>
                   mutate((bs) =>
@@ -79,7 +61,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
                     ),
                   )
                 }
-                style={{ ...subtle, padding: '0.2rem 0.4rem', fontSize: 12 }}
+                className="btn btn-sm"
               >
                 {b.meta?.locked ? '🔒 locked' : '🔓 unlocked'}
               </button>
@@ -92,7 +74,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
                     return next;
                   })
                 }
-                style={{ ...subtle, padding: '0.2rem 0.4rem', fontSize: 12, opacity: i === 0 ? 0.4 : 1 }}
+                className="btn btn-sm"
               >
                 ↑
               </button>
@@ -105,7 +87,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
                     return next;
                   })
                 }
-                style={{ ...subtle, padding: '0.2rem 0.4rem', fontSize: 12, opacity: i === blocks.length - 1 ? 0.4 : 1 }}
+                className="btn btn-sm"
               >
                 ↓
               </button>
@@ -113,7 +95,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
                 disabled={Boolean(b.meta?.locked) || regen.isPending}
                 onClick={() => regen.mutate({ assetId, blockId: b.id })}
                 title={b.meta?.locked ? 'Locked blocks cannot regenerate' : 'Regenerate this block'}
-                style={{ ...subtle, padding: '0.2rem 0.4rem', fontSize: 12, opacity: b.meta?.locked ? 0.4 : 1 }}
+                className="btn btn-sm"
               >
                 ♻ regen
               </button>
@@ -123,29 +105,30 @@ export function AssetEditor({ assetId }: { assetId: string }) {
               value={b.text}
               disabled={Boolean(b.meta?.locked)}
               onChange={(e) => mutate((bs) => bs.map((x) => (x.id === b.id ? { ...x, text: e.target.value } : x)))}
-              style={{ ...box, flex: 1, fontFamily: 'inherit', opacity: b.meta?.locked ? 0.65 : 1 }}
+              className="textarea"
+              style={{ flex: 1, opacity: b.meta?.locked ? 0.65 : 1 }}
             />
           </div>
         ))}
-        {blocks.length === 0 && <p style={{ color: 'var(--muted)' }}>No version yet.</p>}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        {blocks.length === 0 && <p className="muted">No version yet.</p>}
+        <div className="row">
           <button
             onClick={() => save.mutate({ assetId, blocks })}
             disabled={save.isPending || !dirty}
-            style={{ ...btn, opacity: dirty ? 1 : 0.5 }}
+            className="btn btn-primary"
           >
             {save.isPending ? 'Saving…' : 'Save as new version'}
           </button>
-          {regen.isSuccess && <span style={{ color: 'var(--muted)' }}>Regeneration queued…</span>}
-          {regen.isError && <span style={{ color: 'salmon' }}>{regen.error.message}</span>}
-          {save.isError && <span style={{ color: 'salmon' }}>{save.error.message}</span>}
+          {regen.isSuccess && <span className="muted">Regeneration queued…</span>}
+          {regen.isError && <span className="danger small">{regen.error.message}</span>}
+          {save.isError && <span className="danger small">{save.error.message}</span>}
         </div>
       </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <section className="stack-sm">
         <h3 style={{ margin: 0 }}>Versions & diff</h3>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <select value={diffFrom} onChange={(e) => setDiffFrom(e.target.value)} style={box}>
+        <div className="row">
+          <select value={diffFrom} onChange={(e) => setDiffFrom(e.target.value)} className="select">
             <option value="">from…</option>
             {data.versions.map((v) => (
               <option key={v.id} value={v.id}>
@@ -153,7 +136,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
               </option>
             ))}
           </select>
-          <select value={diffTo} onChange={(e) => setDiffTo(e.target.value)} style={box}>
+          <select value={diffTo} onChange={(e) => setDiffTo(e.target.value)} className="select">
             <option value="">to…</option>
             {data.versions.map((v) => (
               <option key={v.id} value={v.id}>
@@ -163,31 +146,29 @@ export function AssetEditor({ assetId }: { assetId: string }) {
           </select>
         </div>
         {diff.data && (
-          <div style={{ ...box, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="card stack-sm">
             <strong>
               v{diff.data.from} → v{diff.data.to}
-              {diff.data.diff.reordered && <span style={{ color: '#f0c674' }}> · reordered</span>}
+              {diff.data.diff.reordered && <span className="warn"> · reordered</span>}
             </strong>
             {diff.data.diff.added.map((b) => (
-              <div key={b.id} style={{ color: 'var(--ok)', fontSize: 13 }}>
+              <div key={b.id} className="ok small">
                 + [{b.id}] {b.text.slice(0, 120)}
               </div>
             ))}
             {diff.data.diff.removed.map((b) => (
-              <div key={b.id} style={{ color: 'salmon', fontSize: 13 }}>
+              <div key={b.id} className="danger small">
                 − [{b.id}] {b.text.slice(0, 120)}
               </div>
             ))}
             {diff.data.diff.changed.map((c) => (
-              <div key={c.id} style={{ fontSize: 13 }}>
+              <div key={c.id} className="small">
                 <strong>~ [{c.id}]</strong>
                 <pre style={{ margin: '0.25rem 0', whiteSpace: 'pre-wrap' }}>
                   {c.ops.map((op, i) => (
                     <div
                       key={i}
-                      style={{
-                        color: op.type === 'add' ? 'var(--ok)' : op.type === 'remove' ? 'salmon' : 'var(--muted)',
-                      }}
+                      className={op.type === 'add' ? 'ok' : op.type === 'remove' ? 'danger' : 'muted'}
                     >
                       {op.type === 'add' ? '+ ' : op.type === 'remove' ? '− ' : '  '}
                       {op.text}
@@ -197,7 +178,7 @@ export function AssetEditor({ assetId }: { assetId: string }) {
               </div>
             ))}
             {diff.data.diff.added.length + diff.data.diff.removed.length + diff.data.diff.changed.length === 0 && (
-              <span style={{ color: 'var(--muted)' }}>No changes.</span>
+              <span className="muted">No changes.</span>
             )}
           </div>
         )}

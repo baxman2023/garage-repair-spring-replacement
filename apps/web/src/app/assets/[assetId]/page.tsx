@@ -9,9 +9,11 @@ export default async function AssetPage({ params }: { params: Promise<{ assetId:
   if (!session) redirect(`/login?next=/assets/${assetId}`);
 
   return (
-    <main style={{ maxWidth: 1000 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/projects">← Projects</Link>
+        <Link href="/projects" className="backlink">
+          ← Projects
+        </Link>
       </p>
       <h1>Asset editor</h1>
       <AssetEditor assetId={assetId} />

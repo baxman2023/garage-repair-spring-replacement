@@ -13,12 +13,14 @@ export default async function CompliancePage({
   if (!session) redirect(`/login?next=/assets/${assetId}/compliance`);
 
   return (
-    <main style={{ maxWidth: 1000 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/assets/${assetId}/claims`}>← Claims (proof linker)</Link>
+        <Link href={`/assets/${assetId}/claims`} className="backlink">
+          ← Claims (proof linker)
+        </Link>
       </p>
       <h1>Compliance pre-flight — G6</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         FTC, health/finance mode, and Meta/Google ad-policy rule packs with line refs. Errors
         and strict-mode claim failures always block; lint warnings may be acknowledged — with
         a reason, on the record.

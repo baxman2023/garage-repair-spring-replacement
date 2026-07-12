@@ -2,19 +2,11 @@
 
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-
 export function CouncilReport({ assetId }: { assetId: string }) {
   const report = trpc.council.report.useQuery({ assetId }, { refetchInterval: 5000 });
 
-  if (report.isPending) return <p style={{ color: 'var(--muted)' }}>Loading…</p>;
-  if (report.isError) return <p style={{ color: 'salmon' }}>{report.error.message}</p>;
+  if (report.isPending) return <p className="muted">Loading…</p>;
+  if (report.isError) return <p className="alert alert-danger">{report.error.message}</p>;
 
   const data = report.data;
   const escalation = data.latestGate && !data.latestGate.pass
@@ -22,42 +14,45 @@ export function CouncilReport({ assetId }: { assetId: string }) {
     : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="stack">
       <p>
         <strong>{data.asset.type}</strong> — status <code>{data.asset.status}</code>
         {data.latestGate && (
-          <span style={{ marginLeft: 8, color: data.latestGate.pass ? 'var(--ok)' : 'salmon' }}>
+          <span
+            className={data.latestGate.pass ? 'badge badge-ok' : 'badge badge-danger'}
+            style={{ marginLeft: 8 }}
+          >
             {data.latestGate.pass ? '● G3 passed' : '■ G3 escalated'}
           </span>
         )}
       </p>
 
       {escalation && (
-        <div style={{ ...box, borderColor: 'salmon' }}>
+        <div className="alert alert-danger">
           <strong>Escalation — the Council could not converge in 3 loops:</strong>
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13 }}>{escalation}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{escalation}</pre>
         </div>
       )}
 
       {data.versions.map((v) => (
-        <div key={v.versionId} style={{ ...box, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div key={v.versionId} className="card stack-sm">
           <strong>Version {v.version}</strong>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.5rem' }}>
             {v.reviews.map((r) => {
               const notes = r.notes as { top_fixes?: string[]; line_notes?: { block_id: string; note: string }[] } | null;
               return (
-                <div key={r.lens} style={{ ...box, padding: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div key={r.lens} className="card" style={{ padding: '0.5rem' }}>
+                  <div className="spread">
                     <strong>{r.lens}</strong>
-                    <span style={{ color: r.verdict === 'pass' ? 'var(--ok)' : 'salmon' }}>{r.score}</span>
+                    <span className={r.verdict === 'pass' ? 'ok' : 'danger'}>{r.score}</span>
                   </div>
                   {notes?.top_fixes?.map((f, i) => (
-                    <div key={i} style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    <div key={i} className="muted xsmall">
                       fix: {f}
                     </div>
                   ))}
                   {notes?.line_notes?.map((n, i) => (
-                    <div key={i} style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    <div key={i} className="muted xsmall">
                       [{n.block_id}] {n.note}
                     </div>
                   ))}
@@ -68,7 +63,7 @@ export function CouncilReport({ assetId }: { assetId: string }) {
         </div>
       ))}
       {data.versions.length === 0 && (
-        <p style={{ color: 'var(--muted)' }}>No council reviews yet for this asset.</p>
+        <p className="muted">No council reviews yet for this asset.</p>
       )}
     </div>
   );

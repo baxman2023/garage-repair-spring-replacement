@@ -9,12 +9,14 @@ export default async function PromptsPage({ params }: { params: Promise<{ assetI
   if (!session) redirect(`/login?next=/assets/${assetId}/prompts`);
 
   return (
-    <main style={{ maxWidth: 1000 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/assets/${assetId}/compliance`}>← Compliance (G6)</Link>
+        <Link href={`/assets/${assetId}/compliance`} className="backlink">
+          ← Compliance (G6)
+        </Link>
       </p>
       <h1>Build prompts — Macaly & universal</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         One-shot build prompts compiled from the Page Build Package. Copy verbatim into
         Macaly or any capable model — the copy blocks inside are final and fenced.
       </p>

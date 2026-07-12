@@ -16,14 +16,14 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1200 }}>
+    <main className="page-xl">
       <p>
-        <Link href={`/projects/${id}/voc`}>← VOC</Link>
+        <Link href={`/projects/${id}/voc`} className="backlink">← VOC</Link>
         {' · '}
         <Link href={`/projects/${id}/build`}>Build →</Link>
       </p>
       <h1>Strategy Review — G2</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         The human checkpoint: five markets side by side. Approval snapshots the strategy —
         the build fan-out stays locked until it passes.
       </p>

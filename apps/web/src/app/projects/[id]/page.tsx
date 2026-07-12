@@ -17,13 +17,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 860 }}>
+    <main>
       <p>
-        <Link href="/projects">← Projects</Link>
+        <Link href="/projects" className="backlink">← Projects</Link>
       </p>
       <h1>{project.name}</h1>
       <OnboardingChecklist projectId={id} />
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Sales Detective intake — feed it everything you have, answer what it can’t find. Then
         continue to the <Link href={`/projects/${id}/offer`}>Offer Forge (G0) →</Link>
       </p>

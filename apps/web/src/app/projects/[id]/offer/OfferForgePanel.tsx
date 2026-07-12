@@ -3,24 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-const btn = {
-  padding: '0.5rem 0.9rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-} as const;
-const subtle = { ...btn, background: 'transparent', color: 'var(--muted)', border: '1px solid #333' } as const;
-
 export function OfferForgePanel({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();
   const offers = trpc.offers.list.useQuery({ projectId }, { refetchInterval: 4000 });
@@ -51,50 +33,45 @@ export function OfferForgePanel({ projectId }: { projectId: string }) {
   const approvedId = status.data?.approvedOfferId ?? null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <section style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => forge.mutate({ projectId })} disabled={forge.isPending} style={btn}>
+    <div className="stack-lg">
+      <section className="row-lg">
+        <button
+          onClick={() => forge.mutate({ projectId })}
+          disabled={forge.isPending}
+          className="btn btn-primary"
+        >
           {forge.isPending ? 'Queued…' : rows.length ? 'Forge new variants' : 'Run Offer Forge'}
         </button>
         {approvedId ? (
-          <span style={{ color: 'var(--ok)' }}>● G0 passed — offer approved.</span>
+          <span className="ok">● G0 passed — offer approved.</span>
         ) : (
-          <span style={{ color: 'var(--muted)' }}>
+          <span className="muted">
             G0 pending — select a variant, complete the checklist, approve.
           </span>
         )}
-        {forge.isError && <span style={{ color: 'salmon' }}>{forge.error.message}</span>}
+        {forge.isError && <span className="danger small">{forge.error.message}</span>}
         {forge.isSuccess && !rows.length && (
-          <span style={{ color: 'var(--muted)' }}>Forging — variants appear here shortly.</span>
+          <span className="muted">Forging — variants appear here shortly.</span>
         )}
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '0.75rem',
-        }}
-      >
+      <section className="grid-2">
         {rows.map((r) => (
           <div
             key={r.id}
+            className="card stack-sm"
             style={{
-              ...box,
-              borderColor: r.approved ? 'var(--ok)' : r.selected ? 'var(--accent)' : '#333',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
+              borderColor: r.approved ? 'var(--ok)' : r.selected ? 'var(--accent)' : 'var(--border)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="spread">
               <strong>{r.offer.name || `(unnamed) v${r.version}`}</strong>
-              <span style={{ color: 'var(--muted)' }}>v{r.version}</span>
+              <span className="muted">v{r.version}</span>
             </div>
             {r.offer.diagnosis && (
-              <p style={{ color: 'var(--muted)', margin: 0, fontSize: 13 }}>{r.offer.diagnosis}</p>
+              <p className="muted small" style={{ margin: 0 }}>{r.offer.diagnosis}</p>
             )}
-            <div style={{ fontSize: 13 }}>
+            <div className="small">
               <div>
                 Stack: {r.offer.value_stack.length} item(s), $
                 {r.offer.value_stack.reduce((s, i) => s + i.value_usd, 0).toLocaleString()} vs $
@@ -102,16 +79,16 @@ export function OfferForgePanel({ projectId }: { projectId: string }) {
               </div>
               <div>Urgency: {r.offer.urgency_mechanisms.map((u) => u.type).join(', ') || '—'}</div>
             </div>
-            <div style={{ fontSize: 12 }}>
+            <div className="xsmall">
               {Object.entries(r.g0.checklist).map(([k, ok]) => (
-                <span key={k} style={{ marginRight: 8, color: ok ? 'var(--ok)' : 'salmon' }}>
+                <span key={k} className={ok ? 'ok' : 'danger'} style={{ marginRight: 8 }}>
                   {ok ? '✓' : '✗'} {k.replaceAll('_', ' ')}
                 </span>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'wrap' }}>
+            <div className="row" style={{ marginTop: 'auto' }}>
               {!r.selected && (
-                <button onClick={() => select.mutate({ projectId, offerId: r.id })} style={subtle}>
+                <button onClick={() => select.mutate({ projectId, offerId: r.id })} className="btn">
                   Select
                 </button>
               )}
@@ -121,7 +98,7 @@ export function OfferForgePanel({ projectId }: { projectId: string }) {
                     onClick={() => approve.mutate({ projectId, offerId: r.id })}
                     disabled={approve.isPending || !r.g0.pass}
                     title={r.g0.pass ? 'Run G0 and approve' : r.g0.failures.join(' ')}
-                    style={{ ...btn, opacity: r.g0.pass ? 1 : 0.5 }}
+                    className="btn btn-primary"
                   >
                     Approve (G0)
                   </button>
@@ -130,32 +107,32 @@ export function OfferForgePanel({ projectId }: { projectId: string }) {
                       setDraft(JSON.stringify(r.offer, null, 2));
                       setEditing(true);
                     }}
-                    style={subtle}
+                    className="btn"
                   >
                     Edit
                   </button>
                 </>
               )}
-              {r.approved && <span style={{ color: 'var(--ok)' }}>Approved ✓</span>}
+              {r.approved && <span className="ok">Approved ✓</span>}
             </div>
           </div>
         ))}
         {rows.length === 0 && (
-          <p style={{ color: 'var(--muted)' }}>No offer variants yet — run the forge.</p>
+          <p className="muted">No offer variants yet — run the forge.</p>
         )}
       </section>
-      {approve.isError && <p style={{ color: 'salmon' }}>{approve.error.message}</p>}
+      {approve.isError && <p className="alert alert-danger">{approve.error.message}</p>}
 
       {editing && selected && (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <section className="stack-sm">
           <h3>Edit selected offer</h3>
           <textarea
             rows={18}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            style={{ ...box, fontFamily: 'ui-monospace, monospace', fontSize: 13 }}
+            className="textarea mono small"
           />
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="row">
             <button
               onClick={() => {
                 try {
@@ -165,15 +142,15 @@ export function OfferForgePanel({ projectId }: { projectId: string }) {
                 }
               }}
               disabled={saveEdit.isPending}
-              style={btn}
+              className="btn btn-primary"
             >
               {saveEdit.isPending ? 'Saving…' : 'Save as new version'}
             </button>
-            <button onClick={() => setEditing(false)} style={subtle}>
+            <button onClick={() => setEditing(false)} className="btn">
               Cancel
             </button>
           </div>
-          {saveEdit.isError && <p style={{ color: 'salmon' }}>{saveEdit.error.message}</p>}
+          {saveEdit.isError && <p className="alert alert-danger">{saveEdit.error.message}</p>}
         </section>
       )}
     </div>

@@ -16,12 +16,12 @@ export default async function PredictionsPage({ params }: { params: Promise<{ id
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/controls`}>← Controls</Link>
+        <Link href={`/projects/${id}/controls`} className="backlink">← Controls</Link>
       </p>
       <h1>Predictions & calibration</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         The system forecasts every approved asset's headline metric, scores itself with
         Brier once reality reports in, and recalibrates within hard bounds — priors ±20%,
         lens weights ±20%, quality floors never.

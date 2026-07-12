@@ -16,12 +16,12 @@ export default async function MarketsPage({ params }: { params: Promise<{ id: st
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 900 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/math`}>← Funnel Math</Link>
+        <Link href={`/projects/${id}/math`} className="backlink">← Funnel Math</Link>
       </p>
       <h1>Market Selection</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         The engine proposes 8–12 crowds and keeps the top five by starving-crowd score. Swap,
         edit, or add your own — your edits survive re-runs.
       </p>

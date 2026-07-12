@@ -2,24 +2,6 @@
 
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-const btn = {
-  padding: '0.5rem 0.9rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-} as const;
-const subtle = { ...btn, background: 'transparent', color: 'var(--muted)', border: '1px solid #333' } as const;
-
 export function ReviewPanel({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();
   const review = trpc.strategy.review.useQuery({ projectId }, { refetchInterval: 4000 });
@@ -32,36 +14,30 @@ export function ReviewPanel({ projectId }: { projectId: string }) {
   const allDiagnosed = (data?.markets.length ?? 0) === 5 && data!.markets.every((m) => m.diagnosed);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <section style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className="stack">
+      <section className="row-lg">
         {data?.g2.approved ? (
-          <span style={{ color: 'var(--ok)', fontWeight: 600 }}>
+          <span className="ok" style={{ fontWeight: 600 }}>
             ● G2 approved — snapshot {data.g2.approvedHash?.slice(0, 12)}… Build unlocked.
           </span>
         ) : data?.g2.stale ? (
-          <span style={{ color: '#f0c674' }}>
+          <span className="warn">
             ⚠ Markets changed since approval — re-approve to unlock the build.
           </span>
         ) : (
-          <span style={{ color: 'var(--muted)' }}>G2 pending — review all five markets, then approve.</span>
+          <span className="muted">G2 pending — review all five markets, then approve.</span>
         )}
         <button
           onClick={() => approve.mutate({ projectId })}
           disabled={approve.isPending || !allDiagnosed || data?.g2.approved}
-          style={{ ...btn, opacity: allDiagnosed && !data?.g2.approved ? 1 : 0.5 }}
+          className="btn btn-primary"
         >
           {approve.isPending ? 'Approving…' : data?.g2.stale ? 'Re-approve strategy (G2)' : 'Approve strategy (G2)'}
         </button>
-        {approve.isError && <span style={{ color: 'salmon' }}>{approve.error.message}</span>}
+        {approve.isError && <span className="danger small">{approve.error.message}</span>}
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '0.75rem',
-        }}
-      >
+      <section className="grid-2">
         {data?.markets.map((m) => {
           const p = m.profile as {
             awareness_stage?: string;
@@ -73,36 +49,36 @@ export function ReviewPanel({ projectId }: { projectId: string }) {
             objections?: string[];
           } | null;
           return (
-            <div key={m.id} style={{ ...box, display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div key={m.id} className="card stack-sm">
+              <div className="spread">
                 <strong>
                   #{m.rank} {m.label}
                 </strong>
-                <span style={{ color: 'var(--muted)' }}>
+                <span className="muted">
                   {m.scoreTotal !== null ? `${m.scoreTotal}/100` : ''}
                 </span>
               </div>
               {m.diagnosed && p ? (
                 <>
-                  <div style={{ fontSize: 13 }}>
+                  <div className="small">
                     <span style={{ color: 'var(--accent)' }}>{p.awareness_stage}</span> —{' '}
-                    <span style={{ color: 'var(--muted)' }}>{p.awareness_justification}</span>
+                    <span className="muted">{p.awareness_justification}</span>
                   </div>
-                  <div style={{ fontSize: 13 }}>
+                  <div className="small">
                     soph {p.sophistication}/5 —{' '}
-                    <span style={{ color: 'var(--muted)' }}>{p.sophistication_justification}</span>
+                    <span className="muted">{p.sophistication_justification}</span>
                   </div>
-                  <div style={{ fontSize: 13 }}>
+                  <div className="small">
                     <em>“{p.entry_conversation}”</em>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  <div className="muted xsmall">
                     emotion: {p.resident_emotion} · {p.objections?.length ?? 0} objections
                   </div>
                 </>
               ) : (
-                <span style={{ color: 'salmon', fontSize: 13 }}>not diagnosed yet</span>
+                <span className="danger small">not diagnosed yet</span>
               )}
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+              <div className="muted xsmall">
                 VOC: {m.vocCount} phrase(s)
                 {m.vocHighlights.map((v, i) => (
                   <div key={i}>· “{v.phrase}”</div>
@@ -112,7 +88,7 @@ export function ReviewPanel({ projectId }: { projectId: string }) {
                 <button
                   onClick={() => regenerate.mutate({ projectId, marketId: m.id })}
                   disabled={regenerate.isPending}
-                  style={subtle}
+                  className="btn"
                 >
                   Regenerate diagnosis
                 </button>
@@ -121,9 +97,9 @@ export function ReviewPanel({ projectId }: { projectId: string }) {
           );
         })}
       </section>
-      {regenerate.isError && <p style={{ color: 'salmon' }}>{regenerate.error.message}</p>}
+      {regenerate.isError && <p className="alert alert-danger">{regenerate.error.message}</p>}
       {(data?.markets.length ?? 0) === 0 && (
-        <p style={{ color: 'var(--muted)' }}>No markets yet — run Market Selection first.</p>
+        <p className="muted">No markets yet — run Market Selection first.</p>
       )}
     </div>
   );

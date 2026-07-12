@@ -16,12 +16,12 @@ export default async function FunnelMathPage({ params }: { params: Promise<{ id:
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 900 }}>
+    <main className="page-wide">
       <p className="no-print">
-        <Link href={`/projects/${id}/offer`}>← Offer Forge</Link>
+        <Link href={`/projects/${id}/offer`} className="backlink">← Offer Forge</Link>
       </p>
       <h1>Funnel Math — G1</h1>
-      <p style={{ color: 'var(--muted)' }} className="no-print">
+      <p className="muted no-print">
         Kill uneconomic funnels before generation. A failing run hard-stops the pipeline and
         routes you back to the Offer Forge.
       </p>

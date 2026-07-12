@@ -3,24 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.6rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-const btn = {
-  padding: '0.5rem 0.9rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-} as const;
-const subtle = { ...btn, background: 'transparent', color: 'var(--muted)', border: '1px solid #333', padding: '0.3rem 0.6rem' } as const;
-
 export function MarketsPanel({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();
   const markets = trpc.markets.list.useQuery({ projectId }, { refetchInterval: 4000 });
@@ -61,110 +43,118 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
   const rows = markets.data ?? [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <section style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => run.mutate({ projectId })} disabled={run.isPending} style={btn}>
+    <div className="stack">
+      <section className="row-lg">
+        <button
+          onClick={() => run.mutate({ projectId })}
+          disabled={run.isPending}
+          className="btn btn-primary"
+        >
           {run.isPending ? 'Queued…' : rows.length ? 'Re-run selection' : 'Run Market Selection'}
         </button>
         {rows.length > 0 && (
           <button
             onClick={() => profileAll.mutate({ projectId })}
             disabled={profileAll.isPending}
-            style={btn}
+            className="btn btn-primary"
           >
             {profileAll.isPending ? 'Queued…' : 'Diagnose all (Schwartz profiles)'}
           </button>
         )}
-        {run.isSuccess && <span style={{ color: 'var(--muted)' }}>Selecting — the list refreshes automatically.</span>}
-        {profileAll.isSuccess && <span style={{ color: 'var(--muted)' }}>Diagnosing all markets…</span>}
-        {run.isError && <span style={{ color: 'salmon' }}>{run.error.message}</span>}
-        {profileAll.isError && <span style={{ color: 'salmon' }}>{profileAll.error.message}</span>}
+        {run.isSuccess && <span className="muted">Selecting — the list refreshes automatically.</span>}
+        {profileAll.isSuccess && <span className="muted">Diagnosing all markets…</span>}
+        {run.isError && <span className="danger small">{run.error.message}</span>}
+        {profileAll.isError && <span className="danger small">{profileAll.error.message}</span>}
         {rows.some((r) => r.origin === 'user') && (
-          <span style={{ color: 'var(--muted)' }}>Your edited markets survive re-runs.</span>
+          <span className="muted">Your edited markets survive re-runs.</span>
         )}
       </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      <section className="stack-sm">
         {rows.map((m, idx) => (
-          <div key={m.id} style={{ ...box, display: 'flex', gap: '0.75rem' }}>
+          <div key={m.id} className="card" style={{ display: 'flex', gap: '0.75rem' }}>
             <div style={{ fontSize: 22, fontWeight: 700, minWidth: 34, color: 'var(--accent)' }}>
               #{m.rank}
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <div className="stack-sm" style={{ flex: 1 }}>
               {editingId === m.id ? (
                 <>
-                  <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)} style={box} />
+                  <input
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    className="input"
+                  />
                   <textarea
                     rows={3}
                     value={editRationale}
                     onChange={(e) => setEditRationale(e.target.value)}
-                    style={{ ...box, fontFamily: 'inherit' }}
+                    className="textarea"
                   />
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div className="row">
                     <button
                       onClick={() =>
                         update.mutate({ projectId, marketId: m.id, label: editLabel, rationale: editRationale })
                       }
                       disabled={update.isPending}
-                      style={btn}
+                      className="btn btn-primary"
                     >
                       Save
                     </button>
-                    <button onClick={() => setEditingId(null)} style={subtle}>
+                    <button onClick={() => setEditingId(null)} className="btn">
                       Cancel
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <div className="spread">
                     <strong>
                       {m.label}{' '}
                       {m.origin === 'user' && (
-                        <span style={{ color: 'var(--ok)', fontWeight: 400 }}>(yours)</span>
+                        <span className="ok" style={{ fontWeight: 400 }}>(yours)</span>
                       )}
                     </strong>
-                    <span style={{ color: 'var(--muted)' }}>
+                    <span className="muted">
                       {m.scoreTotal !== null ? `${m.scoreTotal}/100` : 'unscored'}
                     </span>
                   </div>
-                  {m.avatarHint && <div style={{ color: 'var(--muted)', fontSize: 13 }}>{m.avatarHint}</div>}
-                  <div style={{ fontSize: 13 }}>{m.rationale}</div>
+                  {m.avatarHint && <div className="muted small">{m.avatarHint}</div>}
+                  <div className="small">{m.rationale}</div>
                   {m.scores && (
-                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                    <div className="muted xsmall">
                       {Object.entries(m.scores)
                         .map(([k, v]) => `${k.replaceAll('_', ' ')} ${v}`)
                         .join(' · ')}
                     </div>
                   )}
-                  <div style={{ fontSize: 12 }}>
+                  <div className="xsmall">
                     {m.diagnosed ? (
-                      <span style={{ color: 'var(--ok)' }}>
+                      <span className="ok">
                         ✓ diagnosed — {String((m.profile as { awareness_stage?: string }).awareness_stage)} /
                         soph {String((m.profile as { sophistication?: number }).sophistication)}
                       </span>
                     ) : (
-                      <span style={{ color: 'var(--muted)' }}>not yet diagnosed</span>
+                      <span className="muted">not yet diagnosed</span>
                     )}{' '}
                     <button
                       onClick={() => {
                         setProfileEditId(m.id);
                         setProfileDraft(JSON.stringify(m.profile, null, 2));
                       }}
-                      style={{ ...subtle, padding: '0.1rem 0.4rem', fontSize: 12 }}
+                      className="btn btn-sm"
                     >
                       profile JSON
                     </button>
                   </div>
                   {profileEditId === m.id && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div className="stack-sm">
                       <textarea
                         rows={14}
                         value={profileDraft}
                         onChange={(e) => setProfileDraft(e.target.value)}
-                        style={{ ...box, fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
+                        className="textarea mono xsmall"
                       />
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="row">
                         <button
                           onClick={() => {
                             try {
@@ -174,27 +164,27 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
                             }
                           }}
                           disabled={updateProfile.isPending}
-                          style={btn}
+                          className="btn btn-primary"
                         >
                           Save profile
                         </button>
-                        <button onClick={() => setProfileEditId(null)} style={subtle}>
+                        <button onClick={() => setProfileEditId(null)} className="btn">
                           Close
                         </button>
                       </div>
                       {updateProfile.isError && (
-                        <p style={{ color: 'salmon', fontSize: 12 }}>{updateProfile.error.message}</p>
+                        <p className="alert alert-danger">{updateProfile.error.message}</p>
                       )}
                     </div>
                   )}
                 </>
               )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <div className="stack-sm">
               <button
                 onClick={() => idx > 0 && swap.mutate({ projectId, marketIdA: m.id, marketIdB: rows[idx - 1]!.id })}
                 disabled={idx === 0 || swap.isPending}
-                style={{ ...subtle, opacity: idx === 0 ? 0.4 : 1 }}
+                className="btn btn-sm"
               >
                 ↑
               </button>
@@ -203,7 +193,7 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
                   idx < rows.length - 1 && swap.mutate({ projectId, marketIdA: m.id, marketIdB: rows[idx + 1]!.id })
                 }
                 disabled={idx === rows.length - 1 || swap.isPending}
-                style={{ ...subtle, opacity: idx === rows.length - 1 ? 0.4 : 1 }}
+                className="btn btn-sm"
               >
                 ↓
               </button>
@@ -213,41 +203,41 @@ export function MarketsPanel({ projectId }: { projectId: string }) {
                   setEditLabel(m.label);
                   setEditRationale(m.rationale ?? '');
                 }}
-                style={subtle}
+                className="btn btn-sm"
               >
                 Edit
               </button>
             </div>
           </div>
         ))}
-        {rows.length === 0 && <p style={{ color: 'var(--muted)' }}>No markets yet — run the selection engine.</p>}
+        {rows.length === 0 && <p className="muted">No markets yet — run the selection engine.</p>}
       </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: 640 }}>
+      <section className="stack-sm" style={{ maxWidth: 640 }}>
         <h3 style={{ margin: 0 }}>Add a market manually</h3>
         <input
           placeholder="Segment label…"
           value={manualLabel}
           onChange={(e) => setManualLabel(e.target.value)}
-          style={box}
+          className="input"
         />
         <textarea
           rows={2}
           placeholder="Why this crowd…"
           value={manualRationale}
           onChange={(e) => setManualRationale(e.target.value)}
-          style={{ ...box, fontFamily: 'inherit' }}
+          className="textarea"
         />
         <div>
           <button
             onClick={() => addManual.mutate({ projectId, label: manualLabel, rationale: manualRationale })}
             disabled={addManual.isPending || !manualLabel.trim() || !manualRationale.trim()}
-            style={btn}
+            className="btn btn-primary"
           >
             Add market
           </button>
         </div>
-        {addManual.isError && <p style={{ color: 'salmon' }}>{addManual.error.message}</p>}
+        {addManual.isError && <p className="alert alert-danger">{addManual.error.message}</p>}
       </section>
     </div>
   );

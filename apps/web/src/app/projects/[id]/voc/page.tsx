@@ -16,12 +16,12 @@ export default async function VocPage({ params }: { params: Promise<{ id: string
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1080 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/markets`}>← Markets</Link>
+        <Link href={`/projects/${id}/markets`} className="backlink">← Markets</Link>
       </p>
       <h1>Voice of Customer</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Feed each market real customer language — reviews, threads, comments. Generators quote
         this corpus verbatim.
       </p>

@@ -16,12 +16,12 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/gates`}>← Gate dashboard</Link>
+        <Link href={`/projects/${id}/gates`} className="backlink">← Gate dashboard</Link>
       </p>
       <h1>Quiz builder — market router</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Five to eight discovery questions sort every respondent into a market bucket;
         prequal questions disqualify with dignity. The simulator proves the routing on a
         thousand synthetic respondents before anything ships.

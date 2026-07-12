@@ -16,12 +16,12 @@ export default async function OfferPage({ params }: { params: Promise<{ id: stri
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1080 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}`}>← {project.name}</Link>
+        <Link href={`/projects/${id}`} className="backlink">← {project.name}</Link>
       </p>
       <h1>Offer Forge — G0</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Diagnose and strengthen the offer before any copy is written. Nothing advances until a
         selected offer passes the G0 checklist. Then run{' '}
         <Link href={`/projects/${id}/math`}>Funnel Math (G1) →</Link>

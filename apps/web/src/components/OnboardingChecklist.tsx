@@ -14,16 +14,8 @@ export function OnboardingChecklist({ projectId }: { projectId: string }) {
   if (!data) return null;
 
   return (
-    <section
-      style={{
-        padding: '0.75rem',
-        borderRadius: 8,
-        border: '1px solid #333',
-        background: '#12151c',
-        margin: '0.75rem 0 1rem',
-      }}
-    >
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', fontSize: 13 }}>
+    <section className="card" style={{ margin: '0.75rem 0 1rem' }}>
+      <div className="row-lg small">
         {data.steps.map((s, i) => (
           <Link
             key={s.key}
@@ -39,12 +31,12 @@ export function OnboardingChecklist({ projectId }: { projectId: string }) {
         ))}
       </div>
       {data.next ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: 13, color: 'var(--muted)' }}>
+        <p className="muted small" style={{ margin: '0.5rem 0 0' }}>
           <strong style={{ color: 'inherit' }}>Next:</strong> {data.next.hint}{' '}
           <Link href={data.next.href}>Go →</Link> · <Link href={data.next.docs}>docs</Link>
         </p>
       ) : (
-        <p style={{ margin: '0.5rem 0 0', fontSize: 13, color: 'var(--ok)' }}>
+        <p className="ok small" style={{ margin: '0.5rem 0 0' }}>
           Funnel shipped end-to-end. Watch the <Link href={`/projects/${projectId}/dashboard`}>dashboard</Link>{' '}
           and let the challengers earn their shot.
         </p>

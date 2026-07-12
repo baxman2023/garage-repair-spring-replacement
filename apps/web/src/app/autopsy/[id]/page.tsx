@@ -15,9 +15,9 @@ export default async function AutopsyDetailPage({ params }: { params: Promise<{ 
   if (!row) notFound();
 
   return (
-    <main style={{ maxWidth: 900 }}>
+    <main>
       <p>
-        <Link href="/autopsy">← Autopsies</Link>
+        <Link href="/autopsy" className="backlink">← Autopsies</Link>
       </p>
       <h1>{row.title}</h1>
       <AutopsyDetailPanel autopsyId={id} />

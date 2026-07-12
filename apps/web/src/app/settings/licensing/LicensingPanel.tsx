@@ -3,32 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-} as const;
-const btn = {
-  padding: '0.35rem 0.7rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: 12,
-} as const;
-const ghost = { ...btn, background: 'transparent', border: '1px solid #444', color: 'inherit' } as const;
-const input = {
-  padding: '0.4rem 0.6rem',
-  borderRadius: 6,
-  border: '1px solid #333',
-  background: '#0b0e14',
-  color: 'inherit',
-  fontSize: 13,
-} as const;
-
 export function LicensingPanel() {
   const utils = trpc.useUtils();
   const overview = trpc.licensing.overview.useQuery(undefined, { refetchInterval: 8000 });
@@ -39,46 +13,47 @@ export function LicensingPanel() {
   const [key, setKey] = useState('');
 
   const data = overview.data;
-  if (!data) return overview.isLoading ? null : <p style={{ color: 'var(--muted)' }}>Unavailable.</p>;
+  if (!data) return overview.isLoading ? null : <p className="muted">Unavailable.</p>;
   const isOwner = data.role === 'owner';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="stack">
       {data.access.mode !== 'full' && (
-        <div style={{ ...box, borderColor: data.access.mode === 'locked' ? 'salmon' : 'orange' }}>
+        <div className={data.access.mode === 'locked' ? 'alert alert-danger' : 'alert alert-warn'}>
           <strong>{data.access.mode === 'locked' ? 'No seat assigned' : 'Read-only workspace'}</strong>
-          <p style={{ margin: '0.3rem 0 0', color: 'var(--muted)', fontSize: 13 }}>{data.access.reason}</p>
+          <p className="muted small" style={{ margin: '0.3rem 0 0' }}>{data.access.reason}</p>
         </div>
       )}
 
       {isOwner && (
-        <section style={{ ...box, display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <section className="card row">
           <input
-            style={{ ...input, minWidth: 320 }}
+            className="input"
+            style={{ minWidth: 320 }}
             placeholder="License key (lic_…)"
             value={key}
             onChange={(e) => setKey(e.target.value)}
           />
           <button
-            style={btn}
+            className="btn btn-primary btn-sm"
             disabled={activate.isPending || key.trim().length < 8}
             onClick={() => activate.mutate({ key: key.trim() }, { onSuccess: () => setKey('') })}
           >
             Activate key
           </button>
-          {activate.error && <span style={{ color: 'salmon', fontSize: 12 }}>{activate.error.message}</span>}
+          {activate.error && <span className="danger xsmall">{activate.error.message}</span>}
         </section>
       )}
 
       <section>
-        <h2 style={{ margin: '0 0 0.4rem', fontSize: 16 }}>Licenses</h2>
+        <h2>Licenses</h2>
         {data.licenses.map((l) => (
-          <div key={l.licenseId} style={{ ...box, marginBottom: '0.5rem', fontSize: 13 }}>
-            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', flexWrap: 'wrap' }}>
+          <div key={l.licenseId} className="card small" style={{ marginBottom: '0.5rem' }}>
+            <div className="row" style={{ alignItems: 'baseline' }}>
               <code>{l.keyMasked}</code>
               <span>{l.type === 'beta' ? 'Forge Vault beta' : 'standard'}</span>
-              <span style={{ color: l.valid ? 'var(--ok)' : 'salmon' }}>{l.status}</span>
-              <span style={{ color: 'var(--muted)' }}>
+              <span className={l.valid ? 'badge badge-ok' : 'badge badge-danger'}>{l.status}</span>
+              <span className="muted">
                 {l.assignments.length}/{l.seats} seats
                 {l.expiresAt ? ` · expires ${new Date(l.expiresAt).toISOString().slice(0, 10)}` : ''}
               </span>
@@ -89,7 +64,7 @@ export function LicensingPanel() {
                   {a.name ?? a.email}{' '}
                   {isOwner && (
                     <button
-                      style={{ ...ghost, padding: '0.1rem 0.4rem' }}
+                      className="btn btn-sm"
                       onClick={() => unassign.mutate({ licenseId: l.licenseId, userId: a.userId })}
                     >
                       remove seat
@@ -101,19 +76,19 @@ export function LicensingPanel() {
           </div>
         ))}
         {data.licenses.length === 0 && (
-          <p style={{ color: 'var(--muted)' }}>
+          <p className="muted">
             No licenses yet — this workspace is in trial mode. Purchase seats to license it.
           </p>
         )}
       </section>
 
       <section>
-        <h2 style={{ margin: '0 0 0.4rem', fontSize: 16 }}>Members</h2>
+        <h2>Members</h2>
         {data.members.map((m) => (
-          <div key={m.userId} style={{ ...box, marginBottom: '0.4rem', fontSize: 13, display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div key={m.userId} className="card row small" style={{ marginBottom: '0.4rem' }}>
             <span>{m.name ?? m.email}</span>
-            <span style={{ color: 'var(--muted)' }}>{m.role}</span>
-            <span style={{ color: m.seated ? 'var(--ok)' : 'salmon' }}>{m.seated ? 'seated' : 'no seat'}</span>
+            <span className="muted">{m.role}</span>
+            <span className={m.seated ? 'badge badge-ok' : 'badge badge-danger'}>{m.seated ? 'seated' : 'no seat'}</span>
             {isOwner &&
               !m.seated &&
               data.licenses
@@ -122,7 +97,7 @@ export function LicensingPanel() {
                 .map((l) => (
                   <button
                     key={l.licenseId}
-                    style={btn}
+                    className="btn btn-primary btn-sm"
                     disabled={assign.isPending}
                     onClick={() => assign.mutate({ licenseId: l.licenseId, userId: m.userId })}
                   >
@@ -131,7 +106,7 @@ export function LicensingPanel() {
                 ))}
           </div>
         ))}
-        {assign.error && <p style={{ color: 'salmon', fontSize: 12 }}>{assign.error.message}</p>}
+        {assign.error && <p className="alert alert-danger">{assign.error.message}</p>}
       </section>
     </div>
   );

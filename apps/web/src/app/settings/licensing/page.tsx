@@ -9,12 +9,12 @@ export default async function LicensingPage() {
   if (!session.session.activeWorkspaceId) redirect('/');
 
   return (
-    <main style={{ maxWidth: 900 }}>
+    <main>
       <p>
-        <Link href="/">← Projects</Link>
+        <Link href="/" className="backlink">← Projects</Link>
       </p>
       <h1>Licensing & seats</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         CopyForge is licensed per named user. Every teammate who works in this
         workspace needs a seat on an active license.
       </p>

@@ -9,12 +9,12 @@ export default async function AutopsyIndexPage() {
   if (!session.session.activeWorkspaceId) redirect('/');
 
   return (
-    <main style={{ maxWidth: 900 }}>
+    <main>
       <p>
-        <Link href="/">← Projects</Link>
+        <Link href="/" className="backlink">← Projects</Link>
       </p>
       <h1>Autopsy Mode</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Tear down any funnel — paste each page or point at a URL, and the Council of
         Copywriters returns a scored teardown: the persuasion map, the awareness
         mismatch, every proof gap, the offer verdict, and what to rewrite first.

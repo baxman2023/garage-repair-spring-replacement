@@ -8,12 +8,12 @@ export default async function GenomePage() {
   if (!session) redirect('/login?next=/genome');
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/">← Home</Link>
+        <Link href="/" className="backlink">← Home</Link>
       </p>
       <h1>Persuasion Genome</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Winning copy, stored as tagged structural components — not blobs. Feed it swipes;
         generators retrieve the DNA.
       </p>

@@ -9,12 +9,12 @@ export default async function UsagePage() {
   if (!session.session.activeWorkspaceId) redirect('/');
 
   return (
-    <main style={{ maxWidth: 1000 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/settings/billing">← Billing</Link>
+        <Link href="/settings/billing" className="backlink">← Billing</Link>
       </p>
       <h1>Usage & cost</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Every model call runs on your own Anthropic key. These numbers sum directly
         from the usage ledger — token by token.
       </p>

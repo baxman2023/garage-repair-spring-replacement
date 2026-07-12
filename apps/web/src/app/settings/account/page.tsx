@@ -10,10 +10,10 @@ export default async function AccountPage() {
   return (
     <main style={{ maxWidth: 640 }}>
       <p>
-        <Link href="/">← Home</Link>
+        <Link href="/" className="backlink">← Home</Link>
       </p>
       <h1>Account</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Signed in as <code>{session.user.email}</code>
       </p>
       <AccountPanel />

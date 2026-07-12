@@ -10,10 +10,10 @@ export default async function ApiKeysettingsPage() {
   return (
     <main>
       <p>
-        <Link href="/">← Back</Link>
+        <Link href="/" className="backlink">← Back</Link>
       </p>
       <h1>Anthropic API key</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         CopyForge uses your own Anthropic key (your key, your cost). It is encrypted at rest
         and never logged or echoed back to you.
       </p>

@@ -7,56 +7,49 @@ import { DEMO_MARKETS, DEMO_PRODUCT } from './demoData';
  * mutate here.
  */
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-} as const;
-
 export default function DemoPage() {
   return (
-    <main style={{ maxWidth: 980 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/">← App</Link> · <Link href="/docs/getting-started">How to build yours →</Link>
+        <Link href="/" className="backlink">← App</Link> · <Link href="/docs/getting-started">How to build yours →</Link>
       </p>
       <h1>Sample funnel (read-only)</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         A finished 5-market build for the fixture product. Every asset below passed the
         full gate ladder — G3 Council through G7 packaging. Your build follows the same
         path with your product.
       </p>
 
-      <section style={{ ...box, marginBottom: '1rem', fontSize: 14 }}>
+      <section className="card" style={{ marginBottom: '1rem' }}>
         <strong>{DEMO_PRODUCT.name}</strong>
-        <div style={{ color: 'var(--muted)', marginTop: 4 }}>Approved offer (G0): {DEMO_PRODUCT.offer}</div>
-        <div style={{ color: 'var(--muted)' }}>{DEMO_PRODUCT.math}</div>
+        <div className="muted">Approved offer (G0): {DEMO_PRODUCT.offer}</div>
+        <div className="muted">{DEMO_PRODUCT.math}</div>
       </section>
 
       {DEMO_MARKETS.map((m) => (
-        <section key={m.rank} style={{ ...box, marginBottom: '0.9rem' }}>
-          <h2 style={{ margin: '0 0 0.2rem', fontSize: 17 }}>
+        <section key={m.rank} className="card" style={{ marginBottom: '0.9rem' }}>
+          <h2>
             #{m.rank} {m.label}
           </h2>
-          <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 0.6rem' }}>
+          <p className="muted small">
             {m.awareness}-aware · sophistication {m.sophistication} · entry: {m.entryConversation}
           </p>
           {m.assets.map((a) => (
-            <div key={a.type} style={{ borderTop: '1px solid #262a33', padding: '0.5rem 0', fontSize: 14 }}>
-              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'baseline', flexWrap: 'wrap' }}>
+            <div key={a.type} style={{ borderTop: '1px solid var(--border)', padding: '0.5rem 0' }}>
+              <div className="row" style={{ alignItems: 'baseline' }}>
                 <strong style={{ textTransform: 'capitalize' }}>{a.type.replace(/_/g, ' ')}</strong>
-                <span style={{ color: 'var(--ok)', fontSize: 12 }}>
+                <span className="ok xsmall">
                   {Object.keys(a.gates).map((g) => `${g} ✓`).join(' ')}
                 </span>
               </div>
               <div>{a.headline}</div>
-              <div style={{ color: 'var(--muted)', fontSize: 13 }}>{a.excerpt}</div>
+              <div className="muted small">{a.excerpt}</div>
             </div>
           ))}
         </section>
       ))}
 
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Ready to run this on your product? <Link href="/projects">Create a project</Link> and
         follow the checklist — <Link href="/docs/getting-started">the first funnel ships today</Link>.
       </p>

@@ -16,12 +16,12 @@ export default async function BuildPage({ params }: { params: Promise<{ id: stri
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1200 }}>
+    <main className="page-xl">
       <p>
-        <Link href={`/projects/${id}/review`}>← Strategy Review</Link>
+        <Link href={`/projects/${id}/review`} className="backlink">← Strategy Review</Link>
       </p>
       <h1>Build — full funnel fan-out</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         One click builds every asset for every approved market, in cache-optimal order (all of
         market one, then market two…). Kill it, cancel it, resume it — steps never regenerate
         what already exists.

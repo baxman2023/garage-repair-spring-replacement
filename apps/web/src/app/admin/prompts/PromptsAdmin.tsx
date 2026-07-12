@@ -3,23 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.5rem',
-  borderRadius: 6,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-};
-const btn = {
-  padding: '0.4rem 0.8rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-};
-
 export function PromptsAdmin() {
   const utils = trpc.useUtils();
   const names = trpc.prompts.names.useQuery();
@@ -42,44 +25,44 @@ export function PromptsAdmin() {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="stack-lg">
       <section>
         <h2>Prompts</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="row">
           {names.data?.map((n) => (
-            <button key={n} onClick={() => setName(n)} style={{ ...box, cursor: 'pointer' }}>
+            <button key={n} onClick={() => setName(n)} className="btn btn-sm">
               {n}
             </button>
           ))}
-          {names.data?.length === 0 && <span style={{ color: 'var(--muted)' }}>No prompts yet.</span>}
+          {names.data?.length === 0 && <span className="muted">No prompts yet.</span>}
         </div>
       </section>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: 640 }}>
+      <section className="stack-sm" style={{ maxWidth: 640 }}>
         <h3>Create / update a prompt version</h3>
         <input
           placeholder="prompt.name (e.g. council.schwartz)"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={box}
+          className="input"
         />
         <textarea
           placeholder="Prompt body…"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={6}
-          style={{ ...box, fontFamily: 'ui-monospace, monospace' }}
+          className="textarea mono"
         />
         <div>
           <button
             onClick={() => create.mutate({ name, body })}
             disabled={create.isPending || !name || !body}
-            style={btn}
+            className="btn btn-primary"
           >
             {create.isPending ? 'Saving…' : 'Save new version (activate)'}
           </button>
         </div>
-        {create.isError && <p style={{ color: 'salmon' }}>{create.error.message}</p>}
+        {create.isError && <p className="alert alert-danger">{create.error.message}</p>}
       </section>
 
       {name && (
@@ -88,9 +71,9 @@ export function PromptsAdmin() {
           <ul>
             {versions.data?.map((v) => (
               <li key={v.id} style={{ marginBottom: '0.35rem' }}>
-                v{v.version} {v.active && <span style={{ color: 'var(--ok)' }}>(active)</span>}{' '}
+                v{v.version} {v.active && <span className="ok">(active)</span>}{' '}
                 {!v.active && (
-                  <button onClick={() => activate.mutate({ id: v.id })} style={{ ...box, cursor: 'pointer' }}>
+                  <button onClick={() => activate.mutate({ id: v.id })} className="btn btn-sm">
                     Activate
                   </button>
                 )}
@@ -102,7 +85,7 @@ export function PromptsAdmin() {
               onClick={() =>
                 setDiffPair({ aId: versions.data![1]!.id, bId: versions.data![0]!.id })
               }
-              style={{ ...box, cursor: 'pointer' }}
+              className="btn btn-sm"
             >
               Diff latest two
             </button>
@@ -115,18 +98,11 @@ export function PromptsAdmin() {
           <h3>
             Diff v{diff.data.a.version} → v{diff.data.b.version}
           </h3>
-          <pre style={{ ...box, overflowX: 'auto' }}>
+          <pre>
             {diff.data.ops.map((op, i) => (
               <div
                 key={i}
-                style={{
-                  color:
-                    op.type === 'add'
-                      ? 'var(--ok)'
-                      : op.type === 'remove'
-                        ? 'salmon'
-                        : 'var(--muted)',
-                }}
+                className={op.type === 'add' ? 'ok' : op.type === 'remove' ? 'danger' : 'muted'}
               >
                 {op.type === 'add' ? '+ ' : op.type === 'remove' ? '- ' : '  '}
                 {op.text}

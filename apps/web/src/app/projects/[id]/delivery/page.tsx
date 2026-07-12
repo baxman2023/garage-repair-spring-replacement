@@ -16,14 +16,14 @@ export default async function DeliveryPage({ params }: { params: Promise<{ id: s
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1200 }}>
+    <main className="page-xl">
       <p>
-        <Link href={`/projects/${id}/gates`}>← Gate dashboard</Link>
+        <Link href={`/projects/${id}/gates`} className="backlink">← Gate dashboard</Link>
         {' · '}
         <Link href={`/projects/${id}/quiz`}>Quiz builder</Link>
       </p>
       <h1>Delivery Center</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Everything you need to take the build to market, in one place: packages, files,
         build prompts, quiz links, the message-match snippet — and what to do next for
         every asset.

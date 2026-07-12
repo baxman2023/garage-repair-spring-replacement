@@ -11,16 +11,16 @@ const PAGES = [
 
 export default function DocsLayout({ children }: { children: ReactNode }) {
   return (
-    <main style={{ maxWidth: 820 }}>
-      <nav style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', fontSize: 13, marginBottom: '1rem' }}>
-        <Link href="/">← App</Link>
+    <main>
+      <nav className="row-lg small" style={{ marginBottom: '1rem' }}>
+        <Link href="/" className="backlink">← App</Link>
         {PAGES.map((p) => (
           <Link key={p.href} href={p.href}>
             {p.label}
           </Link>
         ))}
       </nav>
-      <article style={{ lineHeight: 1.65 }}>{children}</article>
+      <article>{children}</article>
     </main>
   );
 }

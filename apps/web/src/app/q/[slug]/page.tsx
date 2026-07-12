@@ -11,7 +11,7 @@ export default async function HostedQuizPage({ params }: { params: Promise<{ slu
   const view = publicQuizView(quiz);
 
   return (
-    <main style={{ maxWidth: 560, margin: '0 auto', padding: 16 }}>
+    <main style={{ maxWidth: 640 }}>
       <QuizRuntime slug={slug} questions={view.questions} leadCapture={view.lead_capture} />
     </main>
   );

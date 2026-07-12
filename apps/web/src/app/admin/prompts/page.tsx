@@ -10,9 +10,9 @@ export default async function PromptsAdminPage() {
     return (
       <main>
         <h1>Admin</h1>
-        <p style={{ color: 'salmon' }}>Platform administrators only.</p>
+        <p className="alert alert-danger">Platform administrators only.</p>
         <p>
-          <Link href="/">← Back</Link>
+          <Link href="/" className="backlink">← Back</Link>
         </p>
       </main>
     );
@@ -21,10 +21,10 @@ export default async function PromptsAdminPage() {
   return (
     <main>
       <p>
-        <Link href="/">← Back</Link>
+        <Link href="/" className="backlink">← Back</Link>
       </p>
       <h1>Prompt registry</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Prompts are immutable, versioned, and pinned to assets at generation — bumping a
         version never changes an existing asset unless it&apos;s explicitly upgraded.
       </p>

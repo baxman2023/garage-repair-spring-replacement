@@ -17,7 +17,7 @@ export default async function SharedAutopsyPage({ params }: { params: Promise<{ 
   if (!view) notFound();
 
   return (
-    <main style={{ maxWidth: 820, margin: '0 auto', padding: '1.5rem 1rem' }}>
+    <main>
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -26,21 +26,21 @@ export default async function SharedAutopsyPage({ params }: { params: Promise<{ 
         }
       `}</style>
       <header style={{ marginBottom: '1.25rem' }}>
-        <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>Funnel autopsy · read-only</span>
+        <div className="no-print spread">
+          <span className="muted xsmall">Funnel autopsy · read-only</span>
           <PrintButton />
         </div>
         <h1 style={{ margin: '0.4rem 0 0.2rem' }}>{view.title}</h1>
-        <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
+        <p className="muted small" style={{ margin: 0 }}>
           Council of Copywriters teardown · {view.createdAt.toISOString().slice(0, 10)}
         </p>
       </header>
 
       <AutopsyReportView report={view.report} />
 
-      <footer className="no-print" style={{ marginTop: '2rem', padding: '1rem', borderRadius: 8, border: '1px solid #333', background: '#12151c' }}>
+      <footer className="no-print card" style={{ marginTop: '2rem' }}>
         <strong>Want this funnel rebuilt right?</strong>
-        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0.4rem 0' }}>
+        <p className="muted small" style={{ margin: '0.4rem 0' }}>
           CopyForge generated this teardown — and it can regenerate the whole funnel from the
           same diagnosis: markets, offer, VSL, letter, quiz, emails, through six quality gates.
         </p>

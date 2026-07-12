@@ -16,12 +16,12 @@ export default async function ControlsPage({ params }: { params: Promise<{ id: s
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/ingest`}>← Event ingestion</Link>
+        <Link href={`/projects/${id}/ingest`} className="backlink">← Event ingestion</Link>
       </p>
       <h1>Controls & challengers</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         The first approved asset per market and type holds the crown. Challengers are
         briefed from its recorded weaknesses and must beat it on real volume — the
         promotion heuristic is directional, not lab-grade, and it refuses thin data.

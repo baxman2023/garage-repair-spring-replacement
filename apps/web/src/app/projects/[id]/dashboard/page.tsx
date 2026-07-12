@@ -16,12 +16,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ id: 
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/predictions`}>← Predictions</Link>
+        <Link href={`/projects/${id}/predictions`} className="backlink">← Predictions</Link>
       </p>
       <h1>Ledger dashboard</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Everything the event stream knows: the funnel by market, VSL retention, control
         history, the challenger queue, and how well the system forecasts itself.
       </p>

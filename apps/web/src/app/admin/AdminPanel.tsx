@@ -3,61 +3,34 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const box = {
-  padding: '0.75rem',
-  borderRadius: 8,
-  border: '1px solid #333',
-  background: '#12151c',
-} as const;
-const btn = {
-  padding: '0.3rem 0.7rem',
-  borderRadius: 6,
-  border: 'none',
-  background: 'var(--accent)',
-  color: '#04122e',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: 12,
-} as const;
-const ghost = { ...btn, background: 'transparent', border: '1px solid #444', color: 'inherit' } as const;
-const input = {
-  padding: '0.4rem 0.6rem',
-  borderRadius: 6,
-  border: '1px solid #333',
-  background: '#0b0e14',
-  color: 'inherit',
-  fontSize: 13,
-} as const;
-const th = { textAlign: 'left', padding: '0.3rem 0.6rem', color: 'var(--muted)', fontWeight: 400 } as const;
-const td = { padding: '0.3rem 0.6rem' } as const;
-
 function SearchSection() {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
   const search = trpc.admin.search.useQuery({ query: submitted }, { enabled: submitted.length > 0 });
 
   return (
-    <section style={box}>
-      <h2 style={{ margin: '0 0 0.5rem', fontSize: 16 }}>Search users · workspaces · licenses</h2>
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+    <section className="card">
+      <h2>Search users · workspaces · licenses</h2>
+      <div className="row">
         <input
-          style={{ ...input, minWidth: 280 }}
+          className="input"
+          style={{ minWidth: 280 }}
           placeholder="email, name, workspace, license key…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && setSubmitted(query.trim())}
         />
-        <button style={btn} onClick={() => setSubmitted(query.trim())}>Search</button>
+        <button className="btn btn-primary" onClick={() => setSubmitted(query.trim())}>Search</button>
       </div>
       {search.data && (
-        <div style={{ marginTop: '0.6rem', fontSize: 13, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div className="stack-sm small" style={{ marginTop: '0.6rem' }}>
           {search.data.users.map((u) => (
             <div key={u.id}>
               user · {u.email} {u.name ? `(${u.name})` : ''} {u.isPlatformAdmin ? '· platform admin' : ''}
             </div>
           ))}
           {search.data.workspaces.map((w) => (
-            <div key={w.id}>workspace · {w.name} <code style={{ color: 'var(--muted)' }}>{w.id}</code></div>
+            <div key={w.id}>workspace · {w.name} <code className="muted">{w.id}</code></div>
           ))}
           {search.data.licenses.map((l) => (
             <div key={l.id}>
@@ -66,7 +39,7 @@ function SearchSection() {
             </div>
           ))}
           {search.data.users.length + search.data.workspaces.length + search.data.licenses.length === 0 && (
-            <span style={{ color: 'var(--muted)' }}>No matches.</span>
+            <span className="muted">No matches.</span>
           )}
         </div>
       )}
@@ -89,36 +62,36 @@ function FlagsSection() {
     : [];
 
   return (
-    <section style={box}>
-      <h2 style={{ margin: '0 0 0.5rem', fontSize: 16 }}>Feature flags & kill switches</h2>
+    <section className="card">
+      <h2>Feature flags & kill switches</h2>
       {data.flags
         .filter((f) => f.key !== 'paused_job_types')
         .map((f) => (
-          <div key={f.key} style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', fontSize: 13, marginBottom: '0.3rem' }}>
+          <div key={f.key} className="row small" style={{ marginBottom: '0.3rem' }}>
             <button
-              style={f.enabled ? btn : ghost}
+              className={f.enabled ? 'btn btn-sm btn-primary' : 'btn btn-sm'}
               disabled={setFlag.isPending}
               onClick={() => setFlag.mutate({ key: f.key, enabled: !f.enabled })}
             >
               {f.enabled ? 'ON' : 'OFF'}
             </button>
             <code>{f.key}</code>
-            <span style={{ color: 'var(--muted)' }}>{f.description}</span>
+            <span className="muted">{f.description}</span>
           </div>
         ))}
 
-      <h3 style={{ margin: '0.8rem 0 0.4rem', fontSize: 14 }}>Paused job types</h3>
-      <p style={{ color: 'var(--muted)', fontSize: 12, margin: '0 0 0.4rem' }}>
+      <h3>Paused job types</h3>
+      <p className="muted xsmall">
         Effective pause set (incl. the generation master switch):{' '}
         {data.pausedJobTypes.length ? data.pausedJobTypes.join(', ') : 'none'}
       </p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+      <div className="row">
         {data.knownJobTypes.map((t) => {
           const paused = surgicalTypes.includes(t);
           return (
             <button
               key={t}
-              style={paused ? { ...btn, background: 'salmon' } : ghost}
+              className={paused ? 'btn btn-sm btn-danger' : 'btn btn-sm'}
               disabled={setPaused.isPending}
               onClick={() =>
                 setPaused.mutate({
@@ -144,44 +117,46 @@ function ModelRoutesSection() {
   const [drafts, setDrafts] = useState<Record<string, { model?: string; maxTokens?: string }>>({});
 
   return (
-    <section style={box}>
-      <h2 style={{ margin: '0 0 0.5rem', fontSize: 16 }}>Model routes</h2>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 13, minWidth: 720 }}>
+    <section className="card">
+      <h2>Model routes</h2>
+      <div className="table-wrap">
+        <table style={{ minWidth: 720 }}>
           <thead>
-            <tr>{['Stage', 'Primary model', 'Max tokens', 'Active', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr>
+            <tr>{['Stage', 'Primary model', 'Max tokens', 'Active', ''].map((h) => <th key={h}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {(routes.data ?? []).map((r) => {
               const draft = drafts[r.id] ?? {};
               return (
-                <tr key={r.id} style={{ borderTop: '1px solid #262a33' }}>
-                  <td style={td}>{r.stage}{r.workspaceId ? ` (ws ${r.workspaceId.slice(-6)})` : ''}</td>
-                  <td style={td}>
+                <tr key={r.id}>
+                  <td>{r.stage}{r.workspaceId ? ` (ws ${r.workspaceId.slice(-6)})` : ''}</td>
+                  <td>
                     <input
-                      style={{ ...input, minWidth: 260 }}
+                      className="input"
+                      style={{ minWidth: 260 }}
                       value={draft.model ?? r.primaryModel}
                       onChange={(e) => setDrafts((d) => ({ ...d, [r.id]: { ...d[r.id], model: e.target.value } }))}
                     />
                   </td>
-                  <td style={td}>
+                  <td>
                     <input
-                      style={{ ...input, width: 90 }}
+                      className="input"
+                      style={{ width: 90 }}
                       value={draft.maxTokens ?? String(r.maxTokens)}
                       onChange={(e) => setDrafts((d) => ({ ...d, [r.id]: { ...d[r.id], maxTokens: e.target.value } }))}
                     />
                   </td>
-                  <td style={td}>
+                  <td>
                     <button
-                      style={r.active ? btn : ghost}
+                      className={r.active ? 'btn btn-sm btn-primary' : 'btn btn-sm'}
                       onClick={() => update.mutate({ routeId: r.id, active: !r.active })}
                     >
                       {r.active ? 'active' : 'inactive'}
                     </button>
                   </td>
-                  <td style={td}>
+                  <td>
                     <button
-                      style={ghost}
+                      className="btn btn-sm"
                       disabled={update.isPending}
                       onClick={() =>
                         update.mutate({
@@ -200,7 +175,7 @@ function ModelRoutesSection() {
           </tbody>
         </table>
       </div>
-      {update.error && <p style={{ color: 'salmon', fontSize: 12 }}>{update.error.message}</p>}
+      {update.error && <p className="alert alert-danger">{update.error.message}</p>}
     </section>
   );
 }
@@ -208,27 +183,27 @@ function ModelRoutesSection() {
 function UsageSection() {
   const usage = trpc.admin.usage.useQuery(undefined, { refetchInterval: 15_000 });
   return (
-    <section style={box}>
-      <h2 style={{ margin: '0 0 0.5rem', fontSize: 16 }}>Usage across workspaces</h2>
-      <p style={{ color: 'var(--muted)', fontSize: 12, margin: '0 0 0.4rem' }}>
+    <section className="card">
+      <h2>Usage across workspaces</h2>
+      <p className="muted xsmall">
         Counts and token totals only — content never leaves its workspace.
       </p>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 13, minWidth: 760 }}>
+      <div className="table-wrap">
+        <table style={{ minWidth: 760 }}>
           <thead>
-            <tr>{['Workspace', 'Calls', 'Input', 'Cache read', 'Output', 'Est. cost', 'Pending', 'Failed'].map((h) => <th key={h} style={th}>{h}</th>)}</tr>
+            <tr>{['Workspace', 'Calls', 'Input', 'Cache read', 'Output', 'Est. cost', 'Pending', 'Failed'].map((h) => <th key={h}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {(usage.data ?? []).map((u) => (
-              <tr key={u.workspaceId} style={{ borderTop: '1px solid #262a33' }}>
-                <td style={td}>{u.workspaceName} <code style={{ color: 'var(--muted)' }}>{u.workspaceId.slice(-6)}</code></td>
-                <td style={td}>{u.calls}</td>
-                <td style={td}>{u.inputTokens.toLocaleString('en-US')}</td>
-                <td style={td}>{u.cacheReadTokens.toLocaleString('en-US')}</td>
-                <td style={td}>{u.outputTokens.toLocaleString('en-US')}</td>
-                <td style={td}>${u.costEstUsd.toFixed(2)}</td>
-                <td style={td}>{u.jobsPending}</td>
-                <td style={td}>{u.jobsFailed}</td>
+              <tr key={u.workspaceId}>
+                <td>{u.workspaceName} <code className="muted">{u.workspaceId.slice(-6)}</code></td>
+                <td>{u.calls}</td>
+                <td>{u.inputTokens.toLocaleString('en-US')}</td>
+                <td>{u.cacheReadTokens.toLocaleString('en-US')}</td>
+                <td>{u.outputTokens.toLocaleString('en-US')}</td>
+                <td>${u.costEstUsd.toFixed(2)}</td>
+                <td>{u.jobsPending}</td>
+                <td>{u.jobsFailed}</td>
               </tr>
             ))}
           </tbody>
@@ -240,7 +215,7 @@ function UsageSection() {
 
 export function AdminPanel() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="stack">
       <SearchSection />
       <FlagsSection />
       <ModelRoutesSection />

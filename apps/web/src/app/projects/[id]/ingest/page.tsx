@@ -16,12 +16,12 @@ export default async function IngestPage({ params }: { params: Promise<{ id: str
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href={`/projects/${id}/delivery`}>← Delivery Center</Link>
+        <Link href={`/projects/${id}/delivery`} className="backlink">← Delivery Center</Link>
       </p>
       <h1>Event ingestion</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Reality flows in here: Ringba calls, pixel events, email metrics. Duplicates
         collapse; anything unmapped parks in triage instead of vanishing.
       </p>

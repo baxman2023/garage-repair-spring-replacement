@@ -24,37 +24,21 @@ interface Completion {
   decline: { headline: string; body: string } | null;
 }
 
-const card = {
-  background: '#12151c',
-  border: '1px solid #333',
-  borderRadius: 12,
-  padding: 24,
-} as const;
-const optionBtn = {
-  display: 'block',
+const optionStyle = {
+  display: 'flex',
   width: '100%',
+  justifyContent: 'flex-start',
   textAlign: 'left' as const,
-  padding: '14px 16px',
+  whiteSpace: 'normal' as const,
+  padding: '0.85rem 1rem',
   margin: '8px 0',
-  border: '1px solid #333',
-  borderRadius: 10,
-  background: 'transparent',
-  color: 'var(--fg)',
   fontSize: '1rem',
-  cursor: 'pointer',
-};
-const primaryBtn = {
-  display: 'block',
+} as const;
+const primaryStyle = {
   width: '100%',
-  padding: 14,
+  padding: '0.85rem 1rem',
   marginTop: 12,
-  border: 'none',
-  borderRadius: 10,
-  background: 'var(--accent)',
-  color: '#04122e',
   fontSize: '1.05rem',
-  fontWeight: 650,
-  cursor: 'pointer',
 } as const;
 
 export function QuizRuntime({
@@ -121,42 +105,42 @@ export function QuizRuntime({
 
   return (
     <div>
-      <div style={{ height: 6, background: '#262a33', borderRadius: 3, marginBottom: 20, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${progress}%`, background: 'var(--accent)', transition: 'width .25s ease' }} />
+      <div className="meter" style={{ marginBottom: 20 }}>
+        <span style={{ width: `${progress}%`, transition: 'width .25s ease' }} />
       </div>
 
       {result ? (
-        <div style={card}>
+        <div className="card" style={{ padding: '1.5rem' }}>
           {result.disqualified && result.decline ? (
             <>
-              <h1 style={{ fontSize: '1.4rem', marginBottom: 12 }}>{result.decline.headline}</h1>
-              <p style={{ lineHeight: 1.55 }}>{result.decline.body}</p>
+              <h1 style={{ fontSize: '1.4rem', margin: '0 0 12px' }}>{result.decline.headline}</h1>
+              <p>{result.decline.body}</p>
             </>
           ) : (
             result.band?.resultBlocks.map((b) =>
               b.role === 'headline' ? (
-                <h1 key={b.id} style={{ fontSize: '1.4rem', marginBottom: 12 }}>{b.text}</h1>
+                <h1 key={b.id} style={{ fontSize: '1.4rem', margin: '0 0 12px' }}>{b.text}</h1>
               ) : b.role === 'cta' ? (
-                <button key={b.id} style={primaryBtn}>{b.text}</button>
+                <button key={b.id} className="btn btn-primary" style={primaryStyle}>{b.text}</button>
               ) : (
-                <p key={b.id} style={{ margin: '10px 0', lineHeight: 1.55 }}>{b.text}</p>
+                <p key={b.id} style={{ margin: '10px 0' }}>{b.text}</p>
               ),
             )
           )}
         </div>
       ) : index < questions.length ? (
-        <div style={card}>
+        <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ fontSize: '1.25rem', fontWeight: 650, marginBottom: 16, lineHeight: 1.35 }}>
             {questions[index]!.text}
           </div>
           {questions[index]!.options.map((o) => (
-            <button key={o.id} style={optionBtn} onClick={() => answer(questions[index]!.id, o.id)}>
+            <button key={o.id} className="btn" style={optionStyle} onClick={() => answer(questions[index]!.id, o.id)}>
               {o.text}
             </button>
           ))}
         </div>
       ) : (
-        <div style={card}>
+        <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ fontSize: '1.25rem', fontWeight: 650, marginBottom: 16 }}>{leadCapture.headline}</div>
           {leadCapture.fields.map((f) => (
             <input
@@ -165,13 +149,14 @@ export function QuizRuntime({
               placeholder={f[0]!.toUpperCase() + f.slice(1)}
               value={contact[f] ?? ''}
               onChange={(e) => setContact((c) => ({ ...c, [f]: e.target.value }))}
-              style={{ ...optionBtn, cursor: 'text' }}
+              className="input"
+              style={{ display: 'block', width: '100%', margin: '8px 0', padding: '0.85rem 1rem', fontSize: '1rem' }}
             />
           ))}
-          <button style={primaryBtn} onClick={() => void complete()}>
+          <button className="btn btn-primary" style={primaryStyle} onClick={() => void complete()}>
             {leadCapture.button}
           </button>
-          {error && <p style={{ color: 'salmon', marginTop: 8 }}>{error}</p>}
+          {error && <p className="alert alert-danger" style={{ marginTop: 8 }}>{error}</p>}
         </div>
       )}
     </div>

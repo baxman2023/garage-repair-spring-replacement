@@ -10,18 +10,18 @@ export default async function AdminPage() {
     return (
       <main>
         <h1>Admin</h1>
-        <p style={{ color: 'salmon' }}>Platform administrators only.</p>
+        <p className="alert alert-danger">Platform administrators only.</p>
         <p>
-          <Link href="/">← Back</Link>
+          <Link href="/" className="backlink">← Back</Link>
         </p>
       </main>
     );
   }
 
   return (
-    <main style={{ maxWidth: 1100 }}>
+    <main className="page-wide">
       <p>
-        <Link href="/">← Back</Link> · <Link href="/admin/prompts">Prompt registry →</Link>
+        <Link href="/" className="backlink">← Back</Link> · <Link href="/admin/prompts">Prompt registry →</Link>
       </p>
       <h1>Platform admin</h1>
       <AdminPanel />

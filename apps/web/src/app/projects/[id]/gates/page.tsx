@@ -16,12 +16,12 @@ export default async function GatesPage({ params }: { params: Promise<{ id: stri
   if (!project) notFound();
 
   return (
-    <main style={{ maxWidth: 1300 }}>
+    <main className="page-xl">
       <p>
-        <Link href={`/projects/${id}/build`}>← Build</Link>
+        <Link href={`/projects/${id}/build`} className="backlink">← Build</Link>
       </p>
       <h1>Gate dashboard</h1>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted">
         Every asset × every gate, live. Drill into any report; owners can block, approve, or
         override — always with a reason, always on the audit record.
       </p>

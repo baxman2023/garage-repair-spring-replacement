@@ -3,14 +3,6 @@
 import { useState } from 'react';
 import { trpc } from '@/trpc/react';
 
-const inputStyle = {
-  padding: '0.6rem',
-  borderRadius: 6,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-
 export function AccountPanel() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -22,9 +14,9 @@ export function AccountPanel() {
   });
 
   return (
-    <section>
+    <section className="card">
       <h2>Change password</h2>
-      <p style={{ color: 'var(--muted)' }}>
+      <p className="muted small">
         If your account predates password login, leave “current password” blank to set one.
       </p>
       <form
@@ -32,39 +24,40 @@ export function AccountPanel() {
           e.preventDefault();
           changePassword.mutate({ currentPassword, newPassword });
         }}
-        style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: 360 }}
+        className="stack"
+        style={{ maxWidth: 360, gap: '0.85rem' }}
       >
-        <label htmlFor="current">Current password</label>
-        <input
-          id="current"
-          type="password"
-          autoComplete="current-password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          style={inputStyle}
-        />
-        <label htmlFor="new">New password</label>
-        <input
-          id="new"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          style={inputStyle}
-        />
-        <button
-          type="submit"
-          disabled={changePassword.isPending}
-          style={{ padding: '0.6rem', borderRadius: 6, border: 'none', background: 'var(--accent)', color: '#04122e', fontWeight: 600, cursor: 'pointer' }}
-        >
+        <div className="field">
+          <label htmlFor="current">Current password</label>
+          <input
+            id="current"
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="input"
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="new">New password</label>
+          <input
+            id="new"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="input"
+          />
+        </div>
+        <button type="submit" disabled={changePassword.isPending} className="btn btn-primary">
           {changePassword.isPending ? 'Saving…' : 'Update password'}
         </button>
-        {changePassword.isSuccess && <p style={{ color: 'var(--ok)', margin: 0 }}>Password updated.</p>}
+        {changePassword.isSuccess && <p className="alert alert-ok" style={{ margin: 0 }}>Password updated.</p>}
         {changePassword.isError && (
-          <p style={{ color: 'salmon', margin: 0 }}>{changePassword.error.message}</p>
+          <p className="alert alert-danger" style={{ margin: 0 }}>{changePassword.error.message}</p>
         )}
       </form>
     </section>

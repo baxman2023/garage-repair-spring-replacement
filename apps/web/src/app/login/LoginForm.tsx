@@ -2,14 +2,6 @@
 
 import { useState } from 'react';
 
-const inputStyle = {
-  padding: '0.6rem',
-  borderRadius: 6,
-  border: '1px solid #333',
-  background: '#12151c',
-  color: 'var(--fg)',
-} as const;
-
 /** Same-origin relative paths only (mirrors server-side safeNextPath). */
 function safeNext(next?: string): string {
   if (!next || !next.startsWith('/') || next.startsWith('//')) return '/';
@@ -50,9 +42,9 @@ export function LoginForm({ next }: { next?: string }) {
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: 360 }}>
+    <form onSubmit={submit} className="stack" style={{ gap: '0.85rem' }}>
       {mode === 'register' && (
-        <>
+        <div className="field">
           <label htmlFor="name">Name (optional)</label>
           <input
             id="name"
@@ -60,41 +52,41 @@ export function LoginForm({ next }: { next?: string }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            style={inputStyle}
+            className="input"
           />
-        </>
+        </div>
       )}
-      <label htmlFor="email">Email</label>
-      <input
-        id="email"
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        style={inputStyle}
-      />
-      <label htmlFor="password">Password</label>
-      <input
-        id="password"
-        type="password"
-        required
-        minLength={mode === 'register' ? 8 : 1}
-        autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder={mode === 'register' ? 'At least 8 characters' : 'Your password'}
-        style={inputStyle}
-      />
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ padding: '0.6rem', borderRadius: 6, border: 'none', background: 'var(--accent)', color: '#04122e', fontWeight: 600, cursor: 'pointer' }}
-      >
+      <div className="field">
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="input"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          required
+          minLength={mode === 'register' ? 8 : 1}
+          autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={mode === 'register' ? 'At least 8 characters' : 'Your password'}
+          className="input"
+        />
+      </div>
+      <button type="submit" disabled={pending} className="btn btn-primary" style={{ marginTop: '0.25rem' }}>
         {pending ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
       </button>
-      {error && <p style={{ color: 'salmon', margin: 0 }}>{error}</p>}
-      <p style={{ color: 'var(--muted)', margin: 0 }}>
+      {error && <p className="alert alert-danger" style={{ margin: 0 }}>{error}</p>}
+      <p className="muted small" style={{ margin: 0, textAlign: 'center' }}>
         {mode === 'login' ? 'No account yet?' : 'Already have an account?'}{' '}
         <button
           type="button"
@@ -102,7 +94,7 @@ export function LoginForm({ next }: { next?: string }) {
             setMode(mode === 'login' ? 'register' : 'login');
             setError(null);
           }}
-          style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: 0, font: 'inherit', textDecoration: 'underline' }}
+          style={{ padding: 0, border: 'none', background: 'none', color: 'var(--link)', font: 'inherit', fontWeight: 600 }}
         >
           {mode === 'login' ? 'Create one' : 'Sign in'}
         </button>

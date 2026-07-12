@@ -7,17 +7,16 @@ export function HealthCheck() {
   const health = trpc.health.useQuery();
 
   if (health.isPending) {
-    return <p style={{ color: 'var(--muted)' }}>Checking API…</p>;
+    return <p className="muted small">Checking API…</p>;
   }
   if (health.isError) {
-    return <p style={{ color: 'salmon' }}>API error: {health.error.message}</p>;
+    return <p className="danger small">API error: {health.error.message}</p>;
   }
 
   return (
-    <p>
-      <span style={{ color: 'var(--ok)' }}>● </span>
-      API healthy — <code>{health.data.app}</code> at{' '}
-      <code>{health.data.time}</code>
+    <p className="faint xsmall" style={{ marginTop: '2.5rem' }}>
+      <span className="ok">● </span>
+      API healthy — <code>{health.data.app}</code> at <code>{health.data.time}</code>
     </p>
   );
 }

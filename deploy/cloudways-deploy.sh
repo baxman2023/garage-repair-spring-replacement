@@ -216,7 +216,16 @@ curl_setopt_array(\$ch, [
   CURLOPT_FOLLOWLOCATION => false,
   CURLOPT_TIMEOUT => 120,
   CURLOPT_HEADERFUNCTION => function (\$ch, \$line) {
+    // Track whether the app set its own Cache-Control; when it didn't, add
+    // no-store at end-of-headers so no cache layer can poison a URL again
+    // (a stale cached error once shadowed /api/health for days).
+    static \$sawCacheControl = false;
     \$t = trim(\$line);
+    if (\$t === '' && !\$sawCacheControl) {
+      header('Cache-Control: no-store');
+      \$sawCacheControl = true; // guard against multiple header blocks
+    }
+    if (stripos(\$t, 'cache-control:') === 0) \$sawCacheControl = true;
     if (\$t !== '' && stripos(\$t, 'transfer-encoding:') !== 0 && stripos(\$t, 'connection:') !== 0
         && stripos(\$t, 'HTTP/') !== 0) {
       header(\$line, false);

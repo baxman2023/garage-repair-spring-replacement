@@ -2698,3 +2698,30 @@ tests exercise it) but the UI no longer offers it.
 Test-infra note: the sandbox's resurrected local PM2 worker was silently
 claiming (and failing) queue-test jobs, skewing the fair-scheduler and
 atomic-claim tests — stopped it; the tests themselves were sound.
+
+### Visual redesign — design system + full sweep
+
+User verdict on the old look: "The colors and design are very bad." Root cause:
+no design system — 77 components carried ad-hoc inline styles over 5 CSS
+variables.
+
+- **globals.css rewritten** as a real design system: dark "forge" theme
+  (layered slate surfaces, ember accent #f08a3c, warm links, status tokens),
+  typography scale, and component classes — btn/btn-primary/btn-danger/btn-sm,
+  input/select/textarea with focus rings, card/card-row, table-wrap + styled
+  th/td, badge variants, alert variants, stack/row/spread/grid-2 utilities,
+  meter, eyebrow. Base-element styling doubles as a safety net for any
+  straggler inline styles.
+- **App shell:** sticky blurred header (brand mark, Projects/Genome/Docs nav
+  with active states, account email, sign-out) + footer, both in a client
+  AppShell that renders no chrome on public /q/* funnel pages. Landing page
+  got a real hero.
+- **Sweep:** all ~77 components converted to the system via five parallel
+  batches with an exact mapping spec (inline patterns → classes; status words
+  → badges; error text → alerts; tables → table-wrap; local style consts
+  deleted). Data-derived colors and sizing hints stay inline by design.
+  Print flows (/a/[token], funnel-math report) preserved.
+- **Verification:** typecheck/build/lint/scans green, all test suites pass;
+  Playwright screenshots of landing, login, home, projects, intake workbench,
+  genome, usage, licensing, api-key, docs, demo, autopsy reviewed — no
+  layout breaks; disabled-state and badge semantics confirmed.
